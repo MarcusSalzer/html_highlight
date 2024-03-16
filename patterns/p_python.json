@@ -1,0 +1,8 @@
+{
+    "comment": "(#.*)",
+    "string": "((&quot;|&apos;).+\\2)",
+    "keyword": "\\b(as|assert|break|class|continue|def|del|elif|else|except|False|finally|for|from|global|if|import|lambda|None|nonlocal|pass|raise|return|True|try|while|with|yield|and|or|not|is|in)\\b",
+    "operator": "(\\+|-|\\*|/|%|\\*\\*|//|=|\\+=|-=|\\*=|/=|%=|//=|\\*\\*=|&=|\\|=|\\^=|&gt;&gt;=|&lt;&lt;=|==|!=|&lt;|&gt;|%lt;=|&gt;=|&amp;|\\||\\^|~|&lt;&lt;|&gt;&gt;)",
+    "number": "\\b(\\p{Digit}+)\\b",
+    "function": "\\b([^\\s^\\.]+)\\("
+}

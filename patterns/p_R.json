@@ -1,0 +1,8 @@
+{
+    "comment": "(//.*)",
+    "string": "((&quot;|&apos;).+\\2)",
+    "keyword": "\\b(if|else|repeat|while|function|for|in|next|break|TRUE|FALSE|NULL|Inf|NaN|NA|NA_integer_|NA_real_|NA_complex_|NA_character_)\\b",
+    "operator": "(\\+|-|\\*|/|%%|%/%|&lt;-|\\+=|-=|\\*=|/=|%=|//=|\\*\\*=|&=|\\|=|\\^=|&gt;&gt;=|&lt;&lt;=|==|!=|&lt;|&gt;|%lt;=|&gt;=|&amp;|\\||\\^|~|&lt;&lt;|&gt;&gt;)",
+    "number": "\\b(\\p{Digit}+)\\b",
+    "function": "\\b([^\\s^\\.]+)\\("
+}

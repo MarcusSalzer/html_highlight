@@ -1,0 +1,39 @@
+.code-snippet {
+    background-color: #111;
+    padding: 10px;
+    border-radius: 0px;
+    font-family: monospace;
+    color: #ddd;
+    max-width: fit-content;
+}
+
+.keyword {
+    color: #839cf2;
+}
+
+.variable {
+    color: #a5faf3;
+}
+
+.constant {
+    color: #61928e;
+}
+
+.function {
+    color: #f6faa5;
+}
+
+.comment {
+    color: #39a848;
+}
+
+.string {
+    color: #edc173;
+}
+
+.operator {
+    color: #f59457;
+}
+.number {
+    color: #73d4ed;
+}

@@ -1,0 +1,32 @@
+
+<head>
+    <link rel="stylesheet" type="text/css" href="_highlight_style.css">
+</head>
+<body>
+    <div class="code-snippet"><span class="keyword">from</span> highlighting_functions <span class="keyword">import</span> Highlighter<br>
+<span class="keyword">import</span> json<br>
+<span class="keyword">import</span> pyperclip <span class="keyword">as</span> pc<br>
+<br>
+<br>
+<span class="keyword">try</span>:<br>
+&nbsp; &nbsp; <span class="variable">in_text</span> <span class="operator">=</span> pc.<span class="function">paste</span>()<br>
+<span class="keyword">except</span> Exception:<br>
+&nbsp; &nbsp; <span class="variable">in_text</span> <span class="operator">=</span> <span class="string">&quot;?&quot;</span><br>
+<br>
+<br>
+<span class="function">print</span>(<span class="string">&quot;-&quot;</span> <span class="operator">*</span> <span class="number">30</span>)<br>
+<span class="variable">pattern_path</span> <span class="operator">=</span> <span class="string">&quot;patterns/p_python.json&quot;</span><br>
+<span class="keyword">with</span> <span class="function">open</span>(<span class="variable">pattern_path</span>) <span class="keyword">as</span> f:<br>
+&nbsp; &nbsp; <span class="variable">p_python</span> <span class="operator">=</span> json.<span class="function">load</span>(f)<br>
+<br>
+<span class="variable">highlighter</span> <span class="operator">=</span> <span class="function">Highlighter</span>(<span class="variable">p_python</span>, <span class="keyword">None</span>)<br>
+<br>
+<span class="variable">out_text</span> <span class="operator">=</span> <span class="variable">highlighter</span>.<span class="function">process</span>(<span class="variable">in_text</span>)<br>
+<span class="function">print</span>(<span class="variable">out_text</span>)<br>
+<br>
+<span class="keyword">with</span> <span class="function">open</span>(<span class="string">&quot;output.html&quot;, &quot;w&quot;</span>) <span class="keyword">as</span> f:<br>
+&nbsp; &nbsp; f.<span class="function">write</span>(<span class="variable">out_text</span>)<br>
+<br>
+pc.<span class="function">copy</span>(<span class="variable">out_text</span>)</div>
+</body>
+        
