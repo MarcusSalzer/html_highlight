@@ -1,2 +1,2 @@
-# html_highlight
-A simple program for syntax highlighting
+# Html syntax Highlight
+A simple program for syntax highlighting.
