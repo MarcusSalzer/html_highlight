@@ -5,7 +5,7 @@ import pyperclip as pc
 
 try:
     in_text = pc.paste()
-except Exception:
+except Exception:   
     in_text = "?"
 
 
