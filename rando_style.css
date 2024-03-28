@@ -1,0 +1,29 @@
+
+    .brac_cl {
+        color: #251fd7;
+    }
+    
+    .brac_op {
+        color: #5bd24e;
+    }
+    
+    .num {
+        color: #fdd46d;
+    }
+    
+    .op {
+        color: #672c57;
+    }
+    
+    .str {
+        color: #f1aca3;
+    }
+    
+    .unk {
+        color: #d705cf;
+    }
+    
+    .wsp {
+        color: #32df16;
+    }
+    
