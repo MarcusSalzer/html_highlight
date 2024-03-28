@@ -1,4 +1,7 @@
 # Html syntax Highlight
-A simple program for syntax highlighting. 
-- Initially a regex-lookup type highlighter for ´´python´´.
-- now exploring a more sophisticated, language agnostic, approach.
+A simple program for syntax highlighting. Work in progress.
+- Tokenize code
+- Tag common symbols
+- Tag symbols based on context
+- format html
+- CSS and colors
