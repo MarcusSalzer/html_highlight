@@ -66,13 +66,13 @@ class Highlighter:
         css_link = '<link rel="stylesheet" type="text/css" href="_highlight_style.css">'
         html_text = f"""<div class="code-snippet">{text}</div>"""
         final_html = f"""
-<head>
-    {css_link}
-</head>
-<body>
-    {html_text}
-</body>
-        """         
+        <head>
+            {css_link}
+        </head>
+        <body>
+            {html_text}
+        </body>
+        """
         return final_html
 
     def process(self, text: str):
