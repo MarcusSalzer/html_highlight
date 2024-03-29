@@ -1,29 +1,36 @@
+.brac0 {
+    color: #128a23;
+}
 
-    .brac_cl {
-        color: #251fd7;
-    }
-    
-    .brac_op {
-        color: #5bd24e;
-    }
-    
-    .num {
-        color: #fdd46d;
-    }
-    
-    .op {
-        color: #672c57;
-    }
-    
-    .str {
-        color: #f1aca3;
-    }
-    
-    .unk {
-        color: #d705cf;
-    }
-    
-    .wsp {
-        color: #32df16;
-    }
-    
+.brac1 {
+    color: #88df21;
+}
+
+.brac2 {
+    color: #ef27b3;
+}
+
+.brac3 {
+    color: #5f446b;
+}
+
+.num {
+    color: #a05b25;
+}
+
+.op {
+    color: #eb9198;
+}
+
+.str {
+    color: #d994ca;
+}
+
+.unk {
+    color: #a12c5a;
+}
+
+.wsp {
+    color: #feebea;
+}
+
