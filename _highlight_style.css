@@ -7,70 +7,45 @@
     max-width: fit-content;
 }
 
-.keyword {
-    color: #839cf2;
-}
-
-.variable {
-    color: #a5faf3;
-}
-
-.constant {
-    color: #61928e;
-}
-
-.function {
-    color: #f6faa5;
-}
-
-.comment {
-    color: #39a848;
-}
-
-.string {
-    color: #edc173;
-}
-
-.operator {
-    color: #f59457;
-}
-
-.number {
-    color: #73d4ed;
-}
-
 .brac0 {
-    color: #128a23;
+    color: #85ff66;
 }
 
 .brac1 {
-    color: #88df21;
+    color: #66ffa3;
 }
 
 .brac2 {
-    color: #ef27b3;
+    color: #66ffff;
 }
 
 .brac3 {
-    color: #5f446b;
+    color: #66a3ff;
+}
+
+.keyword {
+    color: #8566ff;
 }
 
 .num {
-    color: #a05b25;
+    color: #e066ff;
 }
 
 .op {
-    color: #eb9198;
+    color: #ff66c2;
 }
 
 .str {
-    color: #d994ca;
+    color: #ff6666;
 }
 
 .unk {
-    color: #a12c5a;
+    color: #ffc266;
 }
 
 .wsp {
-    color: #feebea;
+    color: #e0ff66;
 }
+
+
+

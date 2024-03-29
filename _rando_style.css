@@ -1,0 +1,53 @@
+.code-snippet {
+    background-color: #1a1c33;
+    padding: 10px;
+    border-radius: 0px;
+    font-family: monospace;
+    color: #ddd;
+    max-width: fit-content;
+}
+
+.assign {
+    color: #ffbf66;
+}
+
+.brac1 {
+    color: #ffed66;
+}
+
+.brac2 {
+    color: #e4ff66;
+}
+
+.brac3 {
+    color: #b6ff66;
+}
+
+.keyword {
+    color: #88ff66;
+}
+
+.num {
+    color: #66ff72;
+}
+
+.op {
+    color: #66ffa0;
+}
+
+.punct {
+    color: #66ffce;
+}
+
+.str {
+    color: #66fffc;
+}
+
+.unk {
+    color: #66d4ff;
+}
+
+.wsp {
+    color: #66a6ff;
+}
+

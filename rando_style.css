@@ -1,36 +1,44 @@
-.brac0 {
-    color: #128a23;
+.assign {
+    color: #0c445b;
 }
 
 .brac1 {
-    color: #88df21;
+    color: #893d23;
 }
 
 .brac2 {
-    color: #ef27b3;
+    color: #eec52b;
 }
 
 .brac3 {
-    color: #5f446b;
+    color: #4a3bd4;
+}
+
+.keyword {
+    color: #af9add;
 }
 
 .num {
-    color: #a05b25;
+    color: #802501;
 }
 
 .op {
-    color: #eb9198;
+    color: #dcbbc5;
+}
+
+.punct {
+    color: #f992e2;
 }
 
 .str {
-    color: #d994ca;
+    color: #813694;
 }
 
 .unk {
-    color: #a12c5a;
+    color: #8432d3;
 }
 
 .wsp {
-    color: #feebea;
+    color: #50ab54;
 }
 
