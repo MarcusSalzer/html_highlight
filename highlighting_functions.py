@@ -89,14 +89,13 @@ class Highlighter:
 
 ## new functions
 def tokenize(text) -> list[str]:
-    """Tokenize a text"""
+    """Tokenize a code snippet."""
     # Possible string delimiters
     string_delims = {'"', "'", '"""', "'''"}
 
     # split everything
     tokens: list[str] = re.findall(r"(\w+|[^\w\s]+|\s+|\n)", text)
 
-    print(tokens)
     ## split tokens without letters or numbers
     tmp: list[str] = []
     for t in tokens:
@@ -164,6 +163,9 @@ def tokenize(text) -> list[str]:
                 current_num = ""
                 tmp.append(token)
                 tmp_tags.append(tag)
+    if current_num != "": # if end with number
+        tmp.append(current_num)
+        tmp_tags.append("num")
 
     tokens = tmp
     tags = tmp_tags
@@ -190,7 +192,7 @@ def tag_individuals(tokens, tags, known_str: dict):
 
 
 def tag_variables(tokens, tags):
-    """TODO"""
+    """Find and tag variable names, based on 'assign' tags."""
     variables = []
     for i, token in enumerate(tokens):
         if tags[i] == "assign":
@@ -207,7 +209,7 @@ def tag_variables(tokens, tags):
 
 
 def tag_functions(tokens, tags):
-    """TODO"""
+    """Find and tag function names, based on '('."""
     functions = []
     for i, token in enumerate(tokens[:-2]):
         if tags[i] == "unk" and tokens[i + 1] == "(":
@@ -221,7 +223,31 @@ def tag_functions(tokens, tags):
     return tags
 
 
+def bracket_levels(tags):
+    """Rename bracket tags from brac_op/cl to brac_num.
+    
+    ## Returns
+    - tags (list[str]): modified tags
+    - brac_level (list[int]): bracket depth for all tokens."""
+    brac_level = []
+    current_level = 0
+    for i in range(len(tags)):
+        if tags[i] == "brac_op":
+            brac_level.append(current_level)
+            current_level += 1
+            tags[i] = f"brac{current_level}"
+        elif tags[i] == "brac_cl":
+            tags[i] = f"brac{current_level}"
+            current_level -= 1
+            brac_level.append(current_level)
+        else:
+            brac_level.append(current_level)
+
+    return tags, brac_level
+
+
 def merge_adjacent(tokens, tags):
+    """Merge adjacent tokens if they have the same tag."""
     tmp = []
     tmp_tags = []
 
@@ -257,7 +283,9 @@ def html_specials(text: str) -> str:
     return text
 
 
-def tokens_to_html(tokens, tags, exclude_tags=()):
+def tokens_to_html(tokens, tags, exclude_tags=("wsp", "unk")):
+    """Format text with html spans."""
+
     tokens_with_tags = []
     for token, tag in zip(tokens, tags):
         # fix html specials
