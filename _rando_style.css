@@ -1,5 +1,5 @@
 .code-snippet {
-    background-color: #1a1c33;
+    background-color: #292a33;
     padding: 10px;
     border-radius: 0px;
     font-family: monospace;
@@ -8,46 +8,54 @@
 }
 
 .assign {
-    color: #ffbf66;
+    color: #66ffa7;
 }
 
 .brac1 {
-    color: #ffed66;
+    color: #66beff;
 }
 
 .brac2 {
-    color: #e4ff66;
+    color: #a766ff;
 }
 
 .brac3 {
-    color: #b6ff66;
+    color: #ff66be;
+}
+
+.func {
+    color: #ffa766;
 }
 
 .keyword {
-    color: #88ff66;
+    color: #beff66;
 }
 
 .num {
-    color: #66ff72;
+    color: #66ffa7;
 }
 
 .op {
-    color: #66ffa0;
+    color: #66beff;
 }
 
 .punct {
-    color: #66ffce;
+    color: #a766ff;
 }
 
 .str {
-    color: #66fffc;
+    color: #ff66be;
 }
 
 .unk {
-    color: #66d4ff;
+    color: #ffa766;
+}
+
+.var {
+    color: #beff66;
 }
 
 .wsp {
-    color: #66a6ff;
+    color: #66ffa7;
 }
 

@@ -3,14 +3,23 @@
     <link rel="stylesheet" type="text/css" href="_rando_style.css">
 </head>
 <body>
-    <div class="code-snippet">import json <span class="keyword">as</span> jorre<br>
+    <div class="code-snippet"><span class="func">print</span><span class="brac1">(</span><span class="str">&quot;# tokens&quot;</span><span class="punct">,</span> <span class="func">len</span><span class="brac2">(</span>tokens<span class="brac2">)</span><span class="brac1">)</span><br>
 <br>
-y <span class="assign">=</span> <span class="num">9.77</span><br>
-x <span class="assign">=</span> <span class="brac1">[</span><span class="num">37</span><span class="punct">,</span> <span class="num">2</span><span class="brac1">]</span><br>
-<span class="keyword">for</span> k <span class="keyword">in</span> range<span class="brac1">(</span>x<span class="brac2">[</span><span class="num">0</span><span class="brac2">]</span><span class="brac1">)</span><span class="op">:</span><br>
-&nbsp; &nbsp; print<span class="brac1">(</span><span class="brac2">(</span><span class="brac3">(</span><span class="str">&quot;öh&quot;</span> <span class="op">*</span> k<span class="brac3">)</span><span class="brac2">)</span><span class="brac1">)</span><br>
+<span class="var">known_default</span> <span class="assign">=</span> <span class="brac1">{</span><br>
+&nbsp; &nbsp; <span class="str">&quot;assign&quot;</span><span class="op">:</span> <span class="keyword">r</span><span class="str">&quot;=&quot;</span><span class="punct">,</span><br>
+&nbsp; &nbsp; <span class="str">&quot;punct&quot;</span><span class="op">:</span> <span class="keyword">r</span><span class="str">&quot;,;&quot;</span><span class="punct">,</span><br>
+&nbsp; &nbsp; <span class="str">&quot;op&quot;</span><span class="op">:</span> <span class="keyword">r</span><span class="str">&quot;!%&amp;/+-*:&quot;</span><span class="punct">,</span><br>
+&nbsp; &nbsp; <span class="str">&quot;brac_op&quot;</span><span class="op">:</span> <span class="keyword">r</span><span class="str">&quot;([{&quot;</span><span class="punct">,</span><br>
+&nbsp; &nbsp; <span class="str">&quot;brac_cl&quot;</span><span class="op">:</span> <span class="keyword">r</span><span class="str">&quot;)]}&quot;</span><span class="punct">,</span><br>
+&nbsp; &nbsp; <span class="str">&quot;keyword&quot;</span><span class="op">:</span> <span class="keyword">r</span><span class="str">&quot;for|while|foreach|as|in|if|else|elif|and|or|not&quot;</span><span class="punct">,</span><br>
+<span class="brac1">}</span><br>
 <br>
-this_variable <span class="assign">=</span> <span class="str">&quot;hej på dig&quot;</span><br>
 <br>
-a_longer123string <span class="assign">=</span> this_variable <span class="op">+</span> <span class="str">&quot;ööhö&quot;</span></div>
+# first<span class="op">:</span> tag individual tokens<br>
+<span class="var">tags</span> <span class="assign">=</span> hf.<span class="func">tag_individuals</span><span class="brac1">(</span>tokens<span class="punct">,</span> <span class="var">tags</span><span class="punct">,</span> <span class="var">known_default</span><span class="brac1">)</span><br>
+<br>
+# second<span class="op">:</span> context<br>
+<br>
+<span class="var">tags</span> <span class="assign">=</span> hf.<span class="func">tag_variables</span><span class="brac1">(</span>tokens<span class="punct">,</span> <span class="var">tags</span><span class="brac1">)</span><br>
+<span class="var">tags</span> <span class="assign">=</span> hf.<span class="func">tag_functions</span><span class="brac1">(</span>tokens<span class="punct">,</span> <span class="var">tags</span><span class="brac1">)</span></div>
 </body>

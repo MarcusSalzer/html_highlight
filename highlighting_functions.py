@@ -186,7 +186,39 @@ def tag_individuals(tokens, tags, known_str: dict):
                     tags[i] = key
                     break
 
-    return tokens, tags
+    return tags
+
+
+def tag_variables(tokens, tags):
+    """TODO"""
+    variables = []
+    for i, token in enumerate(tokens):
+        if tags[i] == "assign":
+            if i >= 1 and tags[i - 1] == "unk":
+                variables.append(tokens[i - 1])
+            elif i >= 2 and tags[i - 1] == "wsp" and tags[i - 2] == "unk":
+                variables.append(tokens[i - 2])
+    variables = set(variables)
+    for i, token in enumerate(tokens):
+        if token in variables:
+            tags[i] = "var"
+
+    return tags
+
+
+def tag_functions(tokens, tags):
+    """TODO"""
+    functions = []
+    for i, token in enumerate(tokens[:-2]):
+        if tags[i] == "unk" and tokens[i + 1] == "(":
+            functions.append(token)
+
+    functions = set(functions)
+    for i, token in enumerate(tokens):
+        if token in functions:
+            tags[i] = "func"
+
+    return tags
 
 
 def merge_adjacent(tokens, tags):
@@ -237,4 +269,3 @@ def tokens_to_html(tokens, tags, exclude_tags=()):
 
     text = "".join(tokens_with_tags)
     return f"""<div class="code-snippet">{text}</div>"""
-

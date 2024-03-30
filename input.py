@@ -1,10 +1,19 @@
-import json as jorre
+print("# tokens", len(tokens))
 
-y = 9.77
-x = [37, 2]
-for k in range(x[0]):
-    print((("öh" * k)))
+known_default = {
+    "assign": r"=",
+    "punct": r",;",
+    "op": r"!%&/+-*:",
+    "brac_op": r"([{",
+    "brac_cl": r")]}",
+    "keyword": r"for|while|foreach|as|in|if|else|elif|and|or|not",
+}
 
-this_variable = "hej på dig"
 
-a_longer123string = this_variable + "ööhö"
+# first: tag individual tokens
+tags = hf.tag_individuals(tokens, tags, known_default)
+
+# second: context
+
+tags = hf.tag_variables(tokens, tags)
+tags = hf.tag_functions(tokens, tags)
