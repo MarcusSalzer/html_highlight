@@ -89,7 +89,7 @@ class Highlighter:
 
 ## new functions
 def tokenize(text) -> list[str]:
-    """Tokenize a code snippet."""
+    """Tokenize a code snippet. Also tag string literals and numbers."""
     # Possible string delimiters
     string_delims = {'"', "'", '"""', "'''"}
 
@@ -163,7 +163,7 @@ def tokenize(text) -> list[str]:
                 current_num = ""
                 tmp.append(token)
                 tmp_tags.append(tag)
-    if current_num != "": # if end with number
+    if current_num != "":  # if end with number
         tmp.append(current_num)
         tmp_tags.append("num")
 
@@ -173,7 +173,7 @@ def tokenize(text) -> list[str]:
     return tokens, tags
 
 
-def tag_individuals(tokens, tags, known_str: dict):
+def tag_individuals(tokens, tags, known_str: dict = None) -> list[str]:
     """Tag individual tokens based on known symbols/strings"""
     for i, token in enumerate(tokens):
         if token.isdigit():
@@ -187,23 +187,6 @@ def tag_individuals(tokens, tags, known_str: dict):
                 if token in known_str[key]:
                     tags[i] = key
                     break
-
-    return tags
-
-
-def tag_variables(tokens, tags):
-    """Find and tag variable names, based on 'assign' tags."""
-    variables = []
-    for i, token in enumerate(tokens):
-        if tags[i] == "assign":
-            if i >= 1 and tags[i - 1] == "unk":
-                variables.append(tokens[i - 1])
-            elif i >= 2 and tags[i - 1] == "wsp" and tags[i - 2] == "unk":
-                variables.append(tokens[i - 2])
-    variables = set(variables)
-    for i, token in enumerate(tokens):
-        if token in variables:
-            tags[i] = "var"
 
     return tags
 
@@ -223,9 +206,39 @@ def tag_functions(tokens, tags):
     return tags
 
 
+def tag_variables(tokens, tags):
+    """Find and tag variable names, based on 'assign' and 'function' tags."""
+    variables = []
+    for i in range(len(tokens)):
+        if tags[i] == "assign":
+            if i >= 1 and tags[i - 1] == "unk":
+                # unk, assign,
+                variables.append(tokens[i - 1])
+            elif i >= 2 and tags[i - 1] == "wsp" and tags[i - 2] == "unk":
+                # unk, wsp, assign
+                variables.append(tokens[i - 2])
+        elif "brac" in tags[i] or tags[i] == "punct":
+            if (
+                (i >= 3)
+                and (tags[i - 1] == "unk")
+                and ("brac" in tags[i - 2])
+                and (tags[i - 3] == "func")
+            ):
+                # func, brac, unk, brac/punct
+                variables.append(tokens[i - 1])
+
+    variables = set(variables)
+
+    for i, token in enumerate(tokens):
+        if token in variables:
+            tags[i] = "var"
+
+    return tags
+
+
 def bracket_levels(tags):
     """Rename bracket tags from brac_op/cl to brac_num.
-    
+
     ## Returns
     - tags (list[str]): modified tags
     - brac_level (list[int]): bracket depth for all tokens."""
@@ -246,7 +259,7 @@ def bracket_levels(tags):
     return tags, brac_level
 
 
-def merge_adjacent(tokens, tags):
+def merge_adjacent(tokens, tags, known_str=None):
     """Merge adjacent tokens if they have the same tag."""
     tmp = []
     tmp_tags = []
@@ -259,8 +272,12 @@ def merge_adjacent(tokens, tags):
         if not tag == tag_next:
             if len(current_seq) > 0:
                 current_seq.append(token)
-                tmp.append("".join(current_seq))
-                tmp_tags.append(tag)
+
+                new_token = "".join(current_seq)
+                new_tag = tag_individuals([new_token], ["unk"], known_str)[0]
+
+                tmp.append(new_token)
+                tmp_tags.append(new_tag)
                 current_seq = []
             else:
                 tmp.append(token)
