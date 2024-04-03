@@ -8,54 +8,54 @@
 }
 
 .assign {
-    color: #66ffa7;
+    color: #66ffc1;
 }
 
 .brac1 {
-    color: #66beff;
+    color: #96ff66;
 }
 
 .brac2 {
-    color: #a766ff;
+    color: #ff9266;
 }
 
 .brac3 {
-    color: #ff66be;
+    color: #ff9f66;
 }
 
 .func {
-    color: #ffa766;
+    color: #ff66c1;
 }
 
 .keyword {
-    color: #beff66;
+    color: #78ff66;
 }
 
 .num {
-    color: #66ffa7;
+    color: #ffb766;
 }
 
 .op {
-    color: #66beff;
+    color: #66ffc9;
 }
 
 .punct {
-    color: #a766ff;
+    color: #667bff;
 }
 
 .str {
-    color: #ff66be;
+    color: #668eff;
 }
 
 .unk {
-    color: #ffa766;
+    color: #a866ff;
 }
 
 .var {
-    color: #beff66;
+    color: #edff66;
 }
 
 .wsp {
-    color: #66ffa7;
+    color: #ffcb66;
 }
 

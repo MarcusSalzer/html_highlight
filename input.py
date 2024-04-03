@@ -1,1 +1,1 @@
-tags = hf.tag_variables(tokens, tags)
+TEST = (1, F(A(33), "hej"))

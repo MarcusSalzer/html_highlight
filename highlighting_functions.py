@@ -217,7 +217,7 @@ def tag_variables(tokens, tags):
             elif i >= 2 and tags[i - 1] == "wsp" and tags[i - 2] == "unk":
                 # unk, wsp, assign
                 variables.append(tokens[i - 2])
-        elif "brac" in tags[i] or tags[i] == "punct":
+        elif "brac" in tags[i] or tags[i] in ("punct", "op", "wsp"):
             if (
                 (i >= 3)
                 and (tags[i - 1] == "unk")
@@ -260,7 +260,10 @@ def bracket_levels(tags):
 
 
 def merge_adjacent(tokens, tags, known_str=None):
-    """Merge adjacent tokens if they have the same tag."""
+    """Merge adjacent tokens if they have the same tag.
+    ## Parameters
+    - tokens
+    - tags"""
     tmp = []
     tmp_tags = []
 
@@ -282,8 +285,11 @@ def merge_adjacent(tokens, tags, known_str=None):
             else:
                 tmp.append(token)
                 tmp_tags.append(tag)
-        else:
+        elif "brac" not in tag:  # avoid merging brackets
             current_seq.append(token)
+        else:
+            tmp.append(token)
+            tmp_tags.append(tag)
 
     return tmp, tmp_tags
 
