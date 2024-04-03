@@ -80,7 +80,7 @@ class Highlighter:
 
         text = self.pre_process(text)
         variables, p_variable = self.find_variables(text)
-        if len(variables) > 0:
+        if variables:
             self.patterns_find["variable"] = p_variable
 
         text = self.syntax_highlight(text)
@@ -226,6 +226,9 @@ def tag_variables(tokens, tags):
             ):
                 # func, brac, unk, brac/punct
                 variables.append(tokens[i - 1])
+            elif tokens[i]!="(" and (tags[i - 1] == "unk" and tags[i - 2] in ("punct")):
+                # punct, unk, non-func-brac 
+                variables.append(tokens[i-1])
 
     variables = set(variables)
 

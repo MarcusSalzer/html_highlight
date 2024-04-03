@@ -8,54 +8,51 @@
 }
 
 .assign {
-    color: #66ffc1;
+    color: #66bcff;
 }
 
 .brac1 {
-    color: #96ff66;
+    color: #98ff66;
 }
 
 .brac2 {
-    color: #ff9266;
+    color: #6684ff;
 }
 
 .brac3 {
-    color: #ff9f66;
-}
-
-.func {
     color: #ff66c1;
 }
 
+.func {
+    color: #a1c4ff;
+}
+
 .keyword {
-    color: #78ff66;
+    color: #00b274;
 }
 
 .num {
-    color: #ffb766;
+    color: #ba6f6f;
 }
 
 .op {
-    color: #66ffc9;
+    color: #66fff4;
 }
 
 .punct {
-    color: #667bff;
+    color: #a6ff66;
 }
 
 .str {
-    color: #668eff;
+    color: #a0a082;
 }
 
-.unk {
-    color: #a866ff;
-}
 
 .var {
-    color: #edff66;
+    color: #ffe466;
 }
 
 .wsp {
-    color: #ffcb66;
+    color: #66bbff;
 }
 
