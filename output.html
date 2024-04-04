@@ -1,12 +1,21 @@
-
 <head>
-    <link rel="stylesheet" type="text/css" href="_rando_style.css">
+    <link rel="stylesheet" type="text/css" href="_style.css">
 </head>
+
 <body>
-    <div class="code-snippet"><span class="var">text</span> <span class="assign">=</span> self<span class="punct">.</span><span class="func">pre_process</span><span class="brac1">(</span><span class="var">text</span><span class="brac1">)</span><br>
-variables<span class="punct">,</span> <span class="var">p_variable</span> <span class="assign">=</span> self<span class="punct">.</span><span class="func">find_variables</span><span class="brac1">(</span><span class="var">text</span><span class="brac1">)</span><br>
-<span class="keyword">if</span> variables<span class="op">:</span><br>
-&nbsp; &nbsp; self<span class="punct">.</span><span class="var">patterns_find</span><span class="brac1">[</span><span class="str">&quot;variable&quot;</span><span class="brac1">]</span> <span class="assign">=</span> <span class="var">p_variable</span><br>
-<br>
-<span class="var">text</span> <span class="assign">=</span> self<span class="punct">.</span><span class="func">syntax_highlight</span><span class="brac1">(</span><span class="var">text</span><span class="brac1">)</span></div>
+    <div class="code-snippet"><span class="var">text</span> <span class="assign">=</span> self<span
+            class="punct">.</span><span class="func">pre_process</span><span class="brac1">(</span><span
+            class="var">text</span><span class="brac1">)</span><br>
+        variables<span class="punct">,</span> <span class="var">p_variable</span> <span class="assign">=</span>
+        self<span class="punct">.</span><span class="func">find_variables</span><span class="brac1">(</span><span
+            class="var">text</span><span class="brac1">)</span><br>
+        <span class="keyword">if</span> variables<span class="op">:</span><br>
+        &nbsp; &nbsp; self<span class="punct">.</span><span class="var">patterns_find</span><span
+            class="brac1">[</span><span class="str">&quot;variable&quot;</span><span class="brac1">]</span> <span
+            class="assign">=</span> <span class="var">p_variable</span><br>
+        <br>
+        <span class="var">text</span> <span class="assign">=</span> self<span class="punct">.</span><span
+            class="func">syntax_highlight</span><span class="brac1">(</span><span class="var">text</span><span
+            class="brac1">)</span>
+    </div>
 </body>

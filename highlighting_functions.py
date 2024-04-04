@@ -1,93 +1,6 @@
 import regex as re
 
 
-class Highlighter:
-    patterns_find = {}
-    patterns_repl = {}
-
-    def __init__(self, patterns_find, patterns_repl):
-        self.patterns_find = patterns_find
-        self.patterns_repl = patterns_repl
-
-    def pre_process(self, text: str):
-        # convert html reserved characters
-        text = re.sub(r"&", r"&amp;", text)
-        text = re.sub(r"<", r"&lt;", text)
-        text = re.sub(r">", r"&gt;", text)
-        text = re.sub(r'"', r"&quot;", text)
-        text = re.sub(r"'", r"&apos;", text)
-        # preserve line-breaks
-        text = re.sub(r"\n", r"<br>\n", text)
-        # preserve indentation
-        text = re.sub(r"  ", r"&nbsp; ", text)
-        return text
-
-    def find_variables(self, text: str):
-        """Finds variables in code.
-
-        ## Returns
-        variables: list[str]
-            List of variable names
-
-        pattern_variable: str
-            regex pattern for finding variables"""
-
-        variables = re.findall(r"\b[^\s]+ ?=", text)
-        variables = set(map(lambda s: re.sub(" ?=", "", s), variables))
-        pattern_variable = r"\b(" + "|".join(variables) + r")\b"
-
-        return variables, pattern_variable
-
-    def syntax_highlight(self, text: str):
-        patterns = self.patterns_find
-
-        tagged = {}
-        # tag with placeholders
-        for tag in patterns.keys():
-            tagged[tag] = []
-            while True:
-                m = re.search(patterns[tag], text)
-                if m:
-                    tagged[tag].append(f"""<span class="{tag}">{m.group()}</span>""")
-                    text = text[: m.start()] + f"£££{tag}£££" + text[m.end() :]
-                else:
-                    break
-
-            # fix parantheses
-            for i, t in enumerate(tagged[tag]):
-                tagged[tag][i] = re.sub(r"\(</span>", r"</span>(", t)
-
-        # replace placeholders
-        for tag in tagged.keys():
-            for i, t in enumerate(tagged[tag]):
-                m = re.search(f"£££{tag}£££", text)
-                text = text[: m.start()] + t + text[m.end() :]
-
-        css_link = '<link rel="stylesheet" type="text/css" href="_highlight_style.css">'
-        html_text = f"""<div class="code-snippet">{text}</div>"""
-        final_html = f"""
-        <head>
-            {css_link}
-        </head>
-        <body>
-            {html_text}
-        </body>
-        """
-        return final_html
-
-    def process(self, text: str):
-        """Preprocesses, finds variables and highlights."""
-
-        text = self.pre_process(text)
-        variables, p_variable = self.find_variables(text)
-        if variables:
-            self.patterns_find["variable"] = p_variable
-
-        text = self.syntax_highlight(text)
-        return text
-
-
-## new functions
 def tokenize(text) -> list[str]:
     """Tokenize a code snippet. Also tag string literals and numbers."""
     # Possible string delimiters
@@ -226,9 +139,11 @@ def tag_variables(tokens, tags):
             ):
                 # func, brac, unk, brac/punct
                 variables.append(tokens[i - 1])
-            elif tokens[i]!="(" and (tags[i - 1] == "unk" and tags[i - 2] in ("punct")):
-                # punct, unk, non-func-brac 
-                variables.append(tokens[i-1])
+            elif tokens[i] != "(" and (
+                tags[i - 1] == "unk" and tags[i - 2] in ("punct")
+            ):
+                # punct, unk, non-func-brac
+                variables.append(tokens[i - 1])
 
     variables = set(variables)
 
@@ -267,6 +182,9 @@ def merge_adjacent(tokens, tags, known_str=None):
     ## Parameters
     - tokens
     - tags"""
+    
+    if not known_str:
+        known_str = {}
     tmp = []
     tmp_tags = []
 
@@ -323,3 +241,67 @@ def tokens_to_html(tokens, tags, exclude_tags=("wsp", "unk")):
 
     text = "".join(tokens_with_tags)
     return f"""<div class="code-snippet">{text}</div>"""
+
+
+def highlight_code(text: str, css_path="_style.css"):
+    """Format a code snippet with classes.
+
+    ## Parameters
+    - text(str): source code to highlight
+    - css_path(str): path to css file to link
+
+    ## Returns
+    """
+
+    known_default = {
+        "assign": ["=", "<-"],
+        "punct": [",", ";", "."],
+        "op": r"!%&/+-*:<>^",
+        "brac_op": r"([{",
+        "brac_cl": r")]}",
+        "keyword": [
+            "for",
+            "while",
+            "foreach",
+            "as",
+            "in",
+            "if",
+            "else",
+            "elif",
+            "and",
+            "or",
+            "not",
+            "return",
+        ],
+    }
+    tokens, tags = tokenize(text)
+    # first: tag individual tokens
+    tags = tag_individuals(tokens, tags, known_default)
+
+    # merge and tag again to catch multiple character assignment etc.
+    tokens, tags = merge_adjacent(tokens, tags, known_default)
+
+    # rename brackets
+    tags, brac_level = bracket_levels(tags)
+
+    # second: context
+    tags = tag_functions(tokens, tags)
+    tags = tag_variables(tokens, tags)
+
+    tokens, tags = merge_adjacent(tokens, tags, known_default)
+    EXCLUDE_TAGS = ("unk", "wsp")
+    html_text = tokens_to_html(tokens, tags, EXCLUDE_TAGS)
+    classes = tuple(sorted(set(tags)))
+
+    css_path = "_style.css"
+    css_link = f'<link rel="stylesheet" type="text/css" href="{css_path}">'
+    final_html = f"""
+<head>
+    {css_link}
+</head>
+<body>
+{html_text}
+</body>
+"""
+
+    return final_html, classes
