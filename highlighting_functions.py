@@ -93,8 +93,19 @@ def tokenize(text) -> tuple[list[str], list[str]]:
     return tokens, tags
 
 
-def tag_individuals(tokens, tags, known_str: dict = None) -> list[str]:
-    """Tag individual tokens based on known symbols/strings"""
+def tag_individuals(
+    tokens: list[str], tags: list[str], known_str: dict = None
+) -> list[str]:
+    """Tag individual tokens based on known symbols/strings
+
+    ## Parameters
+    - tokens
+    - tags
+    - known_str: a dict of individual tokens that can be tagged without context.
+
+    ## Returns
+    - tokens: updated tokens"""
+
     for i, token in enumerate(tokens):
         if token.isdigit():
             tags[i] = "num"
@@ -112,7 +123,7 @@ def tag_individuals(tokens, tags, known_str: dict = None) -> list[str]:
 
 
 def tag_functions(tokens, tags):
-    """Find and tag function names, based on '('."""
+    """Find and tag function names, based on ``(``."""
     functions = []
     for i, token in enumerate(tokens[:-2]):
         if tags[i] == "unk" and tokens[i + 1] == "(":
