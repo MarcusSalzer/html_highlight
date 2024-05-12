@@ -1,8 +1,15 @@
 import regex as re
 
 
-def tokenize(text) -> list[str]:
-    """Tokenize a code snippet. Also tag string literals and numbers."""
+def tokenize(text) -> tuple[list[str], list[str]]:
+    """Tokenize a code snippet. Also tag string literals and numbers.
+
+    ## Parameters
+    - text (str) a piece of source code
+
+    ## Returns
+    - tokens (list) tokenized text
+    - tags (list) tags for string literals and numbers"""
     # Possible string delimiters
     string_delims = {'"', "'", '"""', "'''"}
 
@@ -182,7 +189,7 @@ def merge_adjacent(tokens, tags, known_str=None):
     ## Parameters
     - tokens
     - tags"""
-    
+
     if not known_str:
         known_str = {}
     tmp = []
