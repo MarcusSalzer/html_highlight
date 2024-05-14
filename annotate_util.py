@@ -17,6 +17,9 @@ def main():
     with open("data/known_minimal.json", "r") as f:
         known_minimal = json.load(f)
 
+    # load tag names and aliases
+    aliases = load_aliases("data/class_aliases.json")
+
     # do basic tagging
     tokens, tags = hf.tokenize(text)
     tags = hf.tag_individuals(tokens, tags, known_minimal)
@@ -29,6 +32,7 @@ def main():
     print(tags_new)
     # TODO: translating tag name utility
     # TODO: save results
+
 
 def annotate_loop(tokens, tags):
     """Successively ask for input to annotate unknown tokens."""
@@ -44,11 +48,33 @@ def annotate_loop(tokens, tags):
         else:
             print(token + padding + ": " + tags[i])
 
-    print("-"*30)
+    print("-" * 30)
     accept = input("accept annotation?(y/n)").lower()
 
     if accept == "y":
         return tags_new
+
+
+def simplify_tags(tags: str | list[str], aliases: dict[str, list[str]]):
+    """Replace aliases to convention"""
+    tags_out = []
+    for tag in tags:
+        if tag in aliases.keys():
+            tags_out.append(tag)
+        else:
+            print("TODO")  # TODO
+
+
+def load_aliases(path: str):
+    """Load alias dictionary for tags and check uniqueness."""
+    with open(path) as f:
+        class_aliases: dict = json.load(f)
+
+    alias_list = [a for als in class_aliases.values() for a in als]
+
+    assert len(alias_list) == len(set(alias_list)), "Duplicate aliases"
+
+    return class_aliases
 
 
 if __name__ == "__main__":

@@ -1,0 +1,50 @@
+{
+    "assign": [
+        "a",
+        "as",
+        "ass"
+    ],
+    "punct": [
+        "pu",
+        "punctuation"
+    ],
+    "op": [
+        "o",
+        "operator",
+        "oper"
+    ],
+    "br_op": [
+        "bro",
+        "bo"
+    ],
+    "br_cl": [
+        "brc",
+        "bc"
+    ],
+    "func": [
+        "f",
+        "fu",
+        "fun",
+        "function"
+    ],
+    "var": [
+        "v",
+        "va",
+        "variable"
+    ],
+    "num": [
+        "n",
+        "nu",
+        "number"
+    ],
+    "str": [
+        "s",
+        "st",
+        "string"
+    ],
+    "com": [
+        "c",
+        "co",
+        "comment"
+    ]
+}
