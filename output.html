@@ -1,21 +1,59 @@
+
 <head>
     <link rel="stylesheet" type="text/css" href="_style.css">
 </head>
-
 <body>
-    <div class="code-snippet"><span class="var">text</span> <span class="assign">=</span> self<span
-            class="punct">.</span><span class="func">pre_process</span><span class="brac1">(</span><span
-            class="var">text</span><span class="brac1">)</span><br>
-        variables<span class="punct">,</span> <span class="var">p_variable</span> <span class="assign">=</span>
-        self<span class="punct">.</span><span class="func">find_variables</span><span class="brac1">(</span><span
-            class="var">text</span><span class="brac1">)</span><br>
-        <span class="keyword">if</span> variables<span class="op">:</span><br>
-        &nbsp; &nbsp; self<span class="punct">.</span><span class="var">patterns_find</span><span
-            class="brac1">[</span><span class="str">&quot;variable&quot;</span><span class="brac1">]</span> <span
-            class="assign">=</span> <span class="var">p_variable</span><br>
-        <br>
-        <span class="var">text</span> <span class="assign">=</span> self<span class="punct">.</span><span
-            class="func">syntax_highlight</span><span class="brac1">(</span><span class="var">text</span><span
-            class="brac1">)</span>
-    </div>
+<div class="code-snippet">def <span class="func">simplify_tags</span><span class="brac1">(</span><span class="var">tags</span><span class="op">:</span> str | list<span class="brac2">[</span>str<span class="brac2">]</span><span class="punct">,</span> aliases<span class="op">:</span> <span class="var">dict</span><span class="brac2">[</span>str<span class="punct">,</span> list<span class="brac3">[</span>str<span class="brac3">]</span><span class="brac2">]</span><span class="punct">,</span> <span class="var">verbose</span><span class="assign">=</span>False<span class="brac1">)</span><span class="op">:</span>
+<br>
+&nbsp; &nbsp; &quot;&quot;&quot;Replace aliases to convention&quot;&quot;&quot;
+<br>
+&nbsp; &nbsp; <span class="var">tags_out</span> <span class="assign">=</span> <span class="brac1">[</span><span class="brac1">]</span>
+<br>
+&nbsp; &nbsp; <span class="keyword">for</span> <span class="var">tag</span> <span class="keyword">in</span> <span class="var">tags</span><span class="op">:</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; <span class="var">name</span> <span class="assign">=</span> <span class="str">&quot;unk&quot;</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; <span class="keyword">if</span> <span class="var">tag</span> <span class="keyword">in</span> aliases<span class="punct">.</span><span class="func">keys</span><span class="brac1">(</span><span class="brac1">)</span><span class="op">:</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="var">name</span> <span class="assign">=</span> <span class="var">tag</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; <span class="keyword">else</span><span class="op">:</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="keyword">for</span> k <span class="keyword">in</span> aliases<span class="punct">.</span><span class="func">keys</span><span class="brac1">(</span><span class="brac1">)</span><span class="op">:</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="keyword">if</span> <span class="var">tag</span> <span class="keyword">in</span> aliases<span class="brac1">[</span>k<span class="brac1">]</span><span class="op">:</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="var">name</span> <span class="assign">=</span> k
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; <span class="keyword">if</span> <span class="var">verbose</span><span class="op">:</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="func">print</span><span class="brac1">(</span><span class="var">tag</span><span class="punct">,</span> <span class="var">name</span><span class="brac1">)</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; <span class="var">tags_out</span><span class="punct">.</span><span class="func">append</span><span class="brac1">(</span><span class="var">name</span><span class="brac1">)</span>
+<br>
+&nbsp; &nbsp; <span class="keyword">return</span> <span class="var">tags_out</span>
+<br>
+
+<br>
+
+<br>
+def <span class="func">load_aliases</span><span class="brac1">(</span><span class="var">path</span><span class="op">:</span> str<span class="brac1">)</span> -&gt; <span class="var">dict</span><span class="op">:</span>
+<br>
+&nbsp; &nbsp; &quot;&quot;&quot;Load alias dictionary for tags and check uniqueness.&quot;&quot;&quot;
+<br>
+&nbsp; &nbsp; with <span class="func">open</span><span class="brac1">(</span><span class="var">path</span><span class="brac1">)</span> <span class="keyword">as</span> <span class="var">f</span><span class="op">:</span>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; class_aliases<span class="op">:</span> <span class="var">dict</span> <span class="assign">=</span> json<span class="punct">.</span><span class="func">load</span><span class="brac1">(</span><span class="var">f</span><span class="brac1">)</span>
+<br>
+
+<br>
+&nbsp; &nbsp; <span class="var">alias_list</span> <span class="assign">=</span> <span class="brac1">[</span>a <span class="keyword">for</span> als <span class="keyword">in</span> class_aliases<span class="punct">.</span><span class="func">values</span><span class="brac2">(</span><span class="brac2">)</span> <span class="keyword">for</span> a <span class="keyword">in</span> als<span class="brac1">]</span>
+<br>
+
+<br>
+&nbsp; &nbsp; assert <span class="func">len</span><span class="brac1">(</span><span class="var">alias_list</span><span class="brac1">)</span> == <span class="func">len</span><span class="brac1">(</span><span class="func">set</span><span class="brac2">(</span><span class="var">alias_list</span><span class="brac2">)</span><span class="brac1">)</span><span class="punct">,</span> <span class="str">&quot;Duplicate aliases&quot;</span>
+<br>
+
+<br>
+&nbsp; &nbsp; <span class="keyword">return</span> class_aliases</div>
 </body>

@@ -25,6 +25,11 @@
         "fun",
         "function"
     ],
+    "kwd": [
+        "k",
+        "kw",
+        "keyword"
+    ],
     "num": [
         "n",
         "nu",
@@ -43,6 +48,11 @@
         "s",
         "st",
         "string"
+    ],
+    "unk": [
+        "u",
+        "un",
+        "unknown"
     ],
     "var": [
         "v",

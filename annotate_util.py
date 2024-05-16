@@ -1,15 +1,15 @@
-import sys
 import json
 import os
-import highlighting_functions as hf
+import text_functions as tf
 
-example_file = "data/examples/ex01.py"
+EXAMPLE_DIR = "data/examples"
+OUTPUT_DIR = "data/annotated_codes"
 
 
 def main():
-    # load example to annotate
-    with open(example_file) as f:
-        text = f.read()
+    text, example_name = load_example()
+
+    print("-" * 30 + "\n")
 
     print(text)
 
@@ -21,14 +21,21 @@ def main():
     aliases = load_aliases("data/class_aliases_str.json")
 
     # do basic tagging
-    tokens, tags = hf.tokenize(text)
-    tags = hf.tag_individuals(tokens, tags, known_minimal)
-    print(tokens)
-    print(tags)
+    tokens, tags = tf.tokenize(text)
+    tags = tf.tag_individuals(tokens, tags, known_minimal)
+    tokens, tags = tf.merge_adjacent(tokens, tags, known_minimal)
+    tags = tf.tag_functions(tokens, tags)
+    tags = tf.tag_variables(tokens, tags)
+    tags = simplify_tags(tags, aliases)
 
     # annotate unknowns
     tags_new = annotate_loop(tokens, tags)
     tags_new = simplify_tags(tags_new, aliases)
+
+    changed = [False] * len(tags)
+    for i, (old, new) in enumerate(zip(tags, tags_new, strict=True)):
+        if old != new:
+            changed[i] = True
 
     print("-" * 30 + "\n")
     for x in zip(tokens, tags_new, tags, strict=True):
@@ -37,10 +44,8 @@ def main():
     print("-" * 30 + "\n")
     accept = input("accept annotation?(y/n)").lower()
 
-    # if accept == "y":
-
-    print(tags_new)
-    # TODO: save results
+    if accept == "y":
+        save_annotated(tokens, tags_new, changed, example_name)
 
 
 def annotate_loop(tokens: list[str], tags: list[str], fill_copies=True):
@@ -102,6 +107,40 @@ def load_aliases(path: str) -> dict:
     assert len(alias_list) == len(set(alias_list)), "Duplicate aliases"
 
     return class_aliases
+
+
+def load_example() -> tuple[str, str]:
+    example_files = os.listdir(EXAMPLE_DIR)
+    out_files = os.listdir(OUTPUT_DIR)
+
+    todo_examples = []
+    for ex_f in example_files:
+        nam, typ = ex_f.split(".")
+        name = f"{nam}_{typ}.json"
+        if name not in out_files:
+            todo_examples.append(ex_f)
+
+    assert len(todo_examples) > 0, "Out of examples"
+
+    print("examples to do:", len(todo_examples))
+
+    example_name = todo_examples[0]
+
+    example_path = os.path.join(EXAMPLE_DIR, example_name)
+
+    # load example to annotate
+    with open(example_path) as f:
+        text = f.read()
+    return text, example_name
+
+
+def save_annotated(
+    tokens: list[str], tags: list[str], changed: list[bool], example_name: str
+):
+    nam, typ = example_name.split(".")
+    save_path = os.path.join(OUTPUT_DIR, f"{nam}_{typ}.json")
+    with open(save_path, "w") as f:
+        json.dump(dict(type=typ, tokens=tokens, tags=tags, changed=changed), f)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import pyperclip as pc
-from highlighting_functions import highlight_code
+from text_functions import highlight_code
 
 # highlight code in clipboard
 try:
