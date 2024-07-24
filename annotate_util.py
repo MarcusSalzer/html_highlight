@@ -7,6 +7,8 @@ OUTPUT_DIR = "data/annotated_codes"
 
 
 def main():
+    os.system("cls" if os.name == "nt" else "clear")
+
     text, example_name = load_example()
 
     print("-" * 30 + "\n")
@@ -65,7 +67,7 @@ def annotate_loop(tokens: list[str], tags: list[str], fill_copies=True):
     print("\nAnnotating:\n")
     for i, token in enumerate(tokens):
         # for aligned print
-        padding = " " * (max_length - len(token))
+        padding = " " * (max_length - len(repr(token)))
         if tags_new[i] == "unk":
             tags_new[i] = input(repr(token) + padding + "? ")
 
@@ -110,12 +112,19 @@ def load_aliases(path: str) -> dict:
 
 
 def load_example() -> tuple[str, str]:
-    example_files = os.listdir(EXAMPLE_DIR)
+    example_files = []
+    for root, _, files in os.walk(EXAMPLE_DIR):
+        for file in files:
+            fp = os.path.join(root, file)
+            example_files.append(os.path.normpath(fp))
+
+
     out_files = os.listdir(OUTPUT_DIR)
 
     todo_examples = []
     for ex_f in example_files:
-        nam, typ = ex_f.split(".")
+        filename = os.path.split(ex_f)[-1]
+        nam, typ = filename.split(".")
         name = f"{nam}_{typ}.json"
         if name not in out_files:
             todo_examples.append(ex_f)
@@ -124,14 +133,13 @@ def load_example() -> tuple[str, str]:
 
     print("examples to do:", len(todo_examples))
 
-    example_name = todo_examples[0]
-
-    example_path = os.path.join(EXAMPLE_DIR, example_name)
+    example_path = todo_examples[0]
+    print("example:", example_path)
 
     # load example to annotate
     with open(example_path) as f:
         text = f.read()
-    return text, example_name
+    return text, os.path.split(example_path)[-1]
 
 
 def save_annotated(
@@ -141,6 +149,7 @@ def save_annotated(
     save_path = os.path.join(OUTPUT_DIR, f"{nam}_{typ}.json")
     with open(save_path, "w") as f:
         json.dump(dict(type=typ, tokens=tokens, tags=tags, changed=changed), f)
+    print("Done! Saved annotations")
 
 
 if __name__ == "__main__":

@@ -63,5 +63,9 @@
         "ws",
         "w",
         "whitespace"
+    ],
+    "obj": [
+        "ob",
+        "object"
     ]
 }
