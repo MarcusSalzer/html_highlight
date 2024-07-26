@@ -1,0 +1,71 @@
+{
+    "assign": [
+        "a",
+        "as",
+        "ass"
+    ],
+    "br_cl": [
+        "brc",
+        "bc",
+        "brac_cl"
+    ],
+    "br_op": [
+        "bro",
+        "bo",
+        "brac_op"
+    ],
+    "com": [
+        "c",
+        "co",
+        "comment"
+    ],
+    "func": [
+        "f",
+        "fu",
+        "fun",
+        "function"
+    ],
+    "kwd": [
+        "k",
+        "kw",
+        "keyword"
+    ],
+    "num": [
+        "n",
+        "nu",
+        "number"
+    ],
+    "op": [
+        "o",
+        "operator",
+        "oper"
+    ],
+    "punct": [
+        "pu",
+        "punctuation"
+    ],
+    "str": [
+        "s",
+        "st",
+        "string"
+    ],
+    "unk": [
+        "u",
+        "un",
+        "unknown"
+    ],
+    "var": [
+        "v",
+        "va",
+        "variable"
+    ],
+    "wsp": [
+        "ws",
+        "w",
+        "whitespace"
+    ],
+    "obj": [
+        "ob",
+        "object"
+    ]
+}
