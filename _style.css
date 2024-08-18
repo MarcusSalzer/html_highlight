@@ -1,11 +1,10 @@
-.code-snippet {
-    background-color: #292a33;
-    padding: 10px;
-    border-radius: 0px;
-    font-family: monospace;
-    color: #ddd;
-    max-width: fit-content;
+body{
+    background-color: rgb(26, 26, 26);
+    color: white;
 }
+
+/* .code-snippet{
+} */
 
 .assign {
     color: #66bcff;
@@ -27,7 +26,7 @@
     color: #a1c4ff;
 }
 
-.keyword {
+.kwd {
     color: #00b274;
 }
 

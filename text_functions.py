@@ -1,4 +1,5 @@
 import regex as re
+import json
 
 
 def tokenize(text) -> tuple[list[str], list[str]]:
@@ -172,7 +173,7 @@ def tag_variables(tokens, tags):
     return tags
 
 
-def bracket_levels(tags):
+def bracket_levels(tags: list[str]):
     """Rename bracket tags from brac_op/cl to brac_num.
 
     ## Returns
@@ -181,12 +182,12 @@ def bracket_levels(tags):
     brac_level = []
     current_level = 0
     for i in range(len(tags)):
-        if tags[i] == "brac_op":
+        if tags[i] == "br_op":
             brac_level.append(current_level)
             current_level += 1
-            tags[i] = f"brac{current_level}"
-        elif tags[i] == "brac_cl":
-            tags[i] = f"brac{current_level}"
+            tags[i] = f"br{current_level}"
+        elif tags[i] == "br_cl":
+            tags[i] = f"br{current_level}"
             current_level -= 1
             brac_level.append(current_level)
         else:
@@ -246,7 +247,10 @@ def html_specials(text: str) -> str:
 
 
 def tokens_to_html(tokens, tags, exclude_tags=("wsp", "unk")):
-    """Format text with html spans."""
+    """Format text with html spans.
+    ## Returns
+    - text (str): a div with class 'code-snippet'.
+    """
 
     tokens_with_tags = []
     for token, tag in zip(tokens, tags):
@@ -255,10 +259,12 @@ def tokens_to_html(tokens, tags, exclude_tags=("wsp", "unk")):
         if tag in exclude_tags:
             tokens_with_tags.append(token_text)
         else:
-            tokens_with_tags.append(f"""<span class="{tag}">{token_text}</span>""")
+            tokens_with_tags.append(
+                f"""<span class="{tag}" title="{tag}">{token_text}</span>"""
+            )
 
     text = "".join(tokens_with_tags)
-    return f"""<div class="code-snippet">{text}</div>"""
+    return f"""<code class="code-snippet">{text}</code>"""
 
 
 def highlight_code(text: str, css_path="_style.css"):
@@ -323,3 +329,22 @@ def highlight_code(text: str, css_path="_style.css"):
 """
 
     return final_html, classes
+
+
+def make_legend_html():
+    """Load class names and display in a list"""
+    try:
+        with open("data/class_aliases_str.json") as f:
+            classes: dict = json.load(f)
+
+        classnames = classes.keys()
+    except FileNotFoundError:
+        return "<section><p>Could not find classnames.</p></section>"
+    except AttributeError:
+        return "<section><p>Invalid class alias JSON.</p></section>"
+
+    lines = []
+    for c in classnames:
+        lines.append(f"""<li><span class="{c}" title="{c}">{c}</span></li>""")
+    lines = "\n".join(lines)
+    return f"""<section><h2>Legend</h2><ul>{lines}</ul></section>"""
