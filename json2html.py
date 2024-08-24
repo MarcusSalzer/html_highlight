@@ -24,7 +24,6 @@ changed: list[bool] = data["changed"]
 print(f"Loaded {ex}")
 
 tags, _ = bracket_levels(tags)  # TODO?
-print(_)
 
 title = f"<h2>{ex.split('.')[0]}</h2>\n"
 html_text = tokens_to_html(tokens, tags)

@@ -3,8 +3,10 @@ body{
     color: white;
 }
 
-/* .code-snippet{
-} */
+.code-snippet{
+    background-color: rgb(22, 22, 26);
+    display: block;
+}
 
 .assign {
     color: #66bcff;

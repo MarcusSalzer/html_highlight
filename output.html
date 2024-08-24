@@ -5,19 +5,19 @@
 <body>
 <h2>ex03_py</h2>
 
-<code class="code-snippet"><span class="kwd" title="kwd">def</span> <span class="func" title="func">annotate_loop</span><span class="br1" title="br1">(</span><span class="var" title="var">tokens</span><span class="punct" title="punct">:</span> <span class="kwd" title="kwd">list</span><span class="br2" title="br2">[</span><span class="kwd" title="kwd">str</span><span class="br2" title="br2">]</span><span class="punct" title="punct">,</span> <span class="var" title="var">tags</span><span class="punct" title="punct">:</span> <span class="kwd" title="kwd">list</span><span class="br2" title="br2">[</span><span class="kwd" title="kwd">str</span><span class="br2" title="br2">]</span><span class="punct" title="punct">,</span> <span class="var" title="var">fill_copies</span><span class="assign" title="assign">=</span><span class="kwd" title="kwd">True</span><span class="br1" title="br1">)</span><span class="punct" title="punct">:</span><br>
-&nbsp; &nbsp; <span class="str" title="str">&quot;&quot;&quot;Successively ask for input to annotate unknown tokens.<br>
-<br>
-&nbsp; &nbsp; ## Parameters<br>
-&nbsp; &nbsp; - tokens<br>
-&nbsp; &nbsp; - tags<br>
-&nbsp; &nbsp; - fill_copies (bool): Tag all occurrences of a token at once.<br>
-<br>
-&nbsp; &nbsp; ## Returns<br>
-&nbsp; &nbsp; - tags_new (list[str]): New list of tags<br>
-&nbsp; &nbsp; &quot;&quot;&quot;</span><br>
-&nbsp; &nbsp; <span class="var" title="var">max_length</span> <span class="assign" title="assign">=</span> <span class="num" title="num">20</span><br>
-&nbsp; &nbsp; <span class="var" title="var">tags_new</span> <span class="assign" title="assign">=</span> <span class="var" title="var">tags</span><span class="punct" title="punct">.</span><span class="func" title="func">copy</span><span class="br1" title="br1">(</span><span class="br1" title="br1">)</span></code>
+<pre><code class="code-snippet"><span class="kwd" title="kwd">def</span> <span class="func" title="func">annotate_loop</span><span class="br1" title="br1">(</span><span class="var" title="var">tokens</span><span class="punct" title="punct">:</span> <span class="kwd" title="kwd">list</span><span class="br2" title="br2">[</span><span class="kwd" title="kwd">str</span><span class="br2" title="br2">]</span><span class="punct" title="punct">,</span> <span class="var" title="var">tags</span><span class="punct" title="punct">:</span> <span class="kwd" title="kwd">list</span><span class="br2" title="br2">[</span><span class="kwd" title="kwd">str</span><span class="br2" title="br2">]</span><span class="punct" title="punct">,</span> <span class="var" title="var">fill_copies</span><span class="assign" title="assign">=</span><span class="kwd" title="kwd">True</span><span class="br1" title="br1">)</span><span class="punct" title="punct">:</span>
+    <span class="str" title="str">&quot;&quot;&quot;Successively ask for input to annotate unknown tokens.
+
+    ## Parameters
+    - tokens
+    - tags
+    - fill_copies (bool): Tag all occurrences of a token at once.
+
+    ## Returns
+    - tags_new (list[str]): New list of tags
+    &quot;&quot;&quot;</span>
+    <span class="var" title="var">max_length</span> <span class="assign" title="assign">=</span> <span class="num" title="num">20</span>
+    <span class="var" title="var">tags_new</span> <span class="assign" title="assign">=</span> <span class="var" title="var">tags</span><span class="punct" title="punct">.</span><span class="func" title="func">copy</span><span class="br1" title="br1">(</span><span class="br1" title="br1">)</span></code></pre>
 <section><h2>Legend</h2><ul><li><span class="assign" title="assign">assign</span></li>
 <li><span class="br_cl" title="br_cl">br_cl</span></li>
 <li><span class="br_op" title="br_op">br_op</span></li>

@@ -241,15 +241,13 @@ def html_specials(text: str) -> str:
     text = re.sub(r">", r"&gt;", text)
     text = re.sub(r'"', r"&quot;", text)
     text = re.sub(r"'", r"&apos;", text)
-    text = re.sub(r"  ", r"&nbsp; ", text)
-    text = re.sub(r"\n", r"<br>\n", text)
     return text
 
 
 def tokens_to_html(tokens, tags, exclude_tags=("wsp", "unk")):
     """Format text with html spans.
     ## Returns
-    - text (str): a div with class 'code-snippet'.
+    - text (str): HTML containing a `<pre>` with a `<code class="code-snippet">`.
     """
 
     tokens_with_tags = []
@@ -264,7 +262,7 @@ def tokens_to_html(tokens, tags, exclude_tags=("wsp", "unk")):
             )
 
     text = "".join(tokens_with_tags)
-    return f"""<code class="code-snippet">{text}</code>"""
+    return f"""<pre><code class="code-snippet">{text} </code></pre>"""
 
 
 def highlight_code(text: str, css_path="_style.css"):

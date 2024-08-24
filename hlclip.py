@@ -11,3 +11,4 @@ out_text, classes = highlight_code(in_text)
 
 print(out_text)
 pc.copy(out_text)
+print()
