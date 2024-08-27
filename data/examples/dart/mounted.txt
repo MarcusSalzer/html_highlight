@@ -1,0 +1,11 @@
+onPressed: () async {
+  await Provider.of<DatasetIndexProvider>(context,
+          listen: false)
+      .copyDataset(dataset);
+
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Copied ${dataset['name']}")),
+    );
+  }
+}
