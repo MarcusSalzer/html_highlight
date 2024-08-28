@@ -1,6 +1,6 @@
 import os
 import json
-from text_functions import tokens_to_html, make_legend_html, bracket_levels
+from src.text_functions import tokens_to_html, make_legend_html, bracket_levels
 
 
 """

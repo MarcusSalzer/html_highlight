@@ -103,6 +103,7 @@ def tag_individuals(
     - tokens
     - tags
     - known_str: a dict of individual tokens that can be tagged without context.
+        - if None: only tag `num` and `wsp`.
 
     ## Returns
     - tokens: updated tokens"""

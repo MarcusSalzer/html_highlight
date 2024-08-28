@@ -1,6 +1,6 @@
 import json
 import os
-import text_functions as tf
+import src.text_functions as tf
 
 EXAMPLE_DIR = "data/examples"
 OUTPUT_DIR = "data/annotated_codes"
@@ -118,9 +118,10 @@ def load_example() -> tuple[str, str]:
             fp = os.path.join(root, file)
             example_files.append(os.path.normpath(fp))
 
-
     out_files = os.listdir(OUTPUT_DIR)
 
+    # TODO infer typ
+    raise NotImplementedError("infer type from folder. not extension!")
     todo_examples = []
     for ex_f in example_files:
         filename = os.path.split(ex_f)[-1]
