@@ -1,0 +1,4 @@
+
+let sum <- 0
+for k in 1:10:
+    sum += k

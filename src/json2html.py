@@ -41,5 +41,5 @@ final_html = f"""
 </body>
 """
 
-with open("output.html", "w") as f:
+with open("output.html", "w", encoding="utf-8") as f:
     f.write(final_html)

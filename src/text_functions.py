@@ -1,8 +1,11 @@
+"""OLD THINGS"""
+
 import regex as re
 import json
 
 
 def tokenize(text) -> tuple[list[str], list[str]]:
+    print("WARNING: deprecated")
     """Tokenize a code snippet. Also tag string literals and numbers.
 
     ## Parameters
