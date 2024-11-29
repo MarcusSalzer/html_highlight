@@ -1,0 +1,5 @@
+figure(1)
+subplot(231)
+scatter(data.x, data.y, 20, data.scale, 'filled', ...
+  'markeredgecolor', 'k')
+axis xy tight; hold on

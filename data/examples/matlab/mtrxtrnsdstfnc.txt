@@ -1,0 +1,3 @@
+D_kg = distance_matrix(points_k,points_grid);
+D_gk = D_kg';
+D_gg = distance_matrix(points_grid);

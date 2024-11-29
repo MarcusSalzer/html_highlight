@@ -1,0 +1,2 @@
+yhat_v = mu_v + Sigma_vk*(Sigma_kk\(Y-mu_k));
+Sigma_prediction = Sigma_vv - Sigma_vk * (Sigma_kk\Sigma_kv);

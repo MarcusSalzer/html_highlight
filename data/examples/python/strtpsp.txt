@@ -1,0 +1,6 @@
+a = "hej"
+b = 'a ?str + o/ operators%"
+z = f"abc{a}. 3"
+m = """...
+...
+"""

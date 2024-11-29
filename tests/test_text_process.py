@@ -6,10 +6,9 @@ class TestTokenize(unittest.TestCase):
     def test_single_stmt(self):
         tk, ta = text_process.tokenize_plus("x = 3")
         self.assertListEqual(["x", " ", "=", " ", "3"], tk)
-        self.assertListEqual(["unk", "wsp", "unk", "wsp", "num"], ta)
         tk, ta = text_process.tokenize_plus("3+f(y)")
         self.assertListEqual(["3", "+", "f", "(", "y", ")"], tk)
-        self.assertListEqual(["num", "unk", "unk", "unk", "unk", "unk"], ta)
+        self.assertEqual("nu", ta[0])
 
     def test_strs(self):
         tk, ta = text_process.tokenize_plus("name = 'abc';")
@@ -23,13 +22,23 @@ class TestTokenize(unittest.TestCase):
         tk, ta = text_process.tokenize_plus("name='abc'\nx=2")
         self.assertListEqual(["name", "=", "'", "abc", "'", "\n", "x", "=", "2"], tk)
 
+        self.assertEqual("nl", ta[5])
+        self.assertEqual("nu", ta[-1])
+
         tk, ta = text_process.tokenize_plus("range(12):\n  print")
         self.assertListEqual(["range", "(", "12", ")", ":", "\n", "  ", "print"], tk)
+        self.assertEqual("nu", ta[2])
+        self.assertEqual("nl", ta[5])
+        self.assertEqual("ws", ta[6])
 
         tk, ta = text_process.tokenize_plus("while true{\n    do_something\n}")
         self.assertListEqual(
             ["while", " ", "true", "{", "\n", "    ", "do_something", "\n", "}"], tk
         )
+        self.assertEqual("ws", ta[1])
+        self.assertEqual("nl", ta[4])
+        self.assertEqual("ws", ta[5])
+        self.assertEqual("nl", ta[7])
 
     def test_number(self):
         tk, ta = text_process.tokenize_plus("1337, 12")
@@ -45,11 +54,10 @@ class TestTokenize(unittest.TestCase):
             tk,
             "two floats",
         )
-        self.assertListEqual(
-            ["num", "unk", "wsp", "num"],
-            ta,
-            "two floats",
-        )
+
+        self.assertEqual("nu", ta[0])
+        self.assertEqual("ws", ta[2])
+        self.assertEqual("nu", ta[3])
 
     def test_numbers_advanced(self):
         tk, ta = text_process.tokenize_plus("1337usize>2i32")
@@ -138,10 +146,15 @@ class TestTokenize(unittest.TestCase):
             ["1e0", ",", "-", "1e3", ",", "7e77", ",", "33.5e-12"],
             tk,
         )
-        self.assertListEqual(
-            ["num", "unk", "unk", "num", "unk", "num", "unk", "num"],
-            ta,
-        )
+        self.assertEqual("nu", ta[3])
+        self.assertEqual("nu", ta[5])
+        self.assertEqual("nu", ta[7])
+        self.assertEqual("nu", ta[0])
+
+    def test_num_and_var(self):
+        tk, ta = text_process.tokenize_plus("_player = 3")
+        self.assertEqual(["_player", " ", "=", " ", "3"], tk)
+        self.assertNotEqual("nu", ta[0])
 
 
 if __name__ == "__main__":

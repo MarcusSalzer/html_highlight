@@ -1,56 +1,93 @@
 import json
 import os
-import src.text_functions as tf
+import sys
+from glob import glob
+import polars as pl
+import regex as re
 
-EXAMPLE_DIR = "data/examples"
-OUTPUT_DIR = "data/annotated_codes"
+sys.path.append(".")
+from src import text_process
+
+
+EXAMPLE_DIR = os.path.join("data", "examples")
+OUTPUT_DIR = os.path.join("data", "annotated_codes")
 
 
 def main():
     os.system("cls" if os.name == "nt" else "clear")
 
-    text, example_name = load_example()
+    # get example files
+    files = get_example_files()
+    name, lang, _ = files.sort("size").row(0)
+    with open(os.path.join(EXAMPLE_DIR, lang, name + ".txt")) as f:
+        text = f.read()
 
-    print("-" * 30 + "\n")
+    print("-" * 15 + f" {name} ({lang}) " + "-" * 15 + "\n")
 
     print(text)
-
-    # load known (basic) individual tokens
-    with open("data/known_minimal.json", "r") as f:
-        known_minimal = json.load(f)
 
     # load tag names and aliases
     aliases = load_aliases("data/class_aliases_str.json")
 
-    # do basic tagging
-    tokens, tags = tf.tokenize(text)
-    tags = tf.tag_individuals(tokens, tags, known_minimal)
-    tokens, tags = tf.merge_adjacent(tokens, tags, known_minimal)
-    tags = tf.tag_functions(tokens, tags)
-    tags = tf.tag_variables(tokens, tags)
-    tags = simplify_tags(tags, aliases)
+    # basic initial tagging
+    tokens, tags = text_process.tokenize_plus(text)
+
+    tags = [simplify_tag(t, aliases) for t in tags]
 
     # annotate unknowns
-    tags_new = annotate_loop(tokens, tags)
-    tags_new = simplify_tags(tags_new, aliases)
-
-    changed = [False] * len(tags)
-    for i, (old, new) in enumerate(zip(tags, tags_new, strict=True)):
-        if old != new:
-            changed[i] = True
+    tags_new = annotate_loop(tokens, tags, aliases, fill_copies=False)
 
     print("-" * 30 + "\n")
-    for x in zip(tokens, tags_new, tags, strict=True):
-        if "unk" in x:
-            print(x[0], ":", x[1])
+    # print tokens that might have changed
+    for token, tag_new, tag_old in zip(tokens, tags_new, tags, strict=True):
+        if tag_new == "uk" or tag_old == "uk":
+            # print last alias (most verbose)
+            print(f"{token:<30} -> {aliases[tag_new][-1]}")
     print("-" * 30 + "\n")
     accept = input("accept annotation?(y/n)").lower()
 
     if accept == "y":
-        save_annotated(tokens, tags_new, changed, example_name)
+        save_path = os.path.join(OUTPUT_DIR, f"{name}_{lang}.json")
+        with open(save_path, "w") as f:
+            json.dump(dict(tokens=tokens, tags=tags), f)
+        print("Done! Saved annotations")
 
 
-def annotate_loop(tokens: list[str], tags: list[str], fill_copies=True):
+def get_example_files():
+    files = glob("**/*txt", root_dir=EXAMPLE_DIR)
+    done_files = os.listdir(OUTPUT_DIR)
+
+    print(f"found {len(files)} files")
+    print(f"already done {len(done_files)} files")
+
+    file_data = []
+    for f in files:
+        lang, name = re.split(r"[./\\]", f)[:2]
+        size = os.path.getsize(os.path.join(EXAMPLE_DIR, f))
+        file_data.append([name, lang, size])
+
+    done_data = []
+    for f in done_files:
+        name, lang = re.split(r"[._]", f)[:2]
+        done_data.append([name, lang])
+
+    done_df = pl.DataFrame(done_data, schema=["name", "lang"], orient="row")
+
+    files_df = pl.DataFrame(
+        file_data,
+        schema={"name": pl.String, "lang": pl.String, "size": pl.Int32},
+        orient="row",
+    )
+
+    df = files_df.join(done_df, ["name", "lang"], how="anti")
+    print(f"{len(df)} files left")
+
+    return df
+
+
+def annotate_loop(
+    tokens: list[str], tags: list[str], aliases: dict[str, list[str]], fill_copies=True
+):
     """Successively ask for input to annotate unknown tokens.
 
     ## Parameters
@@ -61,15 +98,14 @@ def annotate_loop(tokens: list[str], tags: list[str], fill_copies=True):
     ## Returns
     - tags_new (list[str]): New list of tags
     """
-    max_length = 20
     tags_new = tags.copy()
 
     print("\nAnnotating:\n")
     for i, token in enumerate(tokens):
         # for aligned print
-        padding = " " * (max_length - len(repr(token)))
-        if tags_new[i] == "unk":
-            tags_new[i] = input(repr(token) + padding + "? ")
+        if tags_new[i] == "uk":
+            t = input(f"{repr(token):<30}: ")
+            tags_new[i] = simplify_tag(t, aliases)
 
             if fill_copies:
                 for j, t2 in enumerate(tokens):
@@ -77,26 +113,31 @@ def annotate_loop(tokens: list[str], tags: list[str], fill_copies=True):
                         tags_new[j] = tags_new[i]
 
         else:
-            print(repr(token) + padding + ": " + tags_new[i])
+            # in already set, print verbose tag name
+            print(f"{repr(token):<30}: " + aliases[tags_new[i]][-1])
 
     return tags_new
 
 
-def simplify_tags(tags: str | list[str], aliases: dict[str, list[str]], verbose=False):
+def simplify_tag(tag: str, aliases: dict[str, list[str]], verbose=False):
     """Replace aliases to convention"""
-    tags_out = []
-    for tag in tags:
-        name = "unk"
-        if tag in aliases.keys():
-            name = tag
-        else:
-            for k in aliases.keys():
-                if tag in aliases[k]:
-                    name = k
-        if verbose:
-            print(tag, name)
-        tags_out.append(name)
-    return tags_out
+    tag_new = None
+    if tag in aliases.keys():
+        # use normal form if match
+        tag_new = tag
+    else:
+        for k in aliases.keys():
+            if tag in aliases[k]:
+                tag_new = k
+
+    while tag_new is None:
+        print(f"unsupported tag: {tag}. Replace?")
+        tag_new = simplify_tag(input().strip(), aliases)
+
+    if verbose:
+        print(f"{tag} -> {tag_new}")
+
+    return tag_new
 
 
 def load_aliases(path: str) -> dict:
@@ -109,48 +150,6 @@ def load_aliases(path: str) -> dict:
     assert len(alias_list) == len(set(alias_list)), "Duplicate aliases"
 
     return class_aliases
-
-
-def load_example() -> tuple[str, str]:
-    example_files = []
-    for root, _, files in os.walk(EXAMPLE_DIR):
-        for file in files:
-            fp = os.path.join(root, file)
-            example_files.append(os.path.normpath(fp))
-
-    out_files = os.listdir(OUTPUT_DIR)
-
-    # TODO infer typ
-    raise NotImplementedError("infer type from folder. not extension!")
-    todo_examples = []
-    for ex_f in example_files:
-        filename = os.path.split(ex_f)[-1]
-        nam, typ = filename.split(".")
-        name = f"{nam}_{typ}.json"
-        if name not in out_files:
-            todo_examples.append(ex_f)
-
-    assert len(todo_examples) > 0, "Out of examples"
-
-    print("examples to do:", len(todo_examples))
-
-    example_path = todo_examples[0]
-    print("example:", example_path)
-
-    # load example to annotate
-    with open(example_path) as f:
-        text = f.read()
-    return text, os.path.split(example_path)[-1]
-
-
-def save_annotated(
-    tokens: list[str], tags: list[str], changed: list[bool], example_name: str
-):
-    nam, typ = example_name.split(".")
-    save_path = os.path.join(OUTPUT_DIR, f"{nam}_{typ}.json")
-    with open(save_path, "w") as f:
-        json.dump(dict(type=typ, tokens=tokens, tags=tags, changed=changed), f)
-    print("Done! Saved annotations")
 
 
 if __name__ == "__main__":

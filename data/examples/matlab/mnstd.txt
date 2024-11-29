@@ -1,0 +1,4 @@
+rhat_mean = mean(rhats,1);
+rhat_std = std(rhats,1);
+sigma2_mean = mean(sigma2s,1);
+sigma2_std = std(sigma2s,1);

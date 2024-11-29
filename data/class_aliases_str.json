@@ -1,71 +1,21 @@
 {
-    "assign": [
-        "a",
-        "as",
-        "ass"
-    ],
-    "br_cl": [
-        "brc",
-        "bc",
-        "brac_cl"
-    ],
-    "br_op": [
-        "bro",
-        "bo",
-        "brac_op"
-    ],
-    "com": [
-        "c",
-        "co",
-        "comment"
-    ],
-    "func": [
-        "f",
-        "fu",
-        "fun",
-        "function"
-    ],
-    "kwd": [
-        "k",
-        "kw",
-        "keyword"
-    ],
-    "num": [
-        "n",
-        "nu",
-        "number"
-    ],
-    "op": [
-        "o",
-        "operator",
-        "oper"
-    ],
-    "punct": [
-        "pu",
-        "punctuation"
-    ],
-    "str": [
-        "s",
-        "st",
-        "string"
-    ],
-    "unk": [
-        "u",
-        "un",
-        "unknown"
-    ],
-    "var": [
-        "v",
-        "va",
-        "variable"
-    ],
-    "wsp": [
-        "ws",
-        "w",
-        "whitespace"
-    ],
-    "obj": [
-        "ob",
-        "object"
-    ]
+  "an": ["annot", "annotation"],
+  "br": ["b", "bracket"],
+  "co": ["c", "co", "comment"],
+  "fn": ["f", "fun", "func", "function"],
+  "kw": ["k", "kw", "keyword"],
+  "kw-ty": ["kt", "type-keyword"],
+  "kw-fl": ["kf", "flow-keyword"],
+  "li": ["l", "lit", "literal"],
+  "mo": ["m", "module"],
+  "nu": ["n", "nu", "number"],
+  "op": ["o", "oper", "operator"],
+  "op-as": ["oa", "o-a", "op-assign", "as", "assign"],
+  "op-ma": ["om", "o-m"],
+  "pu": ["p", "pun", "punctuation"],
+  "st": ["s", "str", "string"],
+  "uk": ["u", "unk", "unknown"],
+  "va": ["v", "var", "variable"],
+  "ws": ["w", "wsp", "whitespace"],
+  "nl": ["nli", "newline"]
 }

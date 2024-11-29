@@ -1,0 +1,1 @@
+{"tokens": ["if", " ", "x", " ", "=", "=", " ", "5", ":", "\n", "    ", "print", "(", "\"", "five", "\"", ")"], "tags": ["unk", "wsp", "unk", "wsp", "unk", "unk", "wsp", "num", "unk", "nl", "wsp", "unk", "unk", "unk", "unk", "unk", "unk"]}

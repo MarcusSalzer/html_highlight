@@ -1,12 +1,13 @@
 import numpy as np
 from colorsys import hsv_to_rgb
 
+
 def palette_from_background(
     n_colors: int, hsv_background=(0.0, 0.5, 0.5), spread=(0.0, 0.0, 0.0), noise=0
 ):
     """Generate a palette contrasting background.
     TODO: S and V spread"""
-    
+
     rng = np.random.default_rng()
 
     # opposite to background
@@ -14,7 +15,7 @@ def palette_from_background(
 
     # linearly spaced hues
     h_vec = np.linspace(h_primary - spread[0] / 2, h_primary + spread[0] / 2, n_colors)
-    h_vec += noise * rng.normal(size = n_colors)
+    h_vec += noise * rng.normal(size=n_colors)
     h_vec = np.round(h_vec % 1.0, 8)
 
     s_vec = 0.6 * np.ones(n_colors)

@@ -1,0 +1,9 @@
+sigma2s = zeros(N_iter,1);
+rhats = zeros(N_iter,Kmax+1);
+
+for i =1:N_iter
+    idx = randi(length(D_kk), length(D_kk), 1);
+    [rhat,s2hat,m,n,d] = covest_nonparametric(D_kk,z(idx),Kmax,Dmax);
+    rhats(i,:) = rhat;
+    sigma2s(i)=s2hat;
+end

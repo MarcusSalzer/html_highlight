@@ -1,5 +1,8 @@
 import os
 import json
+import sys
+
+sys.path.append(".")
 from src.text_functions import tokens_to_html, make_legend_html, bracket_levels
 
 
@@ -10,7 +13,7 @@ DIR = "data/annotated_codes"
 
 examples = os.listdir(DIR)
 
-ex = examples[5]
+ex = examples[0]
 
 ex_path = os.path.join(DIR, ex)
 with open(ex_path) as f:

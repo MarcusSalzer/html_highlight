@@ -1,59 +1,57 @@
-body{
-    background-color: rgb(26, 26, 26);
-    color: white;
+body {
+  background-color: rgb(26, 26, 26);
+  color: white;
 }
 
-.code-snippet{
-    background-color: rgb(22, 22, 26);
-    display: block;
+.code-snippet {
+  background-color: rgb(22, 22, 26);
+  display: block;
 }
 
 .assign {
-    color: #66bcff;
+  color: #66bcff;
 }
 
 .brac1 {
-    color: #98ff66;
+  color: #98ff66;
 }
 
 .brac2 {
-    color: #6684ff;
+  color: #6684ff;
 }
 
 .brac3 {
-    color: #ff66c1;
+  color: #ff66c1;
 }
 
 .func {
-    color: #a1c4ff;
+  color: #a1c4ff;
 }
 
 .kwd {
-    color: #00b274;
+  color: #00b274;
 }
 
 .num {
-    color: #ba6f6f;
+  color: #ba6f6f;
 }
 
 .op {
-    color: #66fff4;
+  color: #66fff4;
 }
 
 .punct {
-    color: #a6ff66;
+  color: #a6ff66;
 }
 
 .str {
-    color: #a0a082;
+  color: #a0a082;
 }
 
-
 .var {
-    color: #ffe466;
+  color: #ffe466;
 }
 
 .wsp {
-    color: #66bbff;
+  color: #66bbff;
 }
-

@@ -1,0 +1,4 @@
+data = readtable('mydatafile.csv');
+%split in validation and training
+data_valid = data(data.validation==1,:);
+data = data(data.validation==0,:);

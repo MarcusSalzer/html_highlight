@@ -1,0 +1,2 @@
+sigma2z = sum(z.^2)/(length(z)-length(beta));
+C_beta =  (X_ols'*X_ols)^(-1)*sigma2z;
