@@ -1,0 +1,4 @@
+
+foreach x in Z_p:
+    if x % 2 is 0:
+        return x

@@ -1,0 +1,13 @@
+hlwrldd_bash
+cmntscntfnm_matlab
+clrrclsvr_matlab
+ex01_python
+mgrshp_matlab
+delmember_python
+strtpsp_python
+cnfnt_matlab
+shrtfns_python
+pd_dummies_python
+jsondat_js
+pltmltln_matlab
+ex01_R

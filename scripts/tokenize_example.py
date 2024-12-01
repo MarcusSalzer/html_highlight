@@ -13,5 +13,5 @@ if __name__ == "__main__":
     for text in examples:
         print("\n" + "-" * 20)
 
-        tokens = text_process.tokenize_plus(text)
+        tokens = text_process.process_regex(text)
         print(tokens)

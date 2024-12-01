@@ -2,21 +2,33 @@ import regex as re
 
 
 # patterns for some basic tokens
+# in order
 basic_pats = {
-    "nu": r"(?<!\w)(?:0x[0-9a-fA-F]+|0b[01]+|[\d_]+\.?\d*(?:e\d+|e-\d+|\w+)?)",
+    "cofl": r"^(?:\/\/|#).+$",  # one full line comment
+    "st": r"[\"'][^\s]*[\"']",
+    "br": r"[\(\)\[\]\{\}]",
+    "nu": r"(?<!\w)(?:0x[0-9a-fA-F]+|0b[01]+|\d[\d_]*\.?\d*(?:e\d+|e-\d+|\w+)?)",
     "ws": r"[\r\t\f\v ]+",
     "nl": r"\n+",
-    "pu": r"[\.,;:]+",
+    "op3": r"===|!==|<=>",
+    "op2": r"(?:<=|>=|==|!=|\+=|-=|--|\*\*|\/\/|\+\+|\*=|\/=|.\^)|\|\||&&",
+    "opas": r"(?:=|<-)",
+    "op": r"[\+\-\*\/%\^!]",
+    "pu": r"[\.,;:]",
     "uk": r"\w+|[^\w\s]+?",
 }
+
+# NOTE: needed priorites:
+# comment < string < everything
+# bigger compound operators <= smaller operators
 
 # todo: include "f" for float in number?
 
 # named groups to capture some initial tags
-regex_token = re.compile("|".join(f"(?P<{k}>{v})" for k, v in basic_pats.items()), re.I)
+regex_token = re.compile("|".join(f"(?P<{k}>{v})" for k, v in basic_pats.items()), re.M)
 
 
-def tokenize_plus(text: str):
+def process_regex(text: str):
     """Tokenize and find some basic tags"""
     tokens = []
     tags = []
@@ -31,4 +43,4 @@ def tokenize_plus(text: str):
 
 class TextProcess:
     def __init__(self, text: str):
-        self.tokens, self.tags = tokenize_plus(text)
+        self.tokens, self.tags = process_regex(text)
