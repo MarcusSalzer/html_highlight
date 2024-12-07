@@ -1,0 +1,4 @@
+def my_function(x: int | float):
+    return x**2
+
+my_var: float = my_function(33.33)

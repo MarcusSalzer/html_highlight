@@ -1,0 +1,1 @@
+{"tokens": ["\n", "let", " ", "sum", " ", "<-", " ", "0", "\n", "for", " ", "k", " ", "in", " ", "1", ":", "10", ":", "\n", "    ", "sum", " ", "+=", " ", "k", "\n"], "tags": ["nl", "kw", "ws", "va", "ws", "opas", "ws", "nu", "nl", "kwfl", "ws", "va", "ws", "kw", "ws", "nu", "pu", "nu", "pu", "nl", "ws", "va", "ws", "op2", "ws", "va", "nl"]}

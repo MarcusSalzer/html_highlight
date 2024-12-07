@@ -202,6 +202,7 @@ def bracket_levels(tags: list[str]):
 
 def merge_adjacent(tokens, tags, known_str=None):
     """Merge adjacent tokens if they have the same tag.
+    NOTE: OLD version
     ## Parameters
     - tokens
     - tags"""

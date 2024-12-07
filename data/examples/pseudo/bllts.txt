@@ -1,0 +1,7 @@
+x = true == 1
+y = 0 == false
+z = x == y
+
+if z
+    return "yes"
+

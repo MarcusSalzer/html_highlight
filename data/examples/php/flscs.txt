@@ -1,0 +1,2 @@
+$happy = false;
+echo $happy == FALSE;

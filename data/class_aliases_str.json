@@ -2,6 +2,7 @@
   "an": ["annot", "annotation"],
   "br": ["b", "bracket"],
   "co": ["c", "co", "comment"],
+  "cofl": ["co-fl", "full-line-comment"],
   "fn": ["f", "fun", "func", "function"],
   "me": ["method"],
   "kw": ["k", "kw", "keyword"],

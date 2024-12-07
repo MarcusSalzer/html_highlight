@@ -10,24 +10,33 @@ from src import text_process
 
 
 EXAMPLE_DIR = os.path.join("data", "examples")
-OUTPUT_DIR = os.path.join("data", "annotated_codes")
+OUTPUT_DIR = os.path.join("data", "annotated")
+
+DONT_MERGE = ["br"]
+
+IGNORE_PRINT = ["ws"]
 
 
 def main():
     os.system("cls" if os.name == "nt" else "clear")
+
+    # get example files
+    files = get_example_files()
+    if files.is_empty():
+        print("No examples left")
+        exit(0)
+    name, lang, _ = files.sort("size").row(0)
 
     # load tag names and aliases
     aliases = load_aliases("data/class_aliases_str.json")
     print("possible tags:")
     print("\n".join([f"{t:<6}: {a[-1]}" for t, a in aliases.items()]) + "\n")
 
-    # get example files
-    files = get_example_files()
-    name, lang, _ = files.sort("size").row(0)
     with open(os.path.join(EXAMPLE_DIR, lang, name + ".txt")) as f:
         text = f.read()
 
     print("type `ignore` to save example for later\n")
+    print("type class +`!` to mark all\n")
 
     print("-" * 15 + f" {name} ({lang}) " + "-" * 15 + "\n")
 
@@ -39,13 +48,15 @@ def main():
     tags = [simplify_tag(t, aliases) for t in tags]
 
     # annotate unknowns
-    tags_new = annotate_loop(tokens, tags, aliases, fill_copies=False)
+    tags_new = annotate_loop(tokens, tags, aliases)
 
     if tags_new is None:
-        print(f"Ignoring example: {name} ({lang})!")
-        with open(os.path.join("data", "ignore.txt"), "a") as f:
-            f.write(f"{name}_{lang}\n")
-        exit(0)
+        ignore(name, lang)
+
+    # merge adjacent tokens
+    # tokens_m, tags_m, merge_idx = text_process.merge_adjacent(
+    #     tokens, tags_new, dont_merge=DONT_MERGE, interactive=True
+    # )
 
     print("-" * 30 + "\n")
     print(text)
@@ -53,17 +64,35 @@ def main():
 
     # print tokens that might have changed
     for token, tag_new, tag_old in zip(tokens, tags_new, tags, strict=True):
-        if tag_new == "uk" or tag_old == "uk":
+        if tag_old == "uk":
             # print last alias (most verbose)
             print(f"{token:<30} -> {aliases[tag_new][-1]}")
+        if tags_new == "uk":
+            print(f"NOTICE: {token:<30} -> {aliases[tag_new][-1]}")
+
+    print("-" * 30 + "\n")
+    # print things that was merged
+    # print("merged:")
+    # for i in merge_idx:
+    #     print(f"  - {tokens_m[i]} ({tags_m[i]})")
+
     print("-" * 30 + "\n")
     accept = input("accept annotation?(y/n)").lower()
 
     if accept == "y":
         save_path = os.path.join(OUTPUT_DIR, f"{name}_{lang}.json")
         with open(save_path, "w") as f:
-            json.dump(dict(tokens=tokens, tags=tags), f)
+            json.dump(dict(tokens=tokens, tags=tags_new), f)
         print("Done! Saved annotations")
+    elif accept.lower() == "ignore":
+        ignore(name, lang)
+
+
+def ignore(name, lang):
+    print(f"Ignoring example: {name} ({lang})!")
+    with open(os.path.join("data", "ignore.txt"), "a") as f:
+        f.write(f"{name}_{lang}\n")
+    exit(0)
 
 
 def get_example_files():
@@ -91,15 +120,17 @@ def get_example_files():
 
     done_ignore_data = []
     for f in done_files:
-        name, lang = re.split(r"[\._]", f)[:2]
+        splts = f.split("_")
+        lang = splts[-1].split(".")[0].strip()
         if lang not in langs:
-            raise ValueError(f"incorrect language: {repr(lang)}")
+            raise ValueError(f"incorrect language: {repr(lang)} (in done)")
+        name = "_".join(splts[:-1])
         done_ignore_data.append([name.strip(), lang.strip()])
     for f in ignore_files:
         splts = f.split("_")
         lang = splts[-1].strip()
         if lang not in langs:
-            raise ValueError(f"incorrect language: {repr(lang)}")
+            raise ValueError(f"incorrect language: {repr(lang)} (in ignore)")
         name = "_".join(splts[:-1])
         done_ignore_data.append([name.strip(), lang.strip()])
 
@@ -118,9 +149,7 @@ def get_example_files():
     return files_df
 
 
-def annotate_loop(
-    tokens: list[str], tags: list[str], aliases: dict[str, list[str]], fill_copies=True
-):
+def annotate_loop(tokens: list[str], tags: list[str], aliases: dict[str, list[str]]):
     """Successively ask for input to annotate unknown tokens.
 
     ## Parameters
@@ -139,6 +168,13 @@ def annotate_loop(
         if tags_new[i] == "uk":
             t = input(f"{repr(token):<30}: ").lower().strip()
 
+            # optionally mark all copies of the same token
+            if t[-1] == "!":
+                fill_copies = True
+                t = t[:-1]
+            else:
+                fill_copies = False
+
             if t == "ignore":
                 return None
 
@@ -149,8 +185,8 @@ def annotate_loop(
                     if t2 == token:
                         tags_new[j] = tags_new[i]
 
-        else:
-            # in already set, print verbose tag name
+        elif tags_new[i] not in IGNORE_PRINT:
+            # if already set, print verbose tag name
             print(f"{repr(token):<30}: " + aliases[tags_new[i]][-1])
 
     return tags_new
