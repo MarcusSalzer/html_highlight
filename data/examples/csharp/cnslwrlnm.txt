@@ -1,0 +1,2 @@
+// print 6
+Console.WriteLine(3 + 3);

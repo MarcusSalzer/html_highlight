@@ -1,0 +1,7 @@
+/// format as s or ms.
+pub fn format_time(seconds: f64) -> String {
+    if seconds < 1.0 {
+        return format!("{:.3} ms", seconds * 1000.0);
+    }
+    return format!("{:.1} s", seconds);
+}

@@ -1,0 +1,1 @@
+fn gen_row_set_par(n: &BigUint, jmax: usize, nrows: usize, fb: &[usize]) -> HashSet<Row>

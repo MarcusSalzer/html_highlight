@@ -1,0 +1,5 @@
+    // corresponding exponent to each prime in Factorbase
+    let mut exponents: Vec<usize> = vec![0; factorbase.len()];
+    if number.is_zero() {
+        return Some(exponents);
+    }

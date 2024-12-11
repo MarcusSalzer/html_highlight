@@ -1,0 +1,12 @@
+pub fn sum_primint<T>(a: &Vec<T>) -> T
+where
+    T: PrimInt,
+{
+    let mut s = T::zero();
+
+    for x in a {
+        s = s + *x;
+    }
+
+    return s;
+}

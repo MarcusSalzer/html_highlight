@@ -25,20 +25,22 @@ class TestInitialRegex(unittest.TestCase):
         self.assertEqual("nl", ta[3])
         self.assertEqual("nu", ta[-1])
 
+    def test_multiline_id(self):
         tk, ta = text_process.process_regex("range(12):\n  print")
         self.assertListEqual(["range", "(", "12", ")", ":", "\n", "  ", "print"], tk)
         self.assertEqual("nu", ta[2])
         self.assertEqual("nl", ta[5])
-        self.assertEqual("ws", ta[6])
+        self.assertEqual("id", ta[6])
 
         tk, ta = text_process.process_regex("while true{\n    do_something\n}")
         self.assertListEqual(
-            ["while", " ", "true", "{", "\n", "    ", "do_something", "\n", "}"], tk
+            ["while", " ", "true", "{", "\n", "  ", "  ", "do_something", "\n", "}"], tk
         )
         self.assertEqual("ws", ta[1])
         self.assertEqual("nl", ta[4])
-        self.assertEqual("ws", ta[5])
-        self.assertEqual("nl", ta[7])
+        self.assertEqual("id", ta[5])
+        self.assertEqual("id", ta[6])
+        self.assertEqual("nl", ta[8])
 
     def test_number(self):
         tk, ta = text_process.process_regex("1337, 12")
@@ -212,6 +214,31 @@ class TestMergeAdjacent(unittest.TestCase):
         self.assertListEqual(["a", "b", "cd"], tkm)
         self.assertListEqual(["y", "y", "x"], tam)
         self.assertListEqual([2], midx)
+
+
+class TestInferIndent(unittest.TestCase):
+    def test_none(self):
+        self.assertEqual(None, text_process.infer_indent("print(x)\na=b+c"))
+
+    def test_4space(self):
+        self.assertEqual(" " * 4, text_process.infer_indent("    print(x)"))
+        self.assertEqual(" " * 4, text_process.infer_indent(" " * 8 + "print(x)"))
+
+    def test_2_space(self):
+        self.assertEqual(" " * 2, text_process.infer_indent("  a = b"))
+
+    def test_2_4_space(self):
+        self.assertEqual(
+            " " * 2,
+            text_process.infer_indent("a = b\n  for x:\n    print(x)"),
+        )
+
+    def test_1_2_3_space(self):
+        self.assertEqual(" ", text_process.infer_indent(" hej\n  abc\n   xyz"))
+
+    def test_tab(self):
+        self.assertEqual("\t", text_process.infer_indent("\t123"), "single tab")
+        self.assertEqual("\t", text_process.infer_indent("\t\t123"), "double tab")
 
 
 if __name__ == "__main__":

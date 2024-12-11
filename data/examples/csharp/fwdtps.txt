@@ -1,0 +1,4 @@
+double aDoubleNum = 5.99D;
+char aLetter = 'D';
+bool aBool = true;
+const int myNum = 15;

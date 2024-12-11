@@ -1,0 +1,4 @@
+#[allow(dead_code)]
+pub fn mat_vec_u128(mat: &Vec<&Vec<u128>>, b: &Vec<u128>) -> Vec<u128> {
+    mat.iter().map(|xa| dot_u128(xa, b)).collect()
+}

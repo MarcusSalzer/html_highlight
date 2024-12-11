@@ -1,0 +1,5 @@
+t = sp.symbols("t")
+
+sols = sp.solve(t**4+t**2-13)
+for s in sols:
+    display(s)

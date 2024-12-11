@@ -1,0 +1,3 @@
+fn test_factorize_naive_prime() {
+    assert_eq!(factorize_naive(180437.into()), [1.into(), 180437.into()]);
+}

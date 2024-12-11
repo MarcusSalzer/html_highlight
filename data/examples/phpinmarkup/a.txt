@@ -1,1 +1,1 @@
-Welcome <?php echo htmlspecialchars($_POST['name']); ?>.
+Welcome <?php echo htmlspecialchars($_POST['name']); ?>. This is my website.

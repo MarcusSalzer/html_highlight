@@ -1,0 +1,4 @@
+function norm (x, y)
+  local length2 = x^2 + y^2
+  return math.sqrt(length2)
+end

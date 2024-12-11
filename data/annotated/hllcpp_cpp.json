@@ -1,1 +1,0 @@
-{"tokens": ["int", " ", "main", "(", ")", " ", "{", "\n", "    ", "std", ":", ":", "cout", " ", "<<", " ", "\"Hello\"", ";", "\n", "    ", "return", " ", "0", ";", "\n", "}"], "tags": ["kwty", "ws", "fn", "br", "br", "ws", "br", "nl", "ws", "mo", "pu", "pu", "at", "ws", "op2", "ws", "st", "pu", "nl", "ws", "kwfl", "ws", "nu", "pu", "nl", "br"]}

@@ -1,22 +1,28 @@
+import math
 import regex as re
 
 # patterns for some basic tokens
 # in order
-basic_pats = {
-    "cofl": r"^(?:\/{2,3}|#|%).+$",  # one full line comment
-    "st": r"[\"'][^\s]*[\"']",
-    "br": r"[\(\)\[\]\{\}]",
+# TODO reorganize operators
+# TODO opun : !, -, ++, --, & (reference), * (dereference), etc.
+
+basic_pats = [
+    ("cofl", r"^(?:\/{2,3}|#|%).+$"),  # one full line comment
+    ("st", r"[\"'][^\"']*[\"']"),
+    ("br", r"[\(\)\[\]\{\}]"),
     # numbers: hex, bin, decimal/scientific
-    "nu": r"(?<!\w)(?:0x[0-9a-fA-F]+|0b[01]+|\d[\d_]*\.?\d*(?:e\d+|e-\d+|\w+)?)",
-    "ws": r"[\r\t\f\v ]+",
-    "nl": r"\n+",
-    "op3": r"===|!==|<=>",
-    "op2": r"(?:<<|>>|<=|>=|==|!=|\+=|-=|--|\*\*|\/\/|\+\+|\*=|\/=|.\^)|\|\||&&",
-    "opas": r"(?:=|<-)",
-    "op": r"[\+\-\*\/%\^!\|]",
-    "pu": r"[\.,;:]",
-    "uk": r"\w+|[^\w\s]+?",
-}
+    ("nu", r"(?<!\w)(?:0x[0-9a-fA-F]+|0b[01]+|\d[\d_]*\.?\d*(?:e\d+|e-\d+|\w+)?)"),
+    ("ws", r"[\r\t\f\v ]+"),
+    ("nl", r"\n+"),
+    # comparison operators
+    ("opcm", r"===|!==|<=>|<=|>=|==|!="),
+    ("opbi", r"<<|>>|\*\*|\/\/|\.\^|\|\||&&"),
+    ("opun", r"\+\+|--"),
+    ("opas", r"=|<-|\+=|-=|\*=|\/="),
+    ("sy", r"->|=>|::|:|(?<=[^\s])\.(?=[^\s])|\.{2,3}"),
+    ("pu", r",|;"),
+    ("uk", r"\w+|[^\w\s]+?"),
+]
 
 # NOTE: needed priorites:
 # comment < string < everything
@@ -24,11 +30,12 @@ basic_pats = {
 
 
 # named groups to capture some initial tags
-regex_token = re.compile("|".join(f"(?P<{k}>{v})" for k, v in basic_pats.items()), re.M)
 
 
-def process_regex(text: str):
+def process_regex(text: str, patterns: list[tuple[str, str]] = basic_pats):
     """Tokenize and find some basic tags"""
+
+    regex_token = re.compile("|".join(f"(?P<{t}>{p})" for t, p in patterns), re.M)
     tokens = []
     tags = []
 
@@ -36,6 +43,9 @@ def process_regex(text: str):
     for m in regex_token.finditer(text):
         tokens.append(m.group())  # matched token
         tags.append(m.lastgroup)  # corresponding tag
+
+    if "".join(tokens) != text:
+        raise ValueError("missed something")
 
     return tokens, tags
 
@@ -101,6 +111,34 @@ def merge_adjacent(
     return tokens_merged, tags_merged, merge_idx
 
 
-class TextProcess:
-    def __init__(self, text: str):
-        self.tokens, self.tags = process_regex(text)
+def infer_indent(text: str, max_symbols=4) -> str | None:
+    """Consider the beginning of each line to infer the indentation token"""
+    counts = []
+    symbols = set()
+    for m in re.finditer(r"^([\t ])+", text, re.MULTILINE):
+        counts.append(len(m.group(0)))
+        symbols.add(m.group(1))
+
+    if not counts or len(symbols) != 1:
+        return None
+
+    id_token = symbols.pop()
+    if id_token == "\t":
+        c = 1
+    else:
+        c = min(math.gcd(*counts), max_symbols)
+
+    return id_token * c
+
+
+def process(text: str):
+    # remove trailing newline
+    text = re.sub(r"\n+$", "", text)
+
+    id_token = infer_indent(text)
+    # make sure indentation is matched before whitspace
+    if id_token:
+        basic_pats.insert(0, ("id", id_token))
+
+    tokens, tags = process_regex(text, basic_pats)
+    return tokens, tags

@@ -1,1 +1,0 @@
-{"tokens": ["while", " ", "True", ":", "\n", "    ", "print", "(", "\"loop!\"", ")"], "tags": ["kwfl", "ws", "li", "pu", "nl", "ws", "fn", "br", "st", "br"]}

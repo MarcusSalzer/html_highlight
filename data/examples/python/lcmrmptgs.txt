@@ -1,0 +1,1 @@
+d["tags"] = [MAP_TAGS.get(t, t) for t in d["tags"]]

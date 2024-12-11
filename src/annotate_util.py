@@ -2,16 +2,17 @@ import json
 import os
 import sys
 from glob import glob
+from typing import Literal
 import polars as pl
 import regex as re
 
 sys.path.append(".")
 from src import text_process
 
-
 EXAMPLE_DIR = os.path.join("data", "examples")
-OUTPUT_DIR = os.path.join("data", "annotated")
+DATASET_FILE = os.path.join("data", "examples_annot.json")
 
+# Irrelevant ??
 DONT_MERGE = ["br"]
 
 IGNORE_PRINT = ["ws"]
@@ -43,7 +44,7 @@ def main():
     print(text)
 
     # basic initial tagging
-    tokens, tags = text_process.process_regex(text)
+    tokens, tags = text_process.process(text)
 
     tags = [simplify_tag(t, aliases) for t in tags]
 
@@ -77,15 +78,49 @@ def main():
     #     print(f"  - {tokens_m[i]} ({tags_m[i]})")
 
     print("-" * 30 + "\n")
-    accept = input("accept annotation?(y/n)").lower()
 
-    if accept == "y":
-        save_path = os.path.join(OUTPUT_DIR, f"{name}_{lang}.json")
-        with open(save_path, "w") as f:
-            json.dump(dict(tokens=tokens, tags=tags_new), f)
-        print("Done! Saved annotations")
-    elif accept.lower() == "ignore":
-        ignore(name, lang)
+    while True:
+        diff_response = input(
+            "difficulty: (e)asy, (n)ormal, (a)mbiguous, (u)nknown ?\n"
+        ).lower()
+
+        diff = None
+        if diff_response.lower() == "ignore":
+            ignore(name, lang)
+        elif diff_response in ["easy", "e"]:
+            diff = "easy"
+        elif diff_response in ["normal", "n"]:
+            diff = "normal"
+        elif diff_response in ["ambiguous", "a"]:
+            diff = "ambiguous"
+        elif diff_response in ["unknown", "u"]:
+            diff = "unknown"
+
+        if diff:
+            save(name, lang, tokens, tags_new, diff)
+        else:
+            print("enter difficulty or ignore, or ctrl+C to cancel")
+
+
+def save(name, lang, tokens, tags, difficulty: Literal["easy", "normal", "ambiguous"]):
+    with open(DATASET_FILE, "r", encoding="utf-8") as f:
+        dataset: dict = json.load(f)
+
+    dataset.update(
+        {
+            f"{name}_{lang}": {
+                "difficulty": difficulty,
+                "tokens": tokens,
+                "tags": tags,
+            }
+        }
+    )
+
+    with open(DATASET_FILE, "w", encoding="utf-8") as f:
+        json.dump(dataset, f)
+
+    print("Done! Saved annotations")
+    exit(0)
 
 
 def ignore(name, lang):
@@ -97,7 +132,11 @@ def ignore(name, lang):
 
 def get_example_files():
     files = glob("**/*txt", root_dir=EXAMPLE_DIR)
-    done_files = os.listdir(OUTPUT_DIR)
+    with open(DATASET_FILE, "r", encoding="utf-8") as f:
+        dataset: dict = json.load(f)
+
+    # strings as "exampleid_lang"
+    done_examples = list(dataset.keys())
     langs = os.listdir(EXAMPLE_DIR)
 
     try:
@@ -107,7 +146,7 @@ def get_example_files():
         ignore_files = []
 
     print(f"found {len(files)} files")
-    print(f"already done {len(done_files)} files")
+    print(f"already done {len(done_examples)} files")
     print(f"ignoring {len(ignore_files)} files")
 
     file_data = []
@@ -119,7 +158,7 @@ def get_example_files():
         file_data.append([name.strip(), lang.strip(), size])
 
     done_ignore_data = []
-    for f in done_files:
+    for f in done_examples:
         splts = f.split("_")
         lang = splts[-1].split(".")[0].strip()
         if lang not in langs:
@@ -169,7 +208,7 @@ def annotate_loop(tokens: list[str], tags: list[str], aliases: dict[str, list[st
             t = input(f"{repr(token):<30}: ").lower().strip()
 
             # optionally mark all copies of the same token
-            if t[-1] == "!":
+            if t and t[-1] == "!":
                 fill_copies = True
                 t = t[:-1]
             else:
@@ -178,7 +217,10 @@ def annotate_loop(tokens: list[str], tags: list[str], aliases: dict[str, list[st
             if t == "ignore":
                 return None
 
-            tags_new[i] = simplify_tag(t, aliases)
+            t_new = simplify_tag(t, aliases)
+            if t_new == "ignore":
+                return None
+            tags_new[i] = t_new
 
             if fill_copies:
                 for j, t2 in enumerate(tokens):

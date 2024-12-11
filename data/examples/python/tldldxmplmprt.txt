@@ -1,0 +1,2 @@
+import util
+examples = util.load_examples()

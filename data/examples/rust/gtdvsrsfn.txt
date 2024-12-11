@@ -1,0 +1,9 @@
+pub fn get_divisors(n: usize) -> Vec<usize> {
+    let mut divisors = Vec::new();
+    for k in 1..=n {
+        if n % k == 0 {
+            divisors.push(k);
+        }
+    }
+    return divisors;
+}
