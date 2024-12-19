@@ -1,0 +1,1 @@
+seg = masks[2]["segmentation"]

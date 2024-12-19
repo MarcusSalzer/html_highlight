@@ -1,0 +1,1 @@
+mask_sum = torch.sum(results[0].masks.data, dim=0)

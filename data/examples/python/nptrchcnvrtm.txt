@@ -1,0 +1,5 @@
+for i in range(N_frames):
+    mask = np.array(torch.sum(results[i].masks.data, dim=0))
+    frames[i] = cv.cvtColor(mask, cv.COLOR_GRAY2RGB)
+
+print("number of frames:", len(frames))

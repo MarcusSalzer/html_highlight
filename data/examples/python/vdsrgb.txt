@@ -1,0 +1,5 @@
+video_s_rgb = torch.empty((N_frames, H, W, 3), dtype=torch.uint8)
+video_s_rgb = 50 * torch.cat((video_smooth[:, :, :, np.newaxis],) * 3, dim=3)
+video_out_path = r"./output/vid_smooth.mp4"
+
+write_video(video_out_path, video_s_rgb, 10)

@@ -1,0 +1,1 @@
+midpoints = np.array([tuple(map(int,ndimage.center_of_mass(np.array(m)))) for m in masks_all])

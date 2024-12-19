@@ -1,0 +1,13 @@
+if True:
+    results = model(
+        IMAGE_PATH,
+        device=DEVICE,
+        retina_masks=True,
+        imgsz=IMG_SIZE,
+        conf=0.2,
+        iou=0.9,
+    )
+    torch.save(results, "../fast_results")
+
+if "results" not in locals():
+    results = torch.load("../fast_results")

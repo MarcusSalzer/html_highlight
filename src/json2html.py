@@ -1,3 +1,7 @@
+"""
+Convert annotation to html to visually check
+"""
+
 import os
 import json
 import sys
@@ -5,9 +9,6 @@ import sys
 sys.path.append(".")
 from src.text_functions import tokens_to_html, make_legend_html, bracket_levels
 
-
-"""
-Convert annotation to html to visually check"""
 
 DIR = "data/annotated_codes"
 

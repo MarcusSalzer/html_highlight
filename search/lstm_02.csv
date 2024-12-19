@@ -1,0 +1,3 @@
+bidi,class_weight_smoothing,dropout_lstm,embedding_dim,epochs,hidden_dim,n_lstm_layers,runtime,value
+true,100.0,0.3,4,3,32,2,0.18366775898903143,0.25249169435215946
+true,100.0,0.3,6,3,32,2,0.15123409799707588,0.2857142857142857

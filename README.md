@@ -28,7 +28,7 @@ Some basic classes are captured through a deterministic (**det**) process. Other
 - `ws`: whitespace (**det**). space, tab
 - `nl`: new-line (**det**).
 - `br`: brackets. In pairs. (**det**) (), [], {}. Sometimes <>.
-- `sy`: syntax features (**det**). :, ::, ->, =>
+- `sy`: syntax features (**det**). :, ::, ->, =>, >>>
 - `pu`: punctuation (**det**). , ;
 - `cofl`: full-line comment.
 - `coil`: in-line comment, to end of line.
@@ -63,6 +63,14 @@ Some basic classes are captured through a deterministic (**det**) process. Other
 ### Other
 
 - `uk`: unknown. To be inferred, or cannot be inferred.
+
+## tag mapping
+
+A simplified, less granular, set of tags
+
+- `va`
+- `fn`
+- `op`
 
 ## Example difficulty
 

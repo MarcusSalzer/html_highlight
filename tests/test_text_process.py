@@ -166,20 +166,29 @@ class TestInitialRegex(unittest.TestCase):
         )
 
     def test_numbers_scientific(self):
-        tk, ta = text_process.process_regex("1e0,-1e3,7e77,33.5e-12")
+        tk, ta = text_process.process_regex("1e0,-1e3,7e77,33.5e-12,1e-10")
         self.assertListEqual(
-            ["1e0", ",", "-", "1e3", ",", "7e77", ",", "33.5e-12"],
+            ["1e0", ",", "-", "1e3", ",", "7e77", ",", "33.5e-12", ",", "1e-10"],
             tk,
         )
+        self.assertEqual("nu", ta[0])
         self.assertEqual("nu", ta[3])
         self.assertEqual("nu", ta[5])
         self.assertEqual("nu", ta[7])
-        self.assertEqual("nu", ta[0])
 
     def test_num_and_var(self):
         tk, ta = text_process.process_regex("_player = 3")
         self.assertEqual(["_player", " ", "=", " ", "3"], tk)
         self.assertNotEqual("nu", ta[0])
+
+    def test_num_range(self):
+        tk, ta = text_process.process_regex("1...9")
+        self.assertListEqual(["1", "...", "9"], tk)
+        self.assertListEqual(["nu", "sy", "nu"], ta)
+
+        tk, ta = text_process.process_regex("1..9")
+        self.assertListEqual(["1", "..", "9"], tk)
+        self.assertListEqual(["nu", "sy", "nu"], ta)
 
 
 class TestMergeAdjacent(unittest.TestCase):

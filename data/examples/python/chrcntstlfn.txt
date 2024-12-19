@@ -1,0 +1,4 @@
+char_counts = util.value_counts_dict(char_examples.explode("chars"), "chars")
+char_tag_counts = util.value_counts_dict(
+    char_examples.explode("char_tags"), "char_tags"
+)

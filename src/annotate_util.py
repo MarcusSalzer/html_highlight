@@ -12,10 +12,8 @@ from src import text_process
 EXAMPLE_DIR = os.path.join("data", "examples")
 DATASET_FILE = os.path.join("data", "examples_annot.json")
 
-# Irrelevant ??
-DONT_MERGE = ["br"]
 
-IGNORE_PRINT = ["ws"]
+IGNORE_PRINT = ["ws", "id", "brop", "brcl"]
 
 
 def main():
@@ -262,7 +260,8 @@ def load_aliases(path: str) -> dict:
 
     alias_list = [a for als in class_aliases.values() for a in als]
 
-    assert len(alias_list) == len(set(alias_list)), "Duplicate aliases"
+    if len(alias_list) != len(set(alias_list)):
+        raise ValueError("Duplicate aliases")
 
     return class_aliases
 

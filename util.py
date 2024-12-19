@@ -1,52 +1,100 @@
 # For mapping to a smaller label space
 import json
-import os
+from glob import glob
 
 import polars as pl
-
-ANNOTATED_EXAMPLES_DIR = os.path.join("data", "annotated")
-
+import torch
 
 MAP_TAGS = {
-    "op2": "op",
-    "op3": "op",
-    "opma": "op",
     "opun": "op",
     "opcm": "op",
+    "opbi": "op",
+    "opas": "op",
     "fnme": "fn",
     "fnst": "fn",
+    "fnas": "fn",
+    "fnfr": "fn",
     "kwty": "cl",
     "kwfl": "kw",
+    "kwop": "kw",
+    "kwim": "kw",
+    "kwva": "kw",
+    "kwfn": "kw",
+    "kwmo": "kw",
+    "kwio": "kw",
+    "kwde": "kw",
     "pa": "va",
     "at": "va",
-    "se": "pu",
+    "mo": "va",
+    "cofl": "co",
+    "coil": "co",
+    "coml": "co",
+    "pu": "sy",
+    "id": "ws",
+    "bo": "li",
 }
 
 
-def load_examples(tag_map: dict | None = None):
+def load_examples(tag_map: dict | None = None, filter_lang: list[str] | None = None):
     """Load all annotated examples
     ## parameters
     - tag_map (dict|None): optionally map tags.
 
-
     ## returns
     - examples (Dataframe): tokens, tags, lang, length."""
-    raise NotImplementedError("UPDATE")
-    data_files = os.listdir(ANNOTATED_EXAMPLES_DIR)
-    print(f"found {len(data_files)} examples")
 
-    examples = []
+    datafile = glob("../**/data/examples_annot.json", recursive=True)[0]
+    with open(datafile, encoding="utf-8") as f:
+        d = json.load(f)
 
-    for filename in data_files:
-        lang = filename.split("_")[-1].split(".")[0]
-        with open(os.path.join(ANNOTATED_EXAMPLES_DIR, filename)) as f:
-            d = json.load(f)
-            if len(d["tokens"]) != len(d["tags"]):
-                raise ValueError("mismatched sequence length")
-            d.update({"lang": lang, "length": len(d["tokens"])})
+    if tag_map:
+        tags = [[tag_map.get(t, t) for t in e["tags"]] for e in d.values()]
+    else:
+        tags = [e["tags"] for e in d.values()]
 
-            if tag_map:
-                d["tags"] = [MAP_TAGS.get(t, t) for t in d["tags"]]
-            examples.append(d)
+    examples = pl.DataFrame(
+        {
+            "name": ["_".join(k.split("_")) for k in d.keys()],
+            "lang": [k.split("_")[-1] for k in d.keys()],
+            "difficulty": [e["difficulty"] for e in d.values()],
+            "tokens": [e["tokens"] for e in d.values()],
+            "tags": tags,
+        }
+    )
+    if filter_lang is not None:
+        examples = examples.filter(pl.col("lang").is_in(filter_lang))
 
-    return pl.DataFrame(examples)
+    return examples.with_columns(length=pl.col("tokens").list.len())
+
+
+def data_split(df: pl.DataFrame, fraction=0.2, shuffle=True, verbose=True):
+    """Typical train/val split of a polars dataframe."""
+    n = int((1 - fraction) * len(df))
+    df2 = df.sample(fraction=1, shuffle=shuffle)
+    if verbose:
+        print(f"splitted {n} & {len(df)-n}" + " (shuffled)" * shuffle)
+    return df2.head(n), df2.tail(-n)
+
+
+def seqs2padded_tensor(sequences: list[list[int | float]], pad_value=0, verbose=True):
+    t = torch.nn.utils.rnn.pad_sequence(
+        (torch.tensor(s) for s in sequences),
+        batch_first=True,
+        padding_value=pad_value,
+    )
+    if verbose:
+        print("padded tensor:", tuple(t.size()))
+    return t
+
+
+def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):
+    chars = []
+    char_tags = []
+    for token, tag in zip(tokens, tags):
+        chars.extend(token)
+        if only_starts:
+            char_tags.extend(["start"] + ["-"] * (len(token) - 1))
+        else:
+            char_tags.extend(["start-" + tag] + [tag] * (len(token) - 1))
+
+    return chars, char_tags

@@ -1,0 +1,1 @@
+val_tag_idx = [[tag2idx[t] for t in seq] for seq in val_df["char_tags"]]

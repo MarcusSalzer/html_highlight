@@ -1,0 +1,8 @@
+        magnitude, angle = cv.cartToPolar(flow[..., 0], flow[..., 1])
+
+        # hue: angle
+        mask[..., 0] = angle * 180 / np.pi / 2
+        # value: magnitude
+        mask[..., 2] = cv.normalize(magnitude, None, 0, 255, cv.NORM_MINMAX)
+
+        rgb = cv.cvtColor(mask, cv.COLOR_HSV2BGR)

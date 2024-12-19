@@ -1,26 +1,46 @@
 import math
 import regex as re
 
+
+# which tags are completely deterministic?
+DET_TAGS = ["cofl", "brop", "brcl", "id", "nu", "ws", "nl", "pu"]
+
+# which tokens have a few possible tags?
+# just a few examples...
+POSSIBLE_PER_TOKEN = {
+    "<": ["sy", "opcm"],
+    "+": ["opbi", "opun"],
+    "-": ["opbi", "opun"],
+    "  ": ["ws", "id"],
+}
+
+
 # patterns for some basic tokens
 # in order
-# TODO reorganize operators
-# TODO opun : !, -, ++, --, & (reference), * (dereference), etc.
-
 basic_pats = [
     ("cofl", r"^(?:\/{2,3}|#|%).+$"),  # one full line comment
     ("st", r"[\"'][^\"']*[\"']"),
-    ("br", r"[\(\)\[\]\{\}]"),
-    # numbers: hex, bin, decimal/scientific
-    ("nu", r"(?<!\w)(?:0x[0-9a-fA-F]+|0b[01]+|\d[\d_]*\.?\d*(?:e\d+|e-\d+|\w+)?)"),
+    ("brop", r"[\(\[\{]"),
+    ("brcl", r"[\)\]\}]"),
+    # catch some syntax features before numbers
+    ("sy", r"\.{2,3}"),
+    # numbers: scientific
+    ("nu", r"(?<!\w)\d+(?:\.\d+)?+e-\d+"),
+    # numbers: hex, bin,
+    ("nu", r"(?<!\w)0x[0-9a-fA-F]+|0b[01]+"),
+    # numbers: integer, decimal
+    ("nu", r"(?<!\w)\d[\d_]*(?:\.\d+)?\w*"),
     ("ws", r"[\r\t\f\v ]+"),
     ("nl", r"\n+"),
+    ("sy", r">>>"),
     # comparison operators
     ("opcm", r"===|!==|<=>|<=|>=|==|!="),
     ("opbi", r"<<|>>|\*\*|\/\/|\.\^|\|\||&&"),
     ("opun", r"\+\+|--"),
     ("opas", r"=|<-|\+=|-=|\*=|\/="),
-    ("sy", r"->|=>|::|:|(?<=[^\s])\.(?=[^\s])|\.{2,3}"),
+    ("sy", r"->|=>|::|:|(?<=[^\s])\.(?=[^\s])"),
     ("pu", r",|;"),
+    ("uk", r"\$[_\p{L}][_\p{L}\d]*"),
     ("uk", r"\w+|[^\w\s]+?"),
 ]
 
@@ -132,6 +152,7 @@ def infer_indent(text: str, max_symbols=4) -> str | None:
 
 
 def process(text: str):
+    """Run complete process"""
     # remove trailing newline
     text = re.sub(r"\n+$", "", text)
 
