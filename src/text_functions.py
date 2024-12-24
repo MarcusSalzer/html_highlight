@@ -182,7 +182,10 @@ def bracket_levels(tags: list[str]):
 
     ## Returns
     - tags (list[str]): modified tags
-    - brac_level (list[int]): bracket depth for all tokens."""
+    - brac_level (list[int]): bracket depth for all tokens.
+
+    NOTE: OLD VERSION
+    """
     brac_level = []
     current_level = 0
     for i in range(len(tags)):

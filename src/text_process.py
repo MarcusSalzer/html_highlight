@@ -162,4 +162,68 @@ def process(text: str):
         basic_pats.insert(0, ("id", id_token))
 
     tokens, tags = process_regex(text, basic_pats)
+
     return tokens, tags
+
+
+def format_html(
+    tokens: list[str],
+    tags: list[str],
+    exclude_tags: list[str] = ["ws", "uk"],
+    level_brackets: bool = True,
+    css_path: str | None = None,
+) -> str:
+    """Format HTML document of tagged text."""
+    tokens_with_tags = []
+    if level_brackets:
+        tags, _ = bracket_levels(tags)
+    for token, tag in zip(tokens, tags):
+        # fix html specials
+        token_text = html_specials(token)
+        if tag in exclude_tags:
+            tokens_with_tags.append(token_text)
+        else:
+            tokens_with_tags.append(f'<span class="{tag}">{token_text}</span>')
+
+    text = "".join(tokens_with_tags)
+    text = f'<pre><code class="code-snippet">{text} </code></pre>'
+    if css_path:
+        css_link = f'<link rel="stylesheet" type="text/css" href="{css_path}">'
+        return f"<head>\n{css_link}\n</head>\n<body>\n{text}\n</body>"
+    else:
+        return text
+
+
+def bracket_levels(tags: list[str]) -> tuple[list[str], list[int]]:
+    """Rename bracket tags from br_op/cl to br_{n}.
+
+    ## Returns
+    - tags_new (list[str]): modified tags
+    - brac_level (list[int]): bracket depth for all tokens."""
+    brac_level = []
+    current_level = 0
+    tags_new = tags.copy()
+    for i in range(len(tags_new)):
+        if tags_new[i] == "brop":
+            brac_level.append(current_level)
+            tags_new[i] = f"br{current_level}"
+            current_level += 1
+        elif tags_new[i] == "brcl":
+            current_level -= 1
+            tags_new[i] = f"br{current_level}"
+            brac_level.append(current_level)
+        else:
+            brac_level.append(current_level)
+
+    return tags_new, brac_level
+
+
+def html_specials(text: str) -> str:
+    """Replace html reserved characters"""
+
+    text = re.sub(r"&", r"&amp;", text)
+    text = re.sub(r"<", r"&lt;", text)
+    text = re.sub(r">", r"&gt;", text)
+    text = re.sub(r'"', r"&quot;", text)
+    text = re.sub(r"'", r"&apos;", text)
+    return text

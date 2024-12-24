@@ -1,0 +1,4 @@
+async function init() {
+    // load exercise content
+}
+document.addEventListener('DOMContentLoaded', init);

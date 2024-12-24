@@ -1,0 +1,15 @@
+export default class Question {
+    text: string;
+    options: Array<string>;
+    correct: string;
+
+    constructor(text: string, options: Array<string>, correct: string) {
+        this.text = text; // The question text
+        this.options = options; // Array of possible answers
+        this.correct = correct; // The correct answer
+    }
+
+    checkAnswer(ans: string) {
+        return ans === this.correct;
+    }
+}

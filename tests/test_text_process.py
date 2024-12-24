@@ -250,5 +250,27 @@ class TestInferIndent(unittest.TestCase):
         self.assertEqual("\t", text_process.infer_indent("\t\t123"), "double tab")
 
 
+class TestBracLevel(unittest.TestCase):
+    def test_none(self):
+        t = ["va", "opas", "nu", "pu"]
+        tn, levels = text_process.bracket_levels(t)
+        self.assertListEqual(t, tn)
+        self.assertListEqual([0, 0, 0, 0], levels)
+
+    def test_1(self):
+        t = ["fnfr", "brop", "va", "brcl"]
+        tn, levels = text_process.bracket_levels(t)
+        self.assertListEqual(["fnfr", "br0", "va", "br0"], tn)
+        self.assertListEqual([0, 0, 1, 0], levels)
+
+    def test_2(self):
+        t = ["fnfr", "brop", "va", "opbi", "va", "brop", "nu", "brcl", "brcl"]
+        tn, levels = text_process.bracket_levels(t)
+        self.assertListEqual(
+            ["fnfr", "br0", "va", "opbi", "va", "br1", "nu", "br1", "br0"], tn
+        )
+        self.assertListEqual([0, 0, 1, 1, 1, 1, 2, 1, 0], levels)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,8 @@
+    displayCompleted() {
+        this.#textSection.innerHTML = "";
+        this.#optionsList.innerHTML = "";
+        this.#resultOutput.innerHTML = "completed quiz";
+        this.#confirmBtn.style.display = "none";
+        this.#nextBtn.style.display = "none";
+        // TODO show continue(link) to next quiz (or back to home)
+    }

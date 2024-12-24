@@ -1,0 +1,3 @@
+for (const q of questions) {
+    console.log(q.text)
+}

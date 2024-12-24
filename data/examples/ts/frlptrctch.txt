@@ -1,0 +1,17 @@
+    for (let k in Object.keys(data.questions)) {
+        try {
+            let q = new Question(
+                data.questions[k].text,
+                data.questions[k].options,
+                data.questions[k].correct,
+            );
+            questions.push(q);
+
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error(error.message);
+            } else {
+                console.error("An unknown error occurred");
+            }
+        }
+    }

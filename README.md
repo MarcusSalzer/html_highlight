@@ -64,14 +64,6 @@ Some basic classes are captured through a deterministic (**det**) process. Other
 
 - `uk`: unknown. To be inferred, or cannot be inferred.
 
-## tag mapping
-
-A simplified, less granular, set of tags
-
-- `va`
-- `fn`
-- `op`
-
 ## Example difficulty
 
 Examples are rated as one of three levels.
