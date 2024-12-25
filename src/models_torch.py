@@ -30,11 +30,11 @@ class LSTMTagger(nn.Module):
         self,
         token_vocab_size,
         label_vocab_size,
-        embedding_dim,
-        hidden_dim,
-        n_lstm_layers=1,
-        dropout_lstm=0,
-        bidi=False,
+        embedding_dim=6,
+        hidden_dim=64,
+        n_lstm_layers=2,
+        dropout_lstm=0.3,
+        bidi=True,
     ):
         super(LSTMTagger, self).__init__()
         self.embedding_tokens = nn.Embedding(

@@ -19,7 +19,8 @@ POSSIBLE_PER_TOKEN = {
 # in order
 basic_pats = [
     ("cofl", r"^(?:\/{2,3}|#|%).+$"),  # one full line comment
-    ("st", r"[\"'][^\"']*[\"']"),
+    ("st", r"\"[^\"]*\""),
+    ("st", r"'[^']*'"),
     ("brop", r"[\(\[\{]"),
     ("brcl", r"[\)\]\}]"),
     # catch some syntax features before numbers

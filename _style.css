@@ -1,57 +1,65 @@
 body {
-  background-color: rgb(26, 26, 26);
   color: white;
 }
 
-.code-snippet {
-  background-color: rgb(22, 22, 26);
-  display: block;
-}
-
-.assign {
+.assign,
+.as {
   color: #66bcff;
 }
 
-.brac1 {
+.br0 {
   color: #98ff66;
 }
 
-.brac2 {
+.brac1,
+.br1 {
+  color: #98ff66;
+}
+
+.brac2,
+.br2 {
   color: #6684ff;
 }
 
-.brac3 {
+.brac3,
+.br3 {
   color: #ff66c1;
 }
 
-.func {
+.func,
+.fnas,
+.fn,
+.fnsa,
+.fnme {
   color: #a1c4ff;
 }
 
-.kwd {
+.kwd,
+.kw {
   color: #00b274;
 }
 
-.num {
+.num,
+.nu {
   color: #ba6f6f;
 }
 
-.op {
+.op,
+.opun,
+.opbi {
   color: #66fff4;
 }
 
-.punct {
+.punct,
+.pu {
   color: #a6ff66;
 }
 
-.str {
+.str,
+.st {
   color: #a0a082;
 }
 
-.var {
+.va {
   color: #ffe466;
-}
-
-.wsp {
-  color: #66bbff;
 }
