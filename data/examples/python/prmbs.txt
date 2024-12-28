@@ -1,0 +1,7 @@
+max = 20
+prime_list = primes(max)
+print(prime_list)
+
+base = 1
+for p in prime_list:
+    base *= p

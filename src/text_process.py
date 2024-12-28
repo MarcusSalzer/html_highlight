@@ -19,6 +19,9 @@ POSSIBLE_PER_TOKEN = {
 # in order
 basic_pats = [
     ("cofl", r"^(?:\/{2,3}|#|%).+$"),  # one full line comment
+    ("cofl", r"(?<=^\s+)(?:\/{2,3}|#|%).+$"),  # comment after indentation
+    # php/jsdoc multiline comments
+    ("coml", r"\/\*{1,2}[\s\S]+\*\/"),
     ("st", r"\"[^\"]*\""),
     ("st", r"'[^']*'"),
     ("brop", r"[\(\[\{]"),
@@ -38,8 +41,8 @@ basic_pats = [
     ("opcm", r"===|!==|<=>|<=|>=|==|!="),
     ("opbi", r"<<|>>|\*\*|\/\/|\.\^|\|\||&&"),
     ("opun", r"\+\+|--"),
-    ("opas", r"=|<-|\+=|-=|\*=|\/="),
     ("sy", r"->|=>|::|:|(?<=[^\s])\.(?=[^\s])"),
+    ("opas", r"=|<-|\+=|-=|\*=|\/="),
     ("pu", r",|;"),
     ("uk", r"\$[_\p{L}][_\p{L}\d]*"),
     ("uk", r"\w+|[^\w\s]+?"),

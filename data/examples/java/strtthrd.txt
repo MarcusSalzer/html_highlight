@@ -1,0 +1,2 @@
+MyThread t = new MyThread(1237);
+t.start();

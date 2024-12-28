@@ -44,6 +44,15 @@ class TestComment(unittest.TestCase):
         self.assertListEqual(["// a comment 123 'str'", "\n"], tk)
         self.assertListEqual(["cofl", "nl"], ta)
 
+    def test_coml_php(self):
+        tk, ta = process_regex("/**\n * Store user.\n */\npublic function store")
+        self.assertListEqual(
+            ["/**\n * Store user.\n */", "\n", "public", " ", "function", " ", "store"],
+            tk,
+        )
+        self.assertEqual("coml", ta[0])
+        self.assertEqual("nl", ta[1])
+
 
 if __name__ == "__main__":
     unittest.main()

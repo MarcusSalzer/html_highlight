@@ -1,0 +1,5 @@
+class MyArray extends Array {
+  isEmpty() {
+    return this.length === 0;
+  }
+}

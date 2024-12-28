@@ -1,0 +1,2 @@
+if __name__ == "__main__":
+    print(plusOne([9, 9, 9]))

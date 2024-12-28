@@ -18,6 +18,20 @@ class TestInitialRegex(unittest.TestCase):
         # tk, ta = text_process.tokenize_plus('a "nested" string')
         # self.assertListEqual(["a", " ", '"', "nested", '"', " ", "string"], tk)
 
+    def test_lambda_arrow_big(self):
+        tk, ta = text_process.process_regex("(m) => parse(m)")
+        self.assertListEqual(
+            ["(", "m", ")", " ", "=>", " ", "parse", "(", "m", ")"],
+            tk,
+        )
+
+    def test_lambda_arrow_small(self):
+        tk, ta = text_process.process_regex("(m) -> parse(m)")
+        self.assertListEqual(
+            ["(", "m", ")", " ", "->", " ", "parse", "(", "m", ")"],
+            tk,
+        )
+
     def test_multiline(self):
         tk, ta = text_process.process_regex("name='abc'\nx=2")
         self.assertListEqual(["name", "=", "'abc'", "\n", "x", "=", "2"], tk)

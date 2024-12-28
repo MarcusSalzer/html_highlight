@@ -1,0 +1,3 @@
+return Illuminate\Support\Facades\View::make('profile');
+ 
+return view('profile');

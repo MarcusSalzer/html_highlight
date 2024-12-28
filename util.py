@@ -23,15 +23,12 @@ MAP_TAGS = {
     "kwmo": "kw",
     "kwio": "kw",
     "kwde": "kw",
-    "pa": "va",
     "at": "va",
     "mo": "va",
     "cofl": "co",
     "coil": "co",
     "coml": "co",
-    "pu": "sy",
     "id": "ws",
-    "bo": "li",
 }
 
 

@@ -1,0 +1,10 @@
+var runningSum = function (nums) {
+  let s = [];
+  let sum = 0.0;
+  for (n in nums) {
+    sum += n;
+    s.push(sum);
+    console.log(sum);
+  }
+  return s;
+};

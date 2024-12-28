@@ -1,4 +1,6 @@
+from datetime import datetime
 from datatools.benchmark import SequentialTimer
+from util import MAP_TAGS
 
 timer = SequentialTimer()
 
@@ -21,6 +23,7 @@ timer.add("import pyperclip")
 
 from src.text_process import process, format_html  # noqa: E402
 
+
 timer.add("import text_process")
 
 from src import inference  # noqa: E402
@@ -37,6 +40,8 @@ def hlclip():
     except Exception:
         in_text = "clipboard problem?"
 
+    save_to_history(in_text)
+
     tokens, tags_det = process(in_text)
     tags_pred = inference.run(tokens, tags_det)
 
@@ -48,10 +53,18 @@ def hlclip():
         else:
             tags.append(td)
 
+    tags = [MAP_TAGS.get(t, t) for t in tags]
+
     out_text = format_html(tokens, tags)
 
     print(out_text)
     pc.copy(out_text)
+
+
+def save_to_history(text: str):
+    name = datetime.now().isoformat()
+    with open("data/hlclip_history/" + name + ".txt", "w", encoding="utf-8") as f:
+        f.write(text)
 
 
 if __name__ == "__main__":

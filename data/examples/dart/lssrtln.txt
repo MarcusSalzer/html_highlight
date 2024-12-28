@@ -1,0 +1,8 @@
+  var l1 = s.split("");
+  var l2 = t.split("");
+
+  l1.sort();
+  l2.sort();
+  if (l1.length != l2.length) {
+    return false;
+  }

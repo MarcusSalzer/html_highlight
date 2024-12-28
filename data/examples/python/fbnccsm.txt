@@ -1,0 +1,10 @@
+a, b = 1, 2
+
+sum = 0
+while a <= 4 * 10**6:
+    if a % 2 == 0:
+        sum += a
+    # a = old b, b = old a + old b
+    b = a + b
+    a = b - a
+print(sum)

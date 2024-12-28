@@ -1,0 +1,9 @@
+try {
+
+  // do something...
+
+} catch (err) {
+
+  // handle error
+
+}

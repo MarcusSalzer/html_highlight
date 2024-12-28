@@ -1,0 +1,3 @@
+if ($request->hasAny(['abc', 'xyz', 'uvw'])) {
+    // this request...
+}

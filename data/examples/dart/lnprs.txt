@@ -1,0 +1,1 @@
+  var t1 = stdin.readLineSync()!.split(":").map((m) => int.parse(m)).toList();

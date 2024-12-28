@@ -1,0 +1,16 @@
+class Solution {
+  static String findTheDifference(String s, String t) {
+    var l1 = s.split("");
+    var l2 = t.split("");
+
+    l1.sort();
+    l2.sort();
+
+    for (var i = 0; i < l1.length; i++) {
+      if (l1[i] != l2[i]) {
+        return l2[i];
+      }
+    }
+    return l2.last;
+  }
+}
