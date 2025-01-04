@@ -21,7 +21,9 @@ basic_pats = [
     ("cofl", r"^(?:\/{2,3}|#|%).+$"),  # one full line comment
     ("cofl", r"(?<=^\s+)(?:\/{2,3}|#|%).+$"),  # comment after indentation
     # php/jsdoc multiline comments
-    ("coml", r"\/\*{1,2}[\s\S]+\*\/"),
+    ("coml", r"\/\*{1,2}[\s\S]+?\*\/"),
+    # inline comments
+    ("coil", r"(?<=\s+)(?:\/{2}|#|%).+$"),
     ("st", r"\"[^\"]*\""),
     ("st", r"'[^']*'"),
     ("brop", r"[\(\[\{]"),
@@ -161,11 +163,14 @@ def process(text: str):
     text = re.sub(r"\n+$", "", text)
 
     id_token = infer_indent(text)
+
+    pats = basic_pats.copy()
+
     # make sure indentation is matched before whitspace
     if id_token:
-        basic_pats.insert(0, ("id", id_token))
+        pats.insert(0, ("id", id_token))
 
-    tokens, tags = process_regex(text, basic_pats)
+    tokens, tags = process_regex(text, pats)
 
     return tokens, tags
 

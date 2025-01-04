@@ -10,10 +10,10 @@ Some forbidden sequences?
 """
 
 import sys
-from timeit import default_timer
 
 import polars as pl
 from datatools import tabular as dttab
+from datatools.benchmark import SequentialTimer
 
 sys.path.append(".")
 import util
@@ -32,7 +32,6 @@ def main():
     print("\n value counts:")
     dttab.value_counts(data["lang"], verbose=True)
     dttab.value_counts(data["tokens"].explode(), verbose=True)
-    dttab.value_counts(data["tags"].explode(), verbose=True)
     timer.add("value counts")
 
     # trailing newlines?
@@ -61,28 +60,30 @@ def main():
 
     timer.add("reprocess")
 
+    for ex in data.iter_rows(named=True):
+        try:
+            lint(ex)
+        except LintError as err:
+            print(ex["name"], err)
+            print(ex["tokens"])
+    timer.add("lint loop")
+
     print(timer)
 
 
-class SequentialTimer:
-    """Measure runtime for each segment of a script."""
+def lint(ex: dict):
+    check_brackets(ex["tags"])
 
-    def __init__(self):
-        self.tt = [("init", default_timer())]
 
-    def add(self, name: str):
-        """Insert a timestamp."""
-        self.tt.append((name, default_timer()))
+def check_brackets(tags):
+    counts = dttab.value_counts(tags, as_dict=True)
+    if counts.get("brop", 0) != counts.get("brcl", 0):
+        raise LintError("unmacthed brackets")
 
-    def get_diffs(self):
-        """Compute runtime for each segment"""
-        return [(k, t - tp) for (k, t), (_, tp) in zip(self.tt[1:], self.tt)]
 
-    def __str__(self):
-        lines = ["Timings: "] + [
-            f"  -{k.ljust(10)}\t {t:.5f} s" for k, t in self.get_diffs()
-        ]
-        return "\n".join(lines)
+class LintError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
 
 
 if __name__ == "__main__":
