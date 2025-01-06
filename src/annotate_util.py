@@ -13,7 +13,7 @@ EXAMPLE_DIR = os.path.join("data", "examples")
 DATASET_FILE = os.path.join("data", "examples_annot.json")
 
 
-IGNORE_PRINT = ["ws", "id", "brop", "brcl"]
+IGNORE_PRINT = ["ws", "id", "nl", "brop", "brcl"]
 
 
 def main():

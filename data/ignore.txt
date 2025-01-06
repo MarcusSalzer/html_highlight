@@ -16,3 +16,15 @@ a_phpinmarkup
 rptmg_css
 mnfnmds_rust
 shrtfns_python
+lftm_rust
+prmsmnfn_rust
+tstfnmthdsnnm_rust
+clswprpts_csharp
+ddcdfnmv_rust
+lspcltt_html
+nttstfbsq_rust
+nttrctch_ts
+smxpnnts_rust
+nfwdccm_rust
+strwmpl_rust
+nxtqstn_ts

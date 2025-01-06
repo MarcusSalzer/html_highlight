@@ -22,10 +22,10 @@ basic_pats = [
     ("cofl", r"(?<=^\s+)(?:\/{2,3}|#|%).+$"),  # comment after indentation
     # php/jsdoc multiline comments
     ("coml", r"\/\*{1,2}[\s\S]+?\*\/"),
-    # inline comments
-    ("coil", r"(?<=\s+)(?:\/{2}|#|%).+$"),
-    ("st", r"\"[^\"]*\""),
-    ("st", r"'[^']*'"),
+    # inline comments (NOTE: quite sketchy)
+    ("coil", r"(?<=\s+)(?:\/{2}|#) ?([^\s]+\s+[^\s].*)"),
+    ("st", r"\"[^\"\n]*\""),
+    ("st", r"'[^'\n]*'"),
     ("brop", r"[\(\[\{]"),
     ("brcl", r"[\)\]\}]"),
     # catch some syntax features before numbers

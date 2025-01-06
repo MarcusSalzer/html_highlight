@@ -33,9 +33,22 @@ class TestEasy(unittest.TestCase):
         self.assertEqual("ws", ta[6])
 
 
-# class TestOp(unittest.TestCase):
-#     def test_intdiv_py(self):
-#         tk,ta =
+class TestOp(unittest.TestCase):
+    def test_intdiv_py_nows(self):
+        tk, ta = process("a//b==3")
+        self.assertListEqual(["a", "//", "b", "==", "3"], tk)
+
+    def test_intdivpy_ws(self):
+        tk, ta = process("a // b")
+        self.assertListEqual(["a", " ", "//", " ", "b"], tk)
+
+    def test_modpy_nows(self):
+        tk, ta = process("a%2==0")
+        self.assertListEqual(["a", "%", "2", "==", "0"], tk)
+
+    def test_modpy_ws(self):
+        tk, ta = process("a % 2 == 0")
+        self.assertListEqual(["a", " ", "%", " ", "2", " ", "==", " ", "0"], tk)
 
 
 class TestComment(unittest.TestCase):
