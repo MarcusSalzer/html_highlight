@@ -3,7 +3,6 @@ import json
 from glob import glob
 
 import polars as pl
-import torch
 
 MAP_TAGS = {
     "opun": "op",
@@ -71,17 +70,6 @@ def data_split(df: pl.DataFrame, fraction=0.2, shuffle=True, verbose=True):
     if verbose:
         print(f"splitted {n} & {len(df)-n}" + " (shuffled)" * shuffle)
     return df2.head(n), df2.tail(-n)
-
-
-def seqs2padded_tensor(sequences: list[list[int | float]], pad_value=0, verbose=True):
-    t = torch.nn.utils.rnn.pad_sequence(
-        (torch.tensor(s) for s in sequences),
-        batch_first=True,
-        padding_value=pad_value,
-    )
-    if verbose:
-        print("padded tensor:", tuple(t.size()))
-    return t
 
 
 def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):

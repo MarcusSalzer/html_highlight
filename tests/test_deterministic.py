@@ -41,6 +41,12 @@ class TestOp(unittest.TestCase):
     def test_intdivpy_ws(self):
         tk, ta = process("a // b")
         self.assertListEqual(["a", " ", "//", " ", "b"], tk)
+        self.assertEqual("opbi", ta[2])
+
+    def test_intdivdart_ws(self):
+        tk, ta = process("a ~/ b")
+        self.assertListEqual(["a", " ", "~/", " ", "b"], tk)
+        self.assertEqual("opbi", ta[2])
 
     def test_modpy_nows(self):
         tk, ta = process("a%2==0")
