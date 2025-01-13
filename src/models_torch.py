@@ -3,7 +3,12 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 
-def run_epoch(model: torch.nn.Module, loader: DataLoader, loss_fn, optimizer=None):
+def run_epoch(
+    model: torch.nn.Module,
+    loader: DataLoader,
+    loss_fn,
+    optimizer: torch.optim.Optimizer | None = None,
+):
     """General training/validation epoch"""
     if optimizer is not None:
         model.train()
@@ -22,6 +27,7 @@ def run_epoch(model: torch.nn.Module, loader: DataLoader, loss_fn, optimizer=Non
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
+
     return loss_agg / len(loader)
 
 
@@ -30,8 +36,8 @@ class LSTMTagger(nn.Module):
         self,
         token_vocab_size,
         label_vocab_size,
-        embedding_dim=10,
-        hidden_dim=200,
+        embedding_dim=12,
+        hidden_dim=128,
         n_lstm_layers=2,
         dropout_lstm=0.3,
         bidi=True,
@@ -145,3 +151,19 @@ class AttentionLayer(nn.Module):
         context_vector = torch.bmm(attention_weights.unsqueeze(1), lstm_out)
         context_vector = context_vector.squeeze(1)
         return context_vector, attention_weights
+
+
+def seqs2padded_tensor(
+    sequences: list[list[int | float]],
+    pad_value=0,
+    verbose=True,
+    device: str | None = None,
+):
+    t = torch.nn.utils.rnn.pad_sequence(
+        (torch.tensor(s) for s in sequences),
+        batch_first=True,
+        padding_value=pad_value,
+    ).to(device)
+    if verbose:
+        print("padded tensor:", tuple(t.size()), t.device)
+    return t

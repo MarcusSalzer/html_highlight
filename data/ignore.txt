@@ -28,3 +28,6 @@ smxpnnts_rust
 nfwdccm_rust
 strwmpl_rust
 nxtqstn_ts
+trctchndfnlcmnt_js
+vdsrgb_python
+chkfstsmnt_ts

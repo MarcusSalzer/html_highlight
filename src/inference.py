@@ -5,7 +5,6 @@ import torch
 from src import models_torch
 
 sys.path.append(".")
-import util_torch
 
 # load vocabs
 with open("./models/lstmTagger_vocabs.json") as f:
@@ -30,10 +29,10 @@ def run(tokens: list[str], tags_det: list[str]) -> list[str]:
     token_idxs = [token2idx.get(t, 1) for t in tokens]
     tag_det_idxs = [tag2idx.get(t, 1) for t in tags_det]
 
-    token_tensors = util_torch.seqs2padded_tensor([token_idxs], verbose=False)
-    tag_det_tensors = util_torch.seqs2padded_tensor([tag_det_idxs], verbose=False)
+    token_tensors = models_torch.seqs2padded_tensor([token_idxs], verbose=False)
+    tag_det_tensors = models_torch.seqs2padded_tensor([tag_det_idxs], verbose=False)
 
-    model = models_torch.LSTMTagger(len(vocab), len(tag_vocab))
+    model = models_torch.LSTMTagger(**metadata["constructor_params"])
     model.load_state_dict(state_dict)
 
     model.eval()

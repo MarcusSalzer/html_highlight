@@ -1,6 +1,6 @@
 from datetime import datetime
 from datatools.benchmark import SequentialTimer
-from util import MAP_TAGS
+from src.util import MAP_TAGS
 
 timer = SequentialTimer()
 

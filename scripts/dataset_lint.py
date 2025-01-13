@@ -7,7 +7,7 @@ from datatools import tabular as dttab
 from datatools.benchmark import SequentialTimer
 
 sys.path.append(".")
-import util
+import src.util as util
 
 from src import text_process
 
@@ -80,14 +80,14 @@ def main():
             err_count += 1
     timer.add("lint loop")
 
-    print(f"{err_count} errors ({err_count/len(data)*100:0.1f}%)\n")
+    print(f"{err_count} errors ({err_count / len(data) * 100:0.1f}%)\n")
 
     print(timer)
 
 
 def lint(ex: dict):
-    # reprocess_check(ex["tokens"], ex["tags"])
-    # bigram_check(ex["tags"])
+    reprocess_check(ex["tokens"], ex["tags"])
+    bigram_check(ex["tags"])
     lang_spec_check(ex["tokens"], ex["tags"], ex["lang"])
 
 
