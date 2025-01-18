@@ -31,3 +31,8 @@ nxtqstn_ts
 trctchndfnlcmnt_js
 vdsrgb_python
 chkfstsmnt_ts
+hllwrld_csharp
+gtdvsrsfn_rust
+rdrbscd_sql
+stccntr_php
+plfl_js

@@ -14,7 +14,6 @@ MAP_TAGS = {
     "fnst": "fn",
     "fnas": "fn",
     "fnfr": "fn",
-    "kwty": "cl",
     "kwfl": "kw",
     "kwop": "kw",
     "kwim": "kw",
@@ -24,43 +23,57 @@ MAP_TAGS = {
     "kwio": "kw",
     "kwde": "kw",
     "at": "va",
-    "mo": "va",
     "cofl": "co",
     "coil": "co",
     "coml": "co",
-    "id": "ws",
 }
 
 
-def load_examples(
+def load_split_idx(split_idx_id: str):
+    name = f"split_index_{split_idx_id}.json"
+    fps = glob(f"./data/**/{name}", recursive=True)
+    if len(fps) > 1:
+        raise ValueError(f"Found {len(fps)} matches")
+    if not fps:
+        raise ValueError(f"Couldn't find {name}")
+    with open(fps[0], "r") as f:
+        split_index = json.load(f)
+    return split_index
+
+
+def load_examples_json(
+    path: str | None = None,
     tag_map: dict | None = None,
     filter_lang: list[str] | None = None,
-    split_index_name: str | None = None,
+    split_idx_id: str | None = None,
     verbose=True,
 ) -> pl.DataFrame | dict[str, pl.DataFrame]:
     """Load all annotated examples
     ## parameters
+    - path: optionally specify a file other than the default dataset.
     - tag_map (dict|None): optionally map tags.
 
     ## returns
     - examples (Dataframe): tokens, tags, lang, length."""
 
-    fp = glob("../**/data/examples_annot.json", recursive=True)[0]
-    with open(fp, encoding="utf-8") as f:
+    if path is None:
+        path = glob("../**/data/examples_annot.json", recursive=True)[0]
+
+    with open(path, encoding="utf-8") as f:
         d = json.load(f)
 
-    if split_index_name is not None:
-        fp = glob(f"../**/data/{split_index_name}.json", recursive=True)[0]
-        with open(fp, "r") as f:
-            split_index = json.load(f)
+    if split_idx_id is not None:
+        split_index = load_split_idx(split_idx_id)
 
     rows = []
     for k, ex in d.items():
-        ex["name"] = k
-        ex["lang"] = k.split("_")[-1]
+        splits = k.split("_")
+        ex["name"] = "_".join(splits[:-1])
+        ex["lang"] = splits[-1]
+        ex["id"] = k
         if tag_map:
             ex["tags"] = [tag_map.get(t, t) for t in ex["tags"]]
-        if split_index_name:
+        if split_idx_id:
             ex["split"] = split_index.get(k)
             # skip if missing from index
             if ex["split"] is None:
@@ -75,7 +88,7 @@ def load_examples(
     if verbose:
         print(f"Loaded {len(data)} examples")
 
-    if split_index_name:
+    if split_idx_id:
         # separate dataframe per split
         data = {g[0]: df for g, df in data.group_by("split", maintain_order=True)}
         if verbose:
@@ -83,6 +96,21 @@ def load_examples(
                 print(f"    {k}: {len(df)}")
 
     return data
+
+
+def save_examples_json(data: pl.DataFrame, path: str):
+    """Format dataframe and save as JSON"""
+    new_data_dict = {
+        f"{d['name']}_{d['lang']}": {
+            "difficulty": d["difficulty"],
+            "tokens": d["tokens"],
+            "tags": d["tags"],
+        }
+        for d in data.rows(named=True)
+    }
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(new_data_dict, f)
 
 
 def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):

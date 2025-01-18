@@ -1,0 +1,18 @@
+def prims_algorithm(self):
+    in_mst = [False] * self.size
+    key_values = [float('inf')] * self.size # Current shortest 
+    parent_nodes = [-1] * self.size # index for tree 
+
+    key_values[0] = 0  # Starting vertex
+
+    for _ in range(self.size):
+        # choose next to add
+        u = min((v for v in range(self.size) if not in_mst[v]), key=lambda v: key_values[v])
+
+        in_mst[u] = True
+
+        # update distances
+        for v in range(self.size):
+            if 0 < self.adj_matrix[u][v] < key_values[v] and not in_mst[v]:
+                key_values[v] = self.adj_matrix[u][v]
+                    parent_nodes[v] = u

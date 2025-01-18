@@ -1,0 +1,13 @@
+<?php
+function increment() {
+  static $count = 37;
+  echo $count;
+  $count++;
+}
+
+increment();
+echo "<br>";
+increment();
+echo "<br>";
+increment();
+?>

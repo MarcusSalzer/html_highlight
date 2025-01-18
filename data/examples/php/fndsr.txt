@@ -1,0 +1,5 @@
+$user = User::find(1);
+ 
+foreach ($user->friends as $friend) {
+    echo $friend->pivot->created_at;
+}

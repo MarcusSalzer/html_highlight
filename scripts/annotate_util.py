@@ -34,15 +34,15 @@ def main():
     with open(os.path.join(EXAMPLE_DIR, lang, name + ".txt")) as f:
         text = f.read()
 
-    print("type `ignore` to save example for later\n")
+    # basic initial tagging
+    tokens, tags = text_process.process(text)
+
+    print("\ntype `ignore` to save example for later\n")
     print("type class +`!` to mark all\n")
 
     print("-" * 15 + f" {name} ({lang}) " + "-" * 15 + "\n")
 
     print(text)
-
-    # basic initial tagging
-    tokens, tags = text_process.process(text)
 
     tags = [simplify_tag(t, aliases) for t in tags]
 

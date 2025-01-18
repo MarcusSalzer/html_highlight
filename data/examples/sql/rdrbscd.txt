@@ -1,0 +1,2 @@
+SELECT * FROM Thingsys
+ORDER BY Property DESC, Title ASC;

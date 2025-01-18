@@ -1,5 +1,7 @@
 try_example/
 hlclip_history/
+models/
+output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

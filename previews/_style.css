@@ -1,7 +1,11 @@
 body {
   color: white;
+  background-color: black;
 }
-
+mark {
+  color: white;
+  background-color: rgba(129, 129, 129, 0.378);
+}
 .assign,
 .as {
   color: #66bcff;
@@ -30,15 +34,24 @@ body {
 .fnas,
 .fn,
 .fnsa,
+.fnfr,
 .fnme {
   color: #a1c4ff;
 }
+.cl {
+  color: #1448a1;
+}
 
 .kwd,
+.kwfl,
+.kwop,
 .kw {
   color: #00b274;
 }
-
+.kwop,
+.kwmo {
+  color: #3cce39;
+}
 .num,
 .nu {
   color: #ba6f6f;
@@ -60,6 +73,14 @@ body {
   color: #a0a082;
 }
 
-.va {
+.va,
+.pa {
   color: #ffe466;
+}
+.li,
+.bo {
+  color: #ff66c1;
+}
+.sy {
+  color: beige;
 }

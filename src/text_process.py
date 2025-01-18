@@ -36,6 +36,7 @@ basic_pats = [
     ("nu", r"(?<!\w)0x[0-9a-fA-F]+|0b[01]+"),
     # numbers: integer, decimal
     ("nu", r"(?<!\w)\d[\d_]*(?:\.\d+)?\w*"),
+    ("id", r"^[\t ]+"),
     ("ws", r"[\r\t\f\v ]+"),
     ("nl", r"\n+"),
     ("sy", r">>>"),
@@ -70,8 +71,10 @@ def process_regex(text: str, patterns: list[tuple[str, str]] = basic_pats):
         tokens.append(m.group())  # matched token
         tags.append(m.lastgroup)  # corresponding tag
 
-    if "".join(tokens) != text:
-        raise ValueError("missed something")
+    rec = "".join(tokens)
+    if rec != text:
+        diffc = len(text) - len(rec)
+        raise ProcessError(f"Missed {diffc} characters")
 
     return tokens, tags
 
@@ -96,7 +99,7 @@ def merge_adjacent(
     """
 
     if len(tokens) != len(tags):
-        raise ValueError("Inconsistent sequence length")
+        raise ProcessError("Inconsistent sequence length")
 
     tokens_merged = []
     tags_merged = []
@@ -112,7 +115,9 @@ def merge_adjacent(
             if (merge_only is None or tag in merge_only) and tag not in dont_merge:
                 if interactive:
                     if (
-                        input(f"merge: `{token}` + `{tokens[i+1]}` ({tag}) ? ").lower()
+                        input(
+                            f"merge: `{token}` + `{tokens[i + 1]}` ({tag}) ? "
+                        ).lower()
                         != "y"
                     ):
                         continue
@@ -138,10 +143,13 @@ def merge_adjacent(
 
 
 def infer_indent(text: str, max_symbols=4) -> str | None:
-    """Consider the beginning of each line to infer the indentation token"""
+    """DEPRECATED?
+
+    Consider the beginning of each line to infer the indentation token"""
     counts = []
     symbols = set()
-    for m in re.finditer(r"^([\t ])+", text, re.MULTILINE):
+    # hopefully avoids multiline comments
+    for m in re.finditer(r"^([\t ])+(?!\*)", text, re.MULTILINE):
         counts.append(len(m.group(0)))
         symbols.add(m.group(1))
 
@@ -152,55 +160,64 @@ def infer_indent(text: str, max_symbols=4) -> str | None:
     if id_token == "\t":
         c = 1
     else:
-        c = min(math.gcd(*counts), max_symbols)
+        if {1, 4}.issubset(counts):
+            # Avoid rare short indentation
+            c = 4
+        else:
+            c = min(math.gcd(*counts), max_symbols)
 
     return id_token * c
 
 
-def process(text: str):
-    """Run complete process"""
+def clean_text(text: str):
+    """Basic cleanup"""
     # remove trailing newline
-    text = re.sub(r"\n+$", "", text)
+    text_clean = re.sub(r"\n+$", "", text)
+    # remove trailing whitespace on lines
+    text_clean = re.sub(r"[\t ]+$", "", text_clean, flags=re.M)
 
-    id_token = infer_indent(text)
+    return text_clean
+
+
+def process(text: str):
+    """Run complete process
+
+    ## returns
+    - tokens
+    - tags
+    """
 
     pats = basic_pats.copy()
 
-    # make sure indentation is matched before whitspace
-    if id_token:
-        pats.insert(0, ("id", id_token))
+    text = clean_text(text)
 
     tokens, tags = process_regex(text, pats)
 
     return tokens, tags
 
 
-def format_html(
-    tokens: list[str],
-    tags: list[str],
-    exclude_tags: list[str] = ["ws", "uk"],
-    level_brackets: bool = True,
-    css_path: str | None = None,
-) -> str:
-    """Format HTML document of tagged text."""
-    tokens_with_tags = []
-    if level_brackets:
-        tags, _ = bracket_levels(tags)
-    for token, tag in zip(tokens, tags):
-        # fix html specials
-        token_text = html_specials(token)
-        if tag in exclude_tags:
-            tokens_with_tags.append(token_text)
-        else:
-            tokens_with_tags.append(f'<span class="{tag}">{token_text}</span>')
+def process_with_inferindent(text: str, verbose: bool = False):
+    """DEPRECATED?
+    Run complete process"""
+    # remove trailing newline
+    text = re.sub(r"\n+$", "", text)
+    # remove trailing whitespace on lines
+    text = re.sub(r"\s+$", "", text, flags=re.M)
 
-    text = "".join(tokens_with_tags)
-    text = f'<pre><code class="code-snippet">{text} </code></pre>'
-    if css_path:
-        css_link = f'<link rel="stylesheet" type="text/css" href="{css_path}">'
-        return f"<head>\n{css_link}\n</head>\n<body>\n{text}\n</body>"
-    else:
-        return text
+    id_token = infer_indent(text)
+
+    pats = basic_pats.copy()
+
+    # make sure indentation is matched before whitespace
+    if id_token:
+        pats.insert(0, ("id", r"^(?<=(?:" + id_token + ")*)" + id_token))
+        if verbose:
+            print(f"indentation: {repr(id_token)}, length {len(id_token)}")
+    elif verbose:
+        print("No indentation.")
+    tokens, tags = process_regex(text, pats)
+
+    return tokens, tags
 
 
 def bracket_levels(tags: list[str]) -> tuple[list[str], list[int]]:
@@ -227,12 +244,8 @@ def bracket_levels(tags: list[str]) -> tuple[list[str], list[int]]:
     return tags_new, brac_level
 
 
-def html_specials(text: str) -> str:
-    """Replace html reserved characters"""
+class ProcessError(Exception):
+    "Something went wrong when processing text."
 
-    text = re.sub(r"&", r"&amp;", text)
-    text = re.sub(r"<", r"&lt;", text)
-    text = re.sub(r">", r"&gt;", text)
-    text = re.sub(r'"', r"&quot;", text)
-    text = re.sub(r"'", r"&apos;", text)
-    return text
+    def __init__(self, *args):
+        super().__init__(*args)

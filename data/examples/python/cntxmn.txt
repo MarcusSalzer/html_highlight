@@ -1,0 +1,2 @@
+>>> with mymod.my_contextmanager():
+...     a = mymod.submod.Constructor(mymod.get(33))

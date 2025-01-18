@@ -177,32 +177,6 @@ def tag_variables(tokens, tags):
     return tags
 
 
-def bracket_levels(tags: list[str]):
-    """Rename bracket tags from brac_op/cl to brac_num.
-
-    ## Returns
-    - tags (list[str]): modified tags
-    - brac_level (list[int]): bracket depth for all tokens.
-
-    NOTE: OLD VERSION
-    """
-    brac_level = []
-    current_level = 0
-    for i in range(len(tags)):
-        if tags[i] == "br_op":
-            brac_level.append(current_level)
-            current_level += 1
-            tags[i] = f"br{current_level}"
-        elif tags[i] == "br_cl":
-            tags[i] = f"br{current_level}"
-            current_level -= 1
-            brac_level.append(current_level)
-        else:
-            brac_level.append(current_level)
-
-    return tags, brac_level
-
-
 def merge_adjacent(tokens, tags, known_str=None):
     """Merge adjacent tokens if they have the same tag.
     NOTE: OLD version
@@ -250,91 +224,6 @@ def html_specials(text: str) -> str:
     text = re.sub(r'"', r"&quot;", text)
     text = re.sub(r"'", r"&apos;", text)
     return text
-
-
-def tokens_to_html(tokens, tags, exclude_tags=("wsp", "unk")):
-    """Format text with html spans.
-    ## Returns
-    - text (str): HTML containing a `<pre>` with a `<code class="code-snippet">`.
-    """
-
-    tokens_with_tags = []
-    for token, tag in zip(tokens, tags):
-        # fix html specials
-        token_text = html_specials(token)
-        if tag in exclude_tags:
-            tokens_with_tags.append(token_text)
-        else:
-            tokens_with_tags.append(
-                f"""<span class="{tag}" title="{tag}">{token_text}</span>"""
-            )
-
-    text = "".join(tokens_with_tags)
-    return f"""<pre><code class="code-snippet">{text} </code></pre>"""
-
-
-def highlight_code(text: str, css_path="_style.css"):
-    """Format a code snippet with classes.
-
-    ## Parameters
-    - text(str): source code to highlight
-    - css_path(str): path to css file to link
-
-    ## Returns
-    """
-
-    known_default = {
-        "assign": ["=", "<-"],
-        "punct": [",", ";", "."],
-        "op": r"!%&/+-*:<>^",
-        "brac_op": r"([{",
-        "brac_cl": r")]}",
-        "keyword": [
-            "for",
-            "while",
-            "foreach",
-            "as",
-            "in",
-            "if",
-            "else",
-            "elif",
-            "and",
-            "or",
-            "not",
-            "return",
-        ],
-    }
-    tokens, tags = tokenize(text)
-    # first: tag individual tokens
-    tags = tag_individuals(tokens, tags, known_default)
-
-    # merge and tag again to catch multiple character assignment etc.
-    tokens, tags = merge_adjacent(tokens, tags, known_default)
-
-    # rename brackets
-    tags, brac_level = bracket_levels(tags)
-
-    # second: context
-    tags = tag_functions(tokens, tags)
-    tags = tag_variables(tokens, tags)
-
-    tokens, tags = merge_adjacent(tokens, tags, known_default)
-    EXCLUDE_TAGS = ("unk", "wsp")
-    html_text = tokens_to_html(tokens, tags, EXCLUDE_TAGS)
-    classes = tuple(sorted(set(tags)))
-
-    css_path = "_style.css"
-    css_link = f'<link rel="stylesheet" type="text/css" href="{css_path}">'
-    final_html = f"""
-<head>
-    {css_link}
-</head>
-<body>
-{html_text}
-</body>
-"""
-
-    return final_html, classes
 
 
 def make_legend_html():

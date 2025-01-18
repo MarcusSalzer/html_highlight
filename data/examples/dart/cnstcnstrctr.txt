@@ -1,0 +1,1 @@
+var p = const ImmutablePoint(2, 2);

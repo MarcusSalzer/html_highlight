@@ -1,0 +1,7 @@
+double initialX = 1.5;
+
+class Point {
+  late double? z = this.x;
+
+  Point(this.x, this.y);
+}
