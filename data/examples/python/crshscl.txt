@@ -1,0 +1,1 @@
+curses.has_color()

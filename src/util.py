@@ -31,7 +31,7 @@ MAP_TAGS = {
 
 def load_split_idx(split_idx_id: str):
     name = f"split_index_{split_idx_id}.json"
-    fps = glob(f"./data/**/{name}", recursive=True)
+    fps = glob(f"../**/data/**/{name}", recursive=True)
     if len(fps) > 1:
         raise ValueError(f"Found {len(fps)} matches")
     if not fps:

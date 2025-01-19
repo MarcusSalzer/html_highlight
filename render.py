@@ -6,8 +6,10 @@ import os
 from src import html_process, util
 
 
-def render_data(data, title):
-    html_process.render_preview(data, "./_style.css", title)
+def render_data(data, title, correct=None, names=False):
+    html_process.render_preview(
+        data, "./_style.css", title, correct=correct, show_names=names
+    )
 
 
 if __name__ == "__main__":
@@ -15,9 +17,8 @@ if __name__ == "__main__":
     parser.add_argument("data", choices=["all", "train", "val", "test"])
     parser.add_argument("-l", "--lang")
     parser.add_argument("-s", "--splits")
-    parser.add_argument(
-        "-p", "--php", action="store_true", help="start PHP local server to show result"
-    )
+    parser.add_argument("-n", "--names", action="store_true")
+    parser.add_argument("-c", "--clear", action="store_true")
     parser.add_argument("-v", "--verbose", action="store_true")
 
     args = parser.parse_args()
@@ -25,13 +26,17 @@ if __name__ == "__main__":
     dataset = args.data
     lang_filter = args.lang
     splits = args.splits
-    php = args.php
+    include_names = args.names
+    clear = args.clear
+    if clear:
+        for f in glob("previews/*.html"):
+            os.remove(f)
 
     if isinstance(lang_filter, str):
         lang_filter = [lang_filter]
 
     # RENDER DATASET
-    all_data = util.load_examples_json(
+    data_true = util.load_examples_json(
         filter_lang=lang_filter, split_idx_id=splits, verbose=False
     )
     if dataset in ["train", "val", "test"]:
@@ -41,13 +46,16 @@ if __name__ == "__main__":
             print("try: -s ", [n[12:].split(".")[0] for n in files])
             exit(1)
 
-        all_data = all_data[dataset]
+        data_true = data_true[dataset]
     if verbose:
-        print(f"Loaded {len(all_data)} examples")
+        print(f"Loaded {len(data_true)} examples")
 
     # preview-document title
-    title = dataset + "_" + "".join(lang_filter) * (lang_filter is not None)
-    render_data(all_data, title=title)
+    title = dataset
+    if lang_filter is not None:
+        title += "_" + "".join(lang_filter)
+
+    render_data(data_true, title=title, names=include_names)
 
     # RENDER PREDICTIONS
     # find all predictions
@@ -57,7 +65,7 @@ if __name__ == "__main__":
         data = util.load_examples_json(
             path=fp, split_idx_id=splits, filter_lang=lang_filter, verbose=False
         )
-        if dataset is not None:
+        if dataset is not None and dataset != "all":
             data = data[dataset]
         all_data[fp.split("/")[-1].split(".")[0]] = data
     if verbose:
@@ -68,16 +76,12 @@ if __name__ == "__main__":
             d = " + ".join(lens)
         print(f"Loaded {d} predictions")
         for k, df in all_data.items():
-            render_data(df, title=title + "_" + k)
+            render_data(
+                df, title=title + "_" + k, correct=data_true, names=include_names
+            )
 
-    if php:
-        paths = sorted(glob("*.html", root_dir="previews/"))
-        paths.remove("index.html")
-        links = [f'<li><a href = "{p}">{p.split(".")[0]}</a></li>' for p in paths]
-        content = "<ul>" + "\n".join(links) + "</ul>"
-        document = '<!DOCTYPE html><html><head><meta charset="utf-8" />'
-        document += f"</head><body>{content}</body></html>"
-        with open("previews/index.html", "w", encoding="utf-8") as f:
-            f.write(document)
+    # for easier access
+    html_process.make_previews_index()
 
-        os.system("php -S localhost:1337 -t previews/")
+    # start local server.
+    os.system("php -S localhost:1337 -t previews/")

@@ -45,7 +45,7 @@ def make_example_groups(examples: pl.DataFrame, min_group_count: int = 3):
     """add a group column, grouping by:
     - approx length
     - lang
-    - difficulty
+    - difficulty?
     """
     examples = examples.with_columns(
         group=(
@@ -56,8 +56,6 @@ def make_example_groups(examples: pl.DataFrame, min_group_count: int = 3):
             .otherwise(pl.lit("long"))
             + "_"
             + pl.col("lang")
-            + "_"
-            + pl.col("difficulty")
         )
     )
 

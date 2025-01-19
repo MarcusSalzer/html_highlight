@@ -1,14 +1,11 @@
 import json
-
-import regex as re
-from src import text_process
-
+from glob import glob
 
 import polars as pl
+import regex as re
 
-from src.text_process import (
-    bracket_levels,
-)
+from src import text_process
+from src.text_process import bracket_levels
 
 
 def make_head_html(css_path: str, title: str | None = None):
@@ -55,11 +52,12 @@ def format_html(
     tokens: list[str],
     tags: list[str],
     override_elements: list[str] | None = None,
-    exclude_tags: list[str] = ["ws", "uk"],
+    exclude_tags: list[str] = ["ws", "uk", "id"],
     level_brackets: bool = True,
     css_path: str | None = None,
     legend: bool = False,
     tooltips: bool = False,
+    errors: list[bool] | None = None,
 ) -> str:
     """Format HTML document of tagged text."""
     tokens_with_tags = []
@@ -68,23 +66,33 @@ def format_html(
     if override_elements is None:
         override_elements = [None] * len(tokens)
 
+    # If no error markings
+    if errors is None:
+        errors = [False] * len(tokens)
+
     if level_brackets:
         tags, _ = bracket_levels(tags)
-    for token, tag, el in zip(tokens, tags, override_elements, strict=True):
+    for token, tag, el, is_err in zip(
+        tokens, tags, override_elements, errors, strict=True
+    ):
         # fix html specials
         token_text = html_specials(token)
         if tag in exclude_tags:
             tokens_with_tags.append(token_text)
         else:
+            # if no overwritten element
             if el is None:
                 el = "span"
+
+            # mark errors
+            tag += " error" * is_err
 
             tokens_with_tags.append(
                 f'<{el} class="{tag}" {f'title="{tag}"' * tooltips}>{token_text}</{el}>'
             )
 
     text = "".join(tokens_with_tags)
-    text = f'<pre><code class="code-snippet">{text} </code></pre>'
+    text = f'\n<pre><code class="code-snippet">{text} </code></pre>\n'
 
     if legend:
         text += "\n" + make_legend_html()
@@ -96,22 +104,67 @@ def format_html(
         return text
 
 
-def render_preview(data: pl.DataFrame, css_path: str, title: str | None = None):
+def render_preview(
+    data: pl.DataFrame,
+    css_path: str,
+    title: str | None = None,
+    correct: pl.DataFrame | None = None,
+    show_names: bool = False,
+    mark_nondet: bool = False,
+):
     """Write a complete HTML document"""
-    document = make_head_html(css_path, title) + "<body>\n"
 
-    if title:
-        document += f"<h1>{title}</h1>"
+    if correct is not None:
+        if len(data) != len(correct):
+            raise ValueError("# examples mismatch")
+        data = data.join(
+            correct.select("name", "lang", "tags"),
+            on=["name", "lang"],
+            how="left",
+            suffix="_correct",
+        )
 
+        if len(data) != len(correct):
+            raise ValueError("join mismatch")
+
+    # to compute mean accuracy (if `correct` provided)
+    accs = []
+    document_examples = ""  # append all markup to this
     for ex in data.iter_rows(named=True):
         _, tags_det = text_process.process("".join(ex["tokens"]))
-        mark = ["mark" if (t == "uk") else None for t in tags_det]
+        if correct is not None:
+            errors = [
+                t != tc for t, tc in zip(ex["tags"], ex["tags_correct"], strict=True)
+            ]
+            acc = 1 - (sum(errors) / len(errors))
+            accs.append(acc)
+        else:
+            errors = None
+        if mark_nondet:
+            mark = ["mark" if (t == "uk") else None for t in tags_det]
+        else:
+            mark = None
         ex_text = format_html(
-            ex["tokens"], ex["tags"], override_elements=mark, tooltips=True
+            ex["tokens"],
+            ex["tags"],
+            override_elements=mark,
+            tooltips=True,
+            errors=errors,
         )
-        ex_title = f"<p>{ex['name']} ({ex['lang']})</p>"
-        document += ex_title + "\n" + ex_text + "<br>"
-    document += "</body>\n"
+        ex_title = f"{(ex['name'] + ' ') * show_names} ({ex['lang']})"
+        if correct is not None:
+            ex_title += f" {acc * 100:.1f}% acc"
+        ex_title = f"\n<p>{ex_title}</p>"
+        document_examples += ex_title + "\n" + ex_text + "\n<br>\n"
+
+    document_full = make_head_html(css_path, title) + "<body>\n"
+    if title:
+        document_full += f"<h1>{title}</h1>"
+    if correct is not None:
+        mean_acc = sum(accs) / len(accs)
+        document_full += f"\n<p>Mean accuracy: {mean_acc * 100:.1f}%</p>\n"
+
+    document_full += document_examples + "</body>\n"
 
     if title:
         filename = re.sub(r"[\\\/\.]", "_", title)
@@ -119,5 +172,22 @@ def render_preview(data: pl.DataFrame, css_path: str, title: str | None = None):
         filename = "output"
 
     with open(f"./previews/{filename}.html", "w", encoding="utf-8") as f:
+        f.write(document_full)
+    print(f"wrote {len(document_full.splitlines())} lines")
+
+
+def make_previews_index():
+    """Create a index with links to previews"""
+
+    paths = sorted(glob("*.html", root_dir="previews/"))
+    try:
+        paths.remove("index.html")
+    except ValueError:
+        pass
+
+    links = [f'<li><a href = "{p}">{p.split(".")[0]}</a></li>' for p in paths]
+    content = "<ul>" + "\n".join(links) + "</ul>"
+    document = '<!DOCTYPE html><html><head><meta charset="utf-8" />'
+    document += f"</head><body>{content}</body></html>"
+    with open("previews/index.html", "w", encoding="utf-8") as f:
         f.write(document)
-    print(f"wrote {len(document.splitlines())} lines")
