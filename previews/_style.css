@@ -1,0 +1,117 @@
+body {
+  color: white;
+  background-color: black;
+}
+pre,
+code {
+  font-family: "Comic Mono", monospace;
+}
+mark {
+  color: white;
+  background-color: rgba(129, 129, 129, 0.378);
+}
+.error {
+  text-decoration: underline wavy red 1px;
+}
+.at {
+  color: rgb(253, 255, 195);
+}
+.bo {
+  color: rgb(147, 88, 167);
+}
+.cl {
+  color: rgb(70, 99, 193);
+}
+.cofl {
+  color: rgb(81, 115, 120);
+}
+.coil {
+  color: rgb(81, 115, 120);
+}
+.coml {
+  color: rgb(81, 115, 120);
+}
+.fnas {
+  color: rgb(95, 198, 249);
+}
+.fnfr {
+  color: rgb(95, 198, 249);
+}
+.fnme {
+  color: rgb(95, 198, 249);
+}
+.kwde {
+  color: rgb(255, 151, 40);
+}
+.kwfl {
+  color: rgb(40, 255, 151);
+}
+.kwfn {
+  color: rgb(255, 151, 40);
+}
+.kwim {
+  color: rgb(255, 151, 40);
+}
+.kwio {
+  color: rgb(255, 151, 40);
+}
+.kwmo {
+  color: rgb(255, 151, 40);
+}
+.kwop {
+  color: rgb(255, 151, 40);
+}
+.kwty {
+  color: rgb(169, 159, 26);
+}
+.kwva {
+  color: rgb(255, 151, 40);
+}
+.li {
+  color: rgb(243, 114, 255);
+}
+.mo {
+  color: rgb(180, 188, 67);
+}
+.nu {
+  color: rgb(212, 111, 255);
+}
+.opas {
+  color: rgb(255, 141, 75);
+}
+.opbi {
+  color: rgb(255, 141, 75);
+}
+.opcm {
+  color: rgb(255, 141, 75);
+}
+.opun {
+  color: rgb(255, 141, 75);
+}
+.pa {
+  color: rgb(253, 255, 195);
+}
+.pu {
+  color: rgb(255, 205, 66);
+}
+.st {
+  color: rgb(194, 188, 108);
+}
+.sy {
+  color: rgb(214, 233, 178);
+}
+.va {
+  color: rgb(253, 255, 195);
+}
+.br0 {
+  color: rgb(182, 255, 179);
+}
+.br1 {
+  color: rgb(179, 231, 255);
+}
+.br2 {
+  color: rgb(211, 179, 255);
+}
+.br3 {
+  color: rgb(255, 179, 251);
+}

@@ -1,65 +1,113 @@
 body {
   color: white;
+  background-color: black;
 }
-
-.assign,
-.as {
-  color: #66bcff;
+mark {
+  color: white;
+  background-color: rgba(129, 129, 129, 0.378);
 }
-
-.br0 {
-  color: #98ff66;
+.error {
+  text-decoration: underline wavy whitesmoke 1px;
 }
-
-.brac1,
-.br1 {
-  color: #98ff66;
+.at {
+  color: rgb(253, 255, 195);
 }
-
-.brac2,
-.br2 {
-  color: #6684ff;
+.bo {
+  color: rgb(147, 88, 167);
 }
-
-.brac3,
-.br3 {
-  color: #ff66c1;
+.cl {
+  color: rgb(70, 99, 193);
 }
-
-.func,
-.fnas,
-.fn,
-.fnsa,
+.cofl {
+  color: rgb(81, 115, 120);
+}
+.coil {
+  color: rgb(81, 115, 120);
+}
+.coml {
+  color: rgb(81, 115, 120);
+}
+.fnas {
+  color: rgb(95, 198, 249);
+}
+.fnfr {
+  color: rgb(95, 198, 249);
+}
 .fnme {
-  color: #a1c4ff;
+  color: rgb(95, 198, 249);
 }
-
-.kwd,
-.kw {
-  color: #00b274;
+.kwde {
+  color: rgb(255, 151, 40);
 }
-
-.num,
+.kwfl {
+  color: rgb(40, 255, 151);
+}
+.kwfn {
+  color: rgb(255, 151, 40);
+}
+.kwim {
+  color: rgb(255, 151, 40);
+}
+.kwio {
+  color: rgb(255, 151, 40);
+}
+.kwmo {
+  color: rgb(255, 151, 40);
+}
+.kwop {
+  color: rgb(255, 151, 40);
+}
+.kwty {
+  color: rgb(169, 159, 26);
+}
+.kwva {
+  color: rgb(255, 151, 40);
+}
+.li {
+  color: rgb(243, 114, 255);
+}
+.mo {
+  color: rgb(180, 188, 67);
+}
 .nu {
-  color: #ba6f6f;
+  color: rgb(212, 111, 255);
 }
-
-.op,
-.opun,
+.opas {
+  color: rgb(255, 141, 75);
+}
 .opbi {
-  color: #66fff4;
+  color: rgb(255, 141, 75);
 }
-
-.punct,
+.opcm {
+  color: rgb(255, 141, 75);
+}
+.opun {
+  color: rgb(255, 141, 75);
+}
+.pa {
+  color: rgb(253, 255, 195);
+}
 .pu {
-  color: #a6ff66;
+  color: rgb(255, 205, 66);
 }
-
-.str,
 .st {
-  color: #a0a082;
+  color: rgb(194, 188, 108);
 }
-
+.sy {
+  color: rgb(214, 233, 178);
+}
 .va {
-  color: #ffe466;
+  color: rgb(253, 255, 195);
+}
+.br0 {
+  color: rgb(182, 255, 179);
+}
+.br1 {
+  color: rgb(179, 231, 255);
+}
+.br2 {
+  color: rgb(211, 179, 255);
+}
+.br3 {
+  color: rgb(255, 179, 251);
 }

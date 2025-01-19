@@ -2,6 +2,33 @@ import unittest
 from src import text_process
 
 
+class TestCleanUp(unittest.TestCase):
+    def test_2lines(self):
+        t = "a\nb\n"
+        c = text_process.clean_text(t)
+        self.assertEqual("a\nb", c)
+
+    def test_2lines_br(self):
+        t = "a\n\n  b\n"
+        c = text_process.clean_text(t)
+        self.assertEqual("a\n\n  b", c)
+
+    def test_trail_nl(self):
+        t = "x = 3\ny = 2\n"
+        c = text_process.clean_text(t)
+        self.assertEqual("x = 3\ny = 2", c)
+
+    def test_trail_2nl(self):
+        t = "x = 3\ny = 2\n\n"
+        c = text_process.clean_text(t)
+        self.assertEqual("x = 3\ny = 2", c)
+
+    def test_trail_spt(self):
+        t = "x = 3 \ny = 2\t\n\nprint(x+y)"
+        c = text_process.clean_text(t)
+        self.assertEqual("x = 3\ny = 2\n\nprint(x+y)", c)
+
+
 class TestInitialRegex(unittest.TestCase):
     def test_single_stmt(self):
         tk, ta = text_process.process_regex("x = 3")
@@ -55,6 +82,11 @@ class TestInitialRegex(unittest.TestCase):
         self.assertEqual("nl", ta[4])
         self.assertEqual("id", ta[5])
         self.assertEqual("nl", ta[7])
+
+    def test_more_id(self):
+        tk, ta = text_process.process("1\n  2\n    3")
+        self.assertListEqual(["1", "\n", "  ", "2", "\n", "    ", "3"], tk)
+        self.assertListEqual(["nu", "nl", "id", "nu", "nl", "id", "nu"], ta)
 
     def test_number(self):
         tk, ta = text_process.process_regex("1337, 12")
@@ -166,6 +198,7 @@ class TestInitialRegex(unittest.TestCase):
             ["a", "=", "0xA"],
             tk,
         )
+        self.assertEqual("nu", ta[2])
 
         tk, ta = text_process.process_regex("a=0x1a2B + 33")
         self.assertListEqual(
@@ -262,6 +295,10 @@ class TestInferIndent(unittest.TestCase):
     def test_tab(self):
         self.assertEqual("\t", text_process.infer_indent("\t123"), "single tab")
         self.assertEqual("\t", text_process.infer_indent("\t\t123"), "double tab")
+
+    def test_php_coml(self):
+        t = "/**\n * Get thse thing\n */\n$x = 1"
+        self.assertEqual(None, text_process.infer_indent(t))
 
 
 class TestBracLevel(unittest.TestCase):

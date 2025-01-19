@@ -28,7 +28,7 @@
   "opas": ["oa", "assignment operator"],
   "fnme": ["me", "method"],
   "fnas": ["fa", "assoc/stat function"],
-  "fnfr": ["f", "free function"],
+  "fnfr": ["f", "free function/callable"],
   "pa": ["para", "parameter"],
   "cl": ["class", "class-like"],
   "mo": ["module", "module/namespace"],

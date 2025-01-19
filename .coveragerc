@@ -1,0 +1,5 @@
+[run]
+omit = **/.pyenv/**
+[report]
+omit = **/.pyenv/**
+skip_empty = True

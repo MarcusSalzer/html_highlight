@@ -5,41 +5,41 @@ import torch
 from src import models_torch
 
 sys.path.append(".")
-import util
-
-# load vocabs
-with open("./models/lstmTagger_vocabs.json") as f:
-    metadata = json.load(f)
-
-# load model weights
-state_dict = torch.load("./models/lstmTagger_state.pth", weights_only=True)
 
 
-vocab = metadata["vocab"]
-tag_vocab = metadata["tag_vocab"]
-tag_map = metadata.get("tag_map")
-token2idx = {t: i for i, t in enumerate(vocab)}
-tag2idx = {t: i for i, t in enumerate(tag_vocab)}
+class Inference:
+    def __init__(self, model_name: str):
+        # load meta
+        with open(f"./models/{model_name}_meta.json") as f:
+            metadata = json.load(f)
 
+        self.vocab = metadata["vocab"]
+        self.tag_vocab = metadata["tag_vocab"]
+        self.tag_map = metadata.get("tag_map")
+        self.token2idx = {t: i for i, t in enumerate(self.vocab)}
+        self.tag2idx = {t: i for i, t in enumerate(self.tag_vocab)}
 
-def run(tokens: list[str], tags_det: list[str]) -> list[str]:
-    # optionally map tags
-    if tag_map is not None:
-        tags_det = [tag_map.get(t, t) for t in tags_det]
+        # load model weights
+        state_dict = torch.load(f"./models/{model_name}_state.pth", weights_only=True)
+        self.model = models_torch.LSTMTagger(**metadata["constructor_params"])
+        self.model.load_state_dict(state_dict)
 
-    token_idxs = [token2idx.get(t, 1) for t in tokens]
-    tag_det_idxs = [tag2idx.get(t, 1) for t in tags_det]
+    def run(self, tokens: list[str], tags_det: list[str]) -> list[str]:
+        """Run inference using model"""
+        # optionally map tags
+        if self.tag_map is not None:
+            tags_det = [self.tag_map.get(t, t) for t in tags_det]
 
-    token_tensors = util.seqs2padded_tensor([token_idxs], verbose=False)
-    tag_det_tensors = util.seqs2padded_tensor([tag_det_idxs], verbose=False)
+        token_idxs = [self.token2idx.get(t, 1) for t in tokens]
+        tag_det_idxs = [self.tag2idx.get(t, 1) for t in tags_det]
 
-    model = models_torch.LSTMTagger(len(vocab), len(tag_vocab))
-    model.load_state_dict(state_dict)
+        token_tensors = models_torch.seqs2padded_tensor([token_idxs], verbose=False)
+        tag_det_tensors = models_torch.seqs2padded_tensor([tag_det_idxs], verbose=False)
 
-    model.eval()
-    with torch.no_grad():
-        tag_scores = model(token_tensors, tag_det_tensors)
-    predictions = torch.argmax(tag_scores, dim=-1)
+        self.model.eval()
+        with torch.no_grad():
+            tag_scores = self.model(token_tensors, tag_det_tensors)
+        predictions = torch.argmax(tag_scores, dim=-1)
 
-    tags = [tag_vocab[p] for p in predictions.ravel()]
-    return tags
+        tags = [self.tag_vocab[p] for p in predictions.ravel()]
+        return tags

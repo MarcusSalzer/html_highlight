@@ -1,0 +1,2 @@
+icecream_sum <- summary(icecream_lm)
+glimpse(icecream_sum)

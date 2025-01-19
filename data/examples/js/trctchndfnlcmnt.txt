@@ -1,0 +1,7 @@
+try {
+  setTimeout(function() {
+    fail; // an undefined variable
+  }, 100);
+} catch (err) {
+  alert("cannot catch!");
+}

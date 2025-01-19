@@ -1,0 +1,5 @@
+>>> scheduler = ...
+>>> for epoch in range(100):
+>>>     train(...)
+>>>     validate(...)
+>>>     scheduler.step()

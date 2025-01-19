@@ -1,0 +1,9 @@
+/**
+ * Get thse thing
+ */
+public function thatThing(): BelongsTo
+{
+    return $this->belongsTo(Thing::class)->withDefault([
+        'attr' => 'xyz1234?',
+    ]);
+}

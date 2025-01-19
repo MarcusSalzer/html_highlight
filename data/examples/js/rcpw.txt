@@ -1,0 +1,7 @@
+function yo(x, exp) {
+  if (exp == 1) {
+    return x;
+  } else {
+    return x * yo(x, exp - 1);
+  }
+} 

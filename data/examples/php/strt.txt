@@ -1,0 +1,6 @@
+use Illuminate\Database\Eloquent\SoftDeletes;
+ 
+class Thingsy extends Model
+{
+    use SoftDeletes;
+}

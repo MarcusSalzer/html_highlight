@@ -1,27 +1,17 @@
+"""Import and use `hlclip.hlclip()` to highlight clipboard"""
+
 from datetime import datetime
 from datatools.benchmark import SequentialTimer
-from util import MAP_TAGS
+from src.html_process import format_html
+from src.util import MAP_TAGS
 
 timer = SequentialTimer()
 
 import pyperclip as pc  # noqa: E402
 
 timer.add("import pyperclip")
-# from src.text_functions import highlight_code
 
-# # highlight code in clipboard
-# try:
-#     in_text = pc.paste()
-# except Exception:
-#     in_text = "clipboard problem?"
-
-# out_text, classes = highlight_code(in_text)
-
-# print(out_text)
-# pc.copy(out_text)
-# print()
-
-from src.text_process import process, format_html  # noqa: E402
+from src.text_process import process  # noqa: E402
 
 
 timer.add("import text_process")
@@ -31,6 +21,8 @@ from src import inference  # noqa: E402
 timer.add("import inference")
 
 print(timer)
+
+infer = inference.Inference("lstm_0113")
 
 
 def hlclip():
@@ -43,7 +35,7 @@ def hlclip():
     save_to_history(in_text)
 
     tokens, tags_det = process(in_text)
-    tags_pred = inference.run(tokens, tags_det)
+    tags_pred = infer.run(tokens, tags_det)
 
     # combine with deterministic tags
     tags = []
