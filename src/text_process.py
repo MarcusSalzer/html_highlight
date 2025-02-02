@@ -23,7 +23,8 @@ basic_pats = [
     # php/jsdoc multiline comments
     ("coml", r"\/\*{1,2}[\s\S]+?\*\/"),
     # inline comments (NOTE: quite sketchy)
-    ("coil", r"(?<=\s+)(?:\/{2}|#) ?([^\s]+\s+[^\s].*)"),
+    ("coil", r"(?<=\s+)\/{2} ?(?:[a-zA-Z]+\s+[a-zA-Z].*)"),
+    ("coil", r"(?<=\s+)# ?.*"),  # shell/py style, less confusion with op
     ("st", r"\"[^\"\n]*\""),
     ("st", r"'[^'\n]*'"),
     ("brop", r"[\(\[\{]"),

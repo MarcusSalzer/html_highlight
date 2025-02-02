@@ -3,7 +3,6 @@
 from datetime import datetime
 import json
 from src import util, data_functions
-import polars as pl
 
 
 def make_split(

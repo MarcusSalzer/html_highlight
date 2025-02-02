@@ -28,6 +28,34 @@ MAP_TAGS = {
     "coml": "co",
 }
 
+# allow these in vocab
+VOCAB_TAGS = [
+    "kwfl",
+    "kwty",
+    "kwop",
+    "kwmo",
+    "kwva",
+    "kwde",
+    "kwfn",
+    "kwim",
+    "kwio",
+    "id",
+    "ws",
+    "nl",
+    "brop",
+    "brcl",
+    "sy",
+    "pu",
+    "bo",
+    "li",
+    "opcm",
+    "opbi",
+    "opun",
+    "opas",
+    "an",
+    "uk",
+]
+
 
 def load_split_idx(split_idx_id: str):
     name = f"split_index_{split_idx_id}.json"
@@ -124,6 +152,28 @@ def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):
             char_tags.extend(["start-" + tag] + [tag] * (len(token) - 1))
 
     return chars, char_tags
+
+
+def make_vocab(
+    examples: pl.DataFrame,
+    insert=["<pad>", "<unk>"],
+    vocab_tags: list[str] | None = VOCAB_TAGS,
+):
+    """Make vocab, and inverse map"""
+    vocab_cands = examples.select(pl.col("tokens", "tags").explode())
+    if vocab_tags is not None:
+        vocab_cands = vocab_cands.filter(pl.col("tags").is_in(vocab_tags))
+
+    vocab_cands = (
+        vocab_cands.group_by("tokens")
+        .agg(pl.len().alias("count"))
+        .sort("count", "tokens", descending=True)
+    )
+
+    vocab = insert + vocab_cands["tokens"].to_list()
+    token2idx = {t: i for i, t in enumerate(vocab)}
+
+    return vocab, token2idx
 
 
 def MAPE(y_true, y_pred, symmetric=False):

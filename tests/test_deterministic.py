@@ -43,6 +43,30 @@ class TestOp(unittest.TestCase):
         self.assertListEqual(["a", " ", "//", " ", "b"], tk)
         self.assertEqual("opbi", ta[2])
 
+    def test_intdivpy2(self):
+        tk, ta = process("range(2, max // i + 1)")
+        self.assertListEqual(
+            [
+                "range",
+                "(",
+                "2",
+                ",",
+                " ",
+                "max",
+                " ",
+                "//",
+                " ",
+                "i",
+                " ",
+                "+",
+                " ",
+                "1",
+                ")",
+            ],
+            tk,
+        )
+        self.assertEqual("opbi", ta[7])
+
     def test_intdivdart_ws(self):
         tk, ta = process("a ~/ b")
         self.assertListEqual(["a", " ", "~/", " ", "b"], tk)

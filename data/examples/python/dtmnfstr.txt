@@ -1,0 +1,2 @@
+now = datetime.now()
+name = f"split_index_{now.month:02d}{now.day:02d}"

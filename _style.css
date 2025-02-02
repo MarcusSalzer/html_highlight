@@ -2,12 +2,16 @@ body {
   color: white;
   background-color: black;
 }
+pre,
+code {
+  font-family: "Comic Mono", monospace;
+}
 mark {
   color: white;
   background-color: rgba(129, 129, 129, 0.378);
 }
 .error {
-  text-decoration: underline wavy whitesmoke 1px;
+  text-decoration: underline wavy red 1px;
 }
 .at {
   color: rgb(253, 255, 195);

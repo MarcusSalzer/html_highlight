@@ -1,0 +1,4 @@
+args = parser.parse_args()
+
+# manual seed.
+torch.manual_seed(args.seed)

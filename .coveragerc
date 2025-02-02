@@ -1,5 +1,5 @@
 [run]
 omit = **/.pyenv/**
 [report]
-omit = **/.pyenv/**
+omit = **/.pyenv/**, ./tests/*
 skip_empty = True

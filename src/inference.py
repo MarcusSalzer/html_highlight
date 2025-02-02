@@ -2,7 +2,7 @@ import json
 import sys
 
 import torch
-from src import models_torch
+from src import torch_util
 
 sys.path.append(".")
 
@@ -21,7 +21,7 @@ class Inference:
 
         # load model weights
         state_dict = torch.load(f"./models/{model_name}_state.pth", weights_only=True)
-        self.model = models_torch.LSTMTagger(**metadata["constructor_params"])
+        self.model = torch_util.LSTMTagger(**metadata["constructor_params"])
         self.model.load_state_dict(state_dict)
 
     def run(self, tokens: list[str], tags_det: list[str]) -> list[str]:
@@ -33,8 +33,8 @@ class Inference:
         token_idxs = [self.token2idx.get(t, 1) for t in tokens]
         tag_det_idxs = [self.tag2idx.get(t, 1) for t in tags_det]
 
-        token_tensors = models_torch.seqs2padded_tensor([token_idxs], verbose=False)
-        tag_det_tensors = models_torch.seqs2padded_tensor([tag_det_idxs], verbose=False)
+        token_tensors = torch_util.seqs2padded_tensor([token_idxs], verbose=False)
+        tag_det_tensors = torch_util.seqs2padded_tensor([tag_det_idxs], verbose=False)
 
         self.model.eval()
         with torch.no_grad():
