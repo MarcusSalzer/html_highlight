@@ -1,0 +1,6 @@
+use Illuminate\Database\Eloquent\SoftDeletes;
+ 
+class Flight extends Model
+{
+    use SoftDeletes;
+}

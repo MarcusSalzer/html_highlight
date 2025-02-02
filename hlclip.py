@@ -7,22 +7,8 @@ timer = SequentialTimer()
 import pyperclip as pc  # noqa: E402
 
 timer.add("import pyperclip")
-# from src.text_functions import highlight_code
-
-# # highlight code in clipboard
-# try:
-#     in_text = pc.paste()
-# except Exception:
-#     in_text = "clipboard problem?"
-
-# out_text, classes = highlight_code(in_text)
-
-# print(out_text)
-# pc.copy(out_text)
-# print()
 
 from src.text_process import process, format_html  # noqa: E402
-
 
 timer.add("import text_process")
 
@@ -57,7 +43,7 @@ def hlclip():
 
     out_text = format_html(tokens, tags)
 
-    print(out_text)
+    print(" ".join(tags))
     pc.copy(out_text)
 
 

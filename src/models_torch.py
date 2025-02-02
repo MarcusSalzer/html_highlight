@@ -1,6 +1,15 @@
+from typing import Literal
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+
+
+def get_device() -> Literal["cuda", "cpu"]:
+    """Pick device"""
+    if torch.cuda.is_available():
+        return "cuda"
+    else:
+        return "cpu"
 
 
 def run_epoch(

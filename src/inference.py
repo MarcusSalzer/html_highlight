@@ -10,8 +10,12 @@ sys.path.append(".")
 with open("./models/lstmTagger_vocabs.json") as f:
     metadata = json.load(f)
 
+dev = models_torch.get_device()
+
 # load model weights
-state_dict = torch.load("./models/lstmTagger_state.pth", weights_only=True)
+state_dict = torch.load(
+    "./models/lstmTagger_state.pth", weights_only=True, map_location=dev
+)
 
 
 vocab = metadata["vocab"]
