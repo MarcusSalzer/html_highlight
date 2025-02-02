@@ -49,7 +49,7 @@ def hlclip():
 
     out_text = format_html(tokens, tags)
 
-    print(out_text)
+    print(" ".join(tags))
     pc.copy(out_text)
 
 
