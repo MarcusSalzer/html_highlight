@@ -1,8 +1,13 @@
-try_example/
+# data things
+data/examples_annot.json
 hlclip_history/
+try_example/
 models/
 output/
 previews/
+search/
+tmp/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

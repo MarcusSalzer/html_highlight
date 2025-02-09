@@ -237,6 +237,44 @@ class TestInitialRegex(unittest.TestCase):
         self.assertListEqual(["1", "..", "9"], tk)
         self.assertListEqual(["nu", "sy", "nu"], ta)
 
+    def test_rust_lifetimes(self):
+        t = "fn longest<'a>(x: &'a str) -> &'a str"
+        tk, ta = text_process.process_regex(t)
+        self.assertListEqual(
+            [
+                "fn",
+                " ",
+                "longest",
+                "<",
+                "'a",
+                ">",
+                "(",
+                "x",
+                ":",
+                " ",
+                "&",
+                "'a",
+                " ",
+                "str",
+                ")",
+                " ",
+                "->",
+                " ",
+                "&",
+                "'a",
+                " ",
+                "str",
+            ],
+            tk,
+        )
+
+    def test_php_assoc(self):
+        t = "'attr' => 'xyz1234?'"
+        tk, ta = text_process.process_regex(t)
+        self.assertListEqual(["'attr'", " ", "=>", " ", "'xyz1234?'"], tk)
+        self.assertEqual("st", ta[0])
+        self.assertEqual("st", ta[4])
+
 
 class TestMergeAdjacent(unittest.TestCase):
     def test_nomerge(self):

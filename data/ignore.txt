@@ -38,3 +38,4 @@ stccntr_php
 plfl_js
 gtrsndstrf_rust
 prms_python
+dtmnfstr_python

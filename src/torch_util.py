@@ -202,7 +202,7 @@ def train_loop(
 
             msg += f"acc: {val_accs[-1] * 100:.2f}%"
             if lr_s is not None:
-                msg += f"{Style.dim} LR: {lr_s.get_last_lr()[0]:.6f} {Style.RESET_ALL}"
+                msg += f"{Style.DIM} LR: {lr_s.get_last_lr()[0]:.6f} {Style.RESET_ALL}"
             print(msg)
 
             if epoch % (10 * print_interval) == 0 and epoch > 0:

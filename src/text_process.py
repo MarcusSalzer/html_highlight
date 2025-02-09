@@ -25,7 +25,11 @@ basic_pats = [
     # inline comments (NOTE: quite sketchy)
     ("coil", r"(?<=\s+)\/{2} ?(?:[a-zA-Z]+\s+[a-zA-Z].*)"),
     ("coil", r"(?<=\s+)# ?.*"),  # shell/py style, less confusion with op
+    # rust lifetime annotations
+    ("an", r"(?<=[&< ])'[^> ]+(?=[> :])"),
+    # basic double-quote string
     ("st", r"\"[^\"\n]*\""),
+    # single quote string
     ("st", r"'[^'\n]*'"),
     ("brop", r"[\(\[\{]"),
     ("brcl", r"[\)\]\}]"),

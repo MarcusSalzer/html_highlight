@@ -1,3 +1,5 @@
+"""Interactive annotation CLI."""
+
 import json
 import os
 import sys
