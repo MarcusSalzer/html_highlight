@@ -32,9 +32,13 @@ def hlclip():
     except Exception:
         in_text = "clipboard problem?"
 
+    if not in_text:
+        in_text = "Copy something!"
+
     save_to_history(in_text)
 
     tokens, tags_det = process(in_text)
+
     tags_pred = infer.run(tokens, tags_det)
 
     # combine with deterministic tags

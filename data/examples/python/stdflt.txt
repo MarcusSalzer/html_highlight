@@ -1,0 +1,3 @@
+runtimes = {}
+for name, time in task_runs:
+    runtimes.setdefault(name, []).append(time)

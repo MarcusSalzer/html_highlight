@@ -62,7 +62,7 @@ def make_example_groups(examples: pl.DataFrame, min_group_count: int = 3):
     # keep all these in "other"
     rare_groups = (
         examples.group_by("group").agg(pl.len()).filter(pl.col("len") < min_group_count)
-    ).select("group")
+    )["group"]
 
     examples = examples.with_columns(
         group=pl.when(pl.col("group").is_in(rare_groups))
@@ -95,7 +95,7 @@ def data_split(
     ratios = [s / ssum for s in ratios]
 
     ## list of df:s for each split
-    split_dfs = [[] for _ in ratios]
+    split_dfs: list[list[pl.DataFrame]] = [[] for _ in ratios]
     for _, group_df in data.group_by(stratify_col, maintain_order=True):
         n_group = len(group_df)
         if shuffle:

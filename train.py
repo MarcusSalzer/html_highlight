@@ -11,7 +11,7 @@ MODEL_DIR = "models"
 DATA_DIR = "data"
 
 
-def train_interactive():
+def train_interactive() -> None:
     """Train a model"""
     models_meta = sorted(glob(f"{MODEL_DIR}/*_meta.json"))
     model_names = [m.split("/")[-1].replace("_meta.json", "") for m in models_meta]

@@ -52,6 +52,7 @@ Some basic classes are captured through a deterministic (**det**) process. Other
 
 - `pa`: parameter. a variable defined together with a function.
 - `cl`: class. Non-primitve defined, also traits.
+- `clco`: class constructor. class name used as a function
 - `mo`: module/namespace.
 - `fnme`: method. A function on an object instance
 - `fnas`: associated/static method/function. On module or class

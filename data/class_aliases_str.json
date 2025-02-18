@@ -31,6 +31,7 @@
   "fnfr": ["f", "free function/callable"],
   "pa": ["para", "parameter"],
   "cl": ["class", "class-like"],
+  "clco": ["constructor", "class constructor"],
   "mo": ["module", "module/namespace"],
   "an": ["annotation"],
   "va": ["v", "variable"],

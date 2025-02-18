@@ -86,7 +86,7 @@ class SequenceDataset(Dataset):
 
 
 def seqs2padded_tensor(
-    sequences: list[list[int | float]],
+    sequences: list[list[int]],
     pad_value=0,
     verbose=True,
     device: str | None = None,

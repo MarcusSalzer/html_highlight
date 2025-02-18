@@ -14,7 +14,6 @@ POSSIBLE_PER_TOKEN = {
     "  ": ["ws", "id"],
 }
 
-
 # patterns for some basic tokens
 # in order
 basic_pats = [
@@ -25,10 +24,13 @@ basic_pats = [
     # inline comments (NOTE: quite sketchy)
     ("coil", r"(?<=\s+)\/{2} ?(?:[a-zA-Z]+\s+[a-zA-Z].*)"),
     ("coil", r"(?<=\s+)# ?.*"),  # shell/py style, less confusion with op
-    # rust lifetime annotations
-    ("an", r"(?<=[&< ])'[^> ]+(?=[> :])"),
+    # triple-quote string
+    ("st", r"\"{3}.*\"{3}"),
     # basic double-quote string
     ("st", r"\"[^\"\n]*\""),
+    # rust lifetime annotations (NOTE: before single-strings)
+    ("an", r"(?<=&|<|< |\+ |, )'\p{L}+(?=[>,])"),  # in angle brackets
+    ("an", r"(?<=&)'\p{L}+"),  # in references
     # single quote string
     ("st", r"'[^'\n]*'"),
     ("brop", r"[\(\[\{]"),
@@ -85,8 +87,8 @@ def process_regex(text: str, patterns: list[tuple[str, str]] = basic_pats):
 
 
 def merge_adjacent(
-    tokens,
-    tags,
+    tokens: list[str],
+    tags: list[str],
     merge_only: list[str] | None = None,
     dont_merge: list[str] = [],
     interactive: bool = False,
@@ -106,7 +108,7 @@ def merge_adjacent(
     if len(tokens) != len(tags):
         raise ProcessError("Inconsistent sequence length")
 
-    tokens_merged = []
+    tokens_merged: list[str] = []
     tags_merged = []
     # keep track of where merges where made
     merge_idx = []

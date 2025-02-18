@@ -1,0 +1,6 @@
+N = 10
+adj_lists = [[] for _ in range(N)]
+print(adj_lists)
+
+adj_lists[1].append(37)
+print(adj_lists)

@@ -75,7 +75,7 @@ def load_examples_json(
     filter_lang: list[str] | None = None,
     split_idx_id: str | None = None,
     verbose=True,
-) -> pl.DataFrame | dict[str, pl.DataFrame]:
+):
     """Load all annotated examples
     ## parameters
     - path: optionally specify a file other than the default dataset.
@@ -92,7 +92,6 @@ def load_examples_json(
 
     if split_idx_id is not None:
         split_index = load_split_idx(split_idx_id)
-
 
     rows = []
     for k, ex in d.items():
@@ -119,10 +118,13 @@ def load_examples_json(
 
     if split_idx_id:
         # separate dataframe per split
-        data = {g[0]: df for g, df in data.group_by("split", maintain_order=True)}
+        data_splits = {
+            g[0]: df for g, df in data.group_by("split", maintain_order=True)
+        }
         if verbose:
-            for k, df in data.items():
+            for k, df in data_splits.items():
                 print(f"    {k}: {len(df)}")
+        return data_splits
 
     return data
 
@@ -143,7 +145,7 @@ def save_examples_json(data: pl.DataFrame, path: str):
 
 
 def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):
-    chars = []
+    chars: list[str] = []
     char_tags = []
     for token, tag in zip(tokens, tags):
         chars.extend(token)

@@ -237,8 +237,14 @@ class TestInitialRegex(unittest.TestCase):
         self.assertListEqual(["1", "..", "9"], tk)
         self.assertListEqual(["nu", "sy", "nu"], ta)
 
-    def test_rust_lifetimes(self):
-        t = "fn longest<'a>(x: &'a str) -> &'a str"
+    def test_rust_lifetime(self):
+        t = "&'a str"
+        tk, ta = text_process.process_regex(t)
+        self.assertListEqual(["&", "'a", " ", "str"], tk)
+        self.assertEqual("an", ta[1])
+
+    def test_rust_lifetime_fun(self):
+        t = "fn longest<'a>(x: &'a str)"
         tk, ta = text_process.process_regex(t)
         self.assertListEqual(
             [
@@ -257,16 +263,41 @@ class TestInitialRegex(unittest.TestCase):
                 " ",
                 "str",
                 ")",
-                " ",
-                "->",
+            ],
+            tk,
+        )
+
+    def test_rust_lifetime_two(self):
+        tk, ta = text_process.process_regex("fn foo<'a, 'b>")
+        self.assertListEqual(["fn", " ", "foo", "<", "'a", ",", " ", "'b", ">"], tk)
+        self.assertEqual("an", ta[4])
+        self.assertEqual("an", ta[7])
+
+    def test_rust_lifetime_tworef(self):
+        tk, ta = text_process.process_regex("x: &'a str, y: &'b str")
+        self.assertListEqual(
+            [
+                "x",
+                ":",
                 " ",
                 "&",
                 "'a",
                 " ",
                 "str",
+                ",",
+                " ",
+                "y",
+                ":",
+                " ",
+                "&",
+                "'b",
+                " ",
+                "str",
             ],
             tk,
         )
+        self.assertEqual("an", ta[4])
+        self.assertEqual("an", ta[13])
 
     def test_php_assoc(self):
         t = "'attr' => 'xyz1234?'"
@@ -274,6 +305,57 @@ class TestInitialRegex(unittest.TestCase):
         self.assertListEqual(["'attr'", " ", "=>", " ", "'xyz1234?'"], tk)
         self.assertEqual("st", ta[0])
         self.assertEqual("st", ta[4])
+
+    def test_empty_singlestr(self):
+        t = "x = ''"
+        tk, ta = text_process.process_regex(t)
+        self.assertListEqual(["x", " ", "=", " ", "''"], tk)
+        self.assertEqual("st", ta[4])
+
+    def test_empty_doublestr(self):
+        t = 'x = ""'
+        tk, ta = text_process.process_regex(t)
+        self.assertListEqual(["x", " ", "=", " ", '""'], tk)
+        self.assertEqual("st", ta[4])
+
+    def test_empty_triplesstr(self):
+        t = '""""""'
+        tk, ta = text_process.process_regex(t)
+        self.assertListEqual(['""""""'], tk)
+        self.assertEqual("st", ta[0])
+
+    def test_py_docstr(self):
+        t = 'def y(x):\n    """This is a..."""\n'
+        tk, ta = text_process.process_regex(t)
+        self.assertListEqual(
+            [
+                "def",
+                " ",
+                "y",
+                "(",
+                "x",
+                ")",
+                ":",
+                "\n",
+                "    ",
+                '"""This is a..."""',
+                "\n",
+            ],
+            tk,
+        )
+
+    def test_singlestring(self):
+        tk, ta = text_process.process_regex("s = [ 'some ']")
+        self.assertEqual(["s", " ", "=", " ", "[", " ", "'some '", "]"], tk)
+        self.assertEqual("st", ta[6])
+
+    def test_strs_weird(self):
+        tk, ta = text_process.process_regex("&x<> = 'some' , 'b '")
+        self.assertListEqual(
+            ["&", "x", "<", ">", " ", "=", " ", "'some'", " ", ",", " ", "'b '"], tk
+        )
+        self.assertEqual("st", ta[7])
+        self.assertEqual("st", ta[11])
 
 
 class TestMergeAdjacent(unittest.TestCase):

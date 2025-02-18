@@ -14,11 +14,13 @@ def palette_from_background(
     h_primary = (hsv_background[0] + 0.5) % 1.0
 
     # linearly spaced hues
-    h_vec = np.linspace(h_primary - spread[0] / 2, h_primary + spread[0] / 2, n_colors)
+    h_vec: np.ndarray = np.linspace(
+        h_primary - spread[0] / 2, h_primary + spread[0] / 2, n_colors
+    )
     h_vec += noise * rng.normal(size=n_colors)
     h_vec = np.round(h_vec % 1.0, 8)
 
-    s_vec = 0.6 * np.ones(n_colors)
+    s_vec: np.ndarray = 0.6 * np.ones(n_colors)
     v_vec = np.ones(n_colors)
     return [hsv_to_rgb(*hsv) for hsv in zip(h_vec, s_vec, v_vec)]
 
@@ -33,7 +35,7 @@ def rgb2hex(r, g, b):
         f = 1
     else:
         f = 255
-    return "#" + "".join(f"{round(i*f):02x}" for i in (r, g, b))
+    return "#" + "".join(f"{round(i * f):02x}" for i in (r, g, b))
 
 
 def random_rgb():

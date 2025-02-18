@@ -10,7 +10,7 @@ sys.path.append(".")
 class Inference:
     def __init__(self, model_name: str):
         # load meta
-        with open(f"./models/{model_name}_meta.json") as f:
+        with open(f"./model_inference/{model_name}_meta.json") as f:
             metadata = json.load(f)
 
         self.vocab = metadata["vocab"]
