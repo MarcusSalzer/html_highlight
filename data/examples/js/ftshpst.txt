@@ -1,0 +1,6 @@
+const response = await fetch("https://mysite.xyz/post", {
+  headers: {
+    "Content-Type": "application/json",
+  },
+  // ...
+});

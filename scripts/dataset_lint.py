@@ -1,3 +1,4 @@
+# mypy: disable-error-code="import-untyped"
 """A few rules for checking the quality of the dataset."""
 
 import os
@@ -13,7 +14,7 @@ import src.util as util
 from src import text_process
 
 
-REQUIRES_PRE = {"id": ("nl", "id"), "opas": ("ws", "va", "pa", "brcl")}
+REQUIRES_PRE = {"id": ("nl", "id"), "opas": ("ws", "va", "pa", "brcl", "shfl")}
 
 # bad tag bigrams
 ILLEGAL_BIGRAMS = [
@@ -24,7 +25,6 @@ ILLEGAL_BIGRAMS = [
     "va va",
     "opcm opcm",
     "kw kw",
-    "fnfr brop",
 ]
 
 
@@ -38,7 +38,9 @@ LANG_SPEC_TOKENS = {
         "else": "kwfl",
         "<": "opcm",
         ">": "opcm",
+        "self": "pa",
     },
+    "js": {"this": "pa"},
 }
 
 
@@ -160,7 +162,7 @@ def reload_check(tokens: list[str], tags: list[str], name: str, lang: str):
 def bigram_check(tags: list[str]):
     """Check for required tags before current tag"""
     for tag_pre, tag in zip(tags, tags[1:]):
-        if "".join([tag_pre, tag]) in ILLEGAL_BIGRAMS:
+        if " ".join([tag_pre, tag]) in ILLEGAL_BIGRAMS:
             raise LintError(f"Illegal bigram: `{tag_pre}` `{tag}`")
 
         req_pre = REQUIRES_PRE.get(tag)

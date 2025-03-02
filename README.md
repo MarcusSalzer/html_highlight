@@ -5,6 +5,8 @@
 - Reset indentation: avoid unnecessary indentation of all lines
 - Feature based classifier
   - Features
+- inline mode: try to catch code fragments in text
+- language classifier: if confident, we can put a little language title at the top of the generated block, especially for longer snippets
 
 ## Classes
 

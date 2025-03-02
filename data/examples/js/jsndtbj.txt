@@ -1,0 +1,2 @@
+const obj = JSON.parse(text);
+obj.t = new Date(obj.t);

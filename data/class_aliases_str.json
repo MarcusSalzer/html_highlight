@@ -34,7 +34,8 @@
   "clco": ["constructor", "class constructor"],
   "mo": ["module", "module/namespace"],
   "an": ["annotation"],
-  "va": ["v", "variable"],
+  "va": ["v", "variable/identifier"],
   "at": ["attribute"],
+  "shfl": ["flag", "shell flag"],
   "uk": ["unknown"]
 }

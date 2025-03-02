@@ -1,0 +1,1 @@
+$discussions = Discussion::get();

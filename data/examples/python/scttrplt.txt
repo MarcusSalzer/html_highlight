@@ -1,0 +1,7 @@
+go.Scatter(
+    x=np.linspace(*search.param_range, res),
+    y=pred_mean + pred_std,
+    name="upper",
+    fill="tonexty",
+    line=dict(color="green"),
+)

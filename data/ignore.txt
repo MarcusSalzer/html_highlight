@@ -13,7 +13,6 @@ vnddnmstrfmt_kotlin
 strtpsp_python
 hdr_html
 a_phpinmarkup
-rptmg_css
 mnfnmds_rust
 shrtfns_python
 lftm_rust
@@ -40,3 +39,14 @@ gtrsndstrf_rust
 prms_python
 dtmnfstr_python
 pntcnstrctr_dart
+cndssgn_dart
+trchbfl_python
+rrwfn_php
+dlln_bash
+ltnm_bash
+pthlns_bash
+grphlp_bash
+nrrp_r
+nwtrm_bash
+tlf_bash
+rptmg_css

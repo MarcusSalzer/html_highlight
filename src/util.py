@@ -1,6 +1,7 @@
 # For mapping to a smaller label space
 import json
 from glob import glob
+from typing import Iterator, Protocol, TypeVar
 
 import polars as pl
 import numpy as np
@@ -55,6 +56,14 @@ VOCAB_TAGS = [
     "an",
     "uk",
 ]
+
+T = TypeVar("T", covariant=True)
+
+
+class ArrayLike(Protocol[T]):
+    def __len__(self) -> int: ...
+    def __iter__(self) -> Iterator[T]: ...
+    def __getitem__(self, index: int) -> T: ...
 
 
 def load_split_idx(split_idx_id: str):
@@ -160,23 +169,34 @@ def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):
 def make_vocab(
     examples: pl.DataFrame,
     insert=["<pad>", "<unk>"],
-    vocab_tags: list[str] | None = VOCAB_TAGS,
-):
+    vocab_allowed_tags: list[str] | None = VOCAB_TAGS,
+) -> tuple[list, dict[str, int], list, dict[str, int]]:
     """Make vocab, and inverse map"""
     vocab_cands = examples.select(pl.col("tokens", "tags").explode())
-    if vocab_tags is not None:
-        vocab_cands = vocab_cands.filter(pl.col("tags").is_in(vocab_tags))
+    if vocab_allowed_tags is not None:
+        vocab_cands = vocab_cands.filter(pl.col("tags").is_in(vocab_allowed_tags))
 
-    vocab_cands = (
+    token_cands = (
         vocab_cands.group_by("tokens")
         .agg(pl.len().alias("count"))
         .sort("count", "tokens", descending=True)
     )
+    tag_cands = (
+        examples.select("tags")
+        .explode("tags")
+        .group_by("tags")
+        .agg(pl.len().alias("count"))
+        .sort("count", "tags", descending=True)
+    )
 
-    vocab = insert + vocab_cands["tokens"].to_list()
+    # token vocab
+    vocab = insert + token_cands["tokens"].to_list()
     token2idx = {t: i for i, t in enumerate(vocab)}
 
-    return vocab, token2idx
+    # tag vocab
+    tag_vocab = insert + tag_cands["tags"].to_list()
+    tag2idx = {t: i for i, t in enumerate(tag_vocab)}
+    return vocab, token2idx, tag_vocab, tag2idx
 
 
 def MAPE(y_true, y_pred, symmetric=False):

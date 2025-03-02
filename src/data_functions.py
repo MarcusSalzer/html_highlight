@@ -1,3 +1,5 @@
+# mypy: disable-error-code="misc"
+
 import random
 import polars as pl
 
@@ -106,11 +108,9 @@ def data_split(
             split_dfs[split_id].append(group_df[s:e])
 
     if shuffle:
-        split_dfs = [
+        return [
             pl.concat(dfs).sample(fraction=1.0, shuffle=True, seed=seed)
             for dfs in split_dfs
         ]
     else:
-        split_dfs = [pl.concat(dfs) for dfs in split_dfs]
-
-    return split_dfs
+        return [pl.concat(dfs) for dfs in split_dfs]

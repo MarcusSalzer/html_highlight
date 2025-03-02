@@ -1,0 +1,1 @@
+y = F.scaled_dot_product_attention(q,k,v, is_causal=True)

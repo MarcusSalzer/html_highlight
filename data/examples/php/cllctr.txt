@@ -1,0 +1,1 @@
+$user->completedExercises->pluck('id')->sort()->toArray();

@@ -1,23 +1,28 @@
 import os
 from timeit import default_timer
+from typing import cast
+
+import polars as pl
 import torch
+from colorama import Fore, Style
 from torch import nn, optim
 from torch.utils.data import DataLoader, Dataset
-import polars as pl
+
 from src import text_process
-from colorama import Fore, Style
+from src.util import ArrayLike
 
 
 class LSTMTagger(nn.Module):
     def __init__(
         self,
-        token_vocab_size,
-        label_vocab_size,
-        embedding_dim=12,
-        hidden_dim=128,
-        n_lstm_layers=2,
-        dropout_lstm=0.3,
-        bidi=True,
+        token_vocab_size: int,
+        label_vocab_size: int,
+        embedding_dim: int = 12,
+        hidden_dim: int = 128,
+        n_lstm_layers: int = 2,
+        dropout_lstm: float = 0.3,
+        bidi: bool = True,
+        n_extra_feats: int = 0,
     ):
         super(LSTMTagger, self).__init__()
         self.embedding_tokens = nn.Embedding(
@@ -26,27 +31,44 @@ class LSTMTagger(nn.Module):
         self.embedding_labels = nn.Embedding(
             label_vocab_size, embedding_dim, padding_idx=0
         )
+
+        # LSTM will recieve embedded tokens, tags and possibly extra_feats
+        lstm_in_dim = (3 if n_extra_feats > 0 else 2) * embedding_dim
+
         self.lstm = nn.LSTM(
-            2 * embedding_dim,
+            lstm_in_dim,
             hidden_dim,
             n_lstm_layers,
             batch_first=True,
             dropout=dropout_lstm,
             bidirectional=bidi,
         )
-        # double size if bidirectional
-        self.hidden2tag = nn.Linear(hidden_dim * (2 if bidi else 1), label_vocab_size)
+        actual_hidden = hidden_dim * (2 if bidi else 1)
+        if n_extra_feats > 0:
+            # project extra features to same dim as tokens and labels
+            self.feature_proj = nn.Linear(n_extra_feats, embedding_dim)
 
-    def forward(self, tokens, labels):
+        # double size if bidirectional
+        self.hidden2tag = nn.Linear(actual_hidden, label_vocab_size)
+
+    def forward(
+        self,
+        tokens: torch.Tensor,
+        labels: torch.Tensor,
+        extra_feats: torch.Tensor | None = None,
+    ):
         embeds_tokens = self.embedding_tokens(tokens)
         embeds_labels = self.embedding_labels(labels)
 
         embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)
-        #  (batch_size, seq_len, embedding_dim)
+        if extra_feats is not None:
+            feats_emb = self.feature_proj(extra_feats)
+            embeds = torch.cat([embeds, feats_emb], dim=-1)
+        #  (bs, seq_len, (2 or 3) * emb_dim)
         lstm_out, _ = self.lstm(embeds)
-        #  (batch_size, seq_len, hidden_dim)
+        #  (bs, seq_len, actual_hidden)
         logits = self.hidden2tag(lstm_out)
-        # (batch_size, seq_len, tagset_size)
+        # (bs, seq_len, tagset_size)
         return logits
 
 
@@ -55,9 +77,9 @@ class SequenceDataset(Dataset):
 
     def __init__(
         self,
-        tokens: list[list[str]],
-        labels_det: list[list[str]],
-        labels_true: list[list[str]],
+        tokens: ArrayLike[list[str]],
+        labels_det: ArrayLike[list[str]],
+        labels_true: ArrayLike[list[str]],
         token2idx: dict[str, int],
         label2idx: dict[str, int],
         device: str | None = None,
@@ -127,10 +149,11 @@ def run_epoch(
     for tokens, labels_det, labels_true in loader:
         # Forward pass
         logits: torch.Tensor = model(tokens, labels_det)
+        bs = logits.shape[0]
         # Reshape for loss calculation
         loss = loss_fn(logits.view(-1, logits.size(-1)), labels_true.view(-1))
-        loss_agg += loss.item()
-        n_elements += labels_true.numel()
+        loss_agg += loss.item() * bs
+        n_elements += bs
         if optimizer is not None:
             # Backward pass and optimization
             loss.backward()
@@ -143,17 +166,18 @@ def run_epoch(
 def train_loop(
     model: torch.nn.Module,
     train_dl: DataLoader,
-    val_dl: DataLoader,
+    val_dl: DataLoader[SequenceDataset],
     epochs=100,
     optimizer: optim.Optimizer | None = None,
     loss_function=None,
     lr_s: optim.lr_scheduler.LRScheduler | None = None,
     name="",
     save_dir=None,
-    print_interval=5,
+    save_wait: int = 5,
+    printerval=1,
     time_limit: int | None = None,
+    reduce_lr_on_plat: bool = True,
 ):
-    fp = os.path.join(save_dir, f"{name}_state.pth")
     if save_dir is not None and not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -162,12 +186,21 @@ def train_loop(
     if loss_function is None:
         loss_function = nn.CrossEntropyLoss()
 
+    if reduce_lr_on_plat:
+        lrs_plat = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, factor=0.5, patience=20
+        )
+    else:
+        lrs_plat = None
+
     losses_train = []
     losses_val = []
     val_accs = []
 
-    prev_best = 0.0
+    prev_best_vl = 0.0
     best_loss = float("inf")
+    prev_best_acc = 0
+    best_acc = 0
     tstart = default_timer()
 
     for epoch in range(epochs):
@@ -179,33 +212,55 @@ def train_loop(
         with torch.no_grad():
             val_loss = run_epoch(model, val_dl, loss_function)
             losses_val.append(val_loss)
-            val_accs.append(val_acc(model, val_dl.dataset))
+            val_acc_now = val_acc(model, cast(SequenceDataset, val_dl.dataset))
+            val_accs.append(val_acc_now)
 
         if lr_s is not None:
             lr_s.step()
+        if lrs_plat is not None:
+            lrs_plat.step(val_loss)
 
+        m_extra = " "
         if val_loss < best_loss:
             best_loss = val_loss
-            if save_dir is not None:
+            if save_dir is not None and epoch > save_wait:
+                fp = os.path.join(save_dir, f"{name}_state.pth")
                 torch.save(model.state_dict(), fp)
+                m_extra += (
+                    f"{Fore.CYAN} Saved in {save_dir} (best VL) {Style.RESET_ALL}"
+                )
+        if val_acc_now > best_acc:
+            best_acc = val_acc_now
+            if save_dir is not None and epoch > save_wait:
+                fp = os.path.join(save_dir, f"{name}_acc_state.pth")
+                torch.save(model.state_dict(), fp)
+                m_extra += (
+                    f"{Fore.CYAN} Saved in {save_dir} (best Acc) {Style.RESET_ALL}"
+                )
 
-        if (epoch) % print_interval == 0:
+        if (epoch) % printerval == 0:
             msg = f"{epoch:4d}/{epochs},{Style.DIM} train: {train_loss:.6f},{Style.RESET_ALL} val: {val_loss:.6f},"
 
-            impr = prev_best - best_loss
-            prev_best = best_loss
+            impr_vl, prev_best_vl = prev_best_vl - best_loss, best_loss
             msg += (
                 Fore.GREEN + f" min-loss: {best_loss:.6f}, " + Style.RESET_ALL
-                if impr > 0
+                if impr_vl > 0
                 else " " * 21
             )
 
-            msg += f"acc: {val_accs[-1] * 100:.2f}%"
+            impr_acc, prev_best_acc = best_acc - prev_best_acc, best_acc
+
+            msg += (
+                Fore.GREEN * (impr_acc > 0)
+                + f"acc: {val_accs[-1] * 100:.2f}%"
+                + Style.RESET_ALL * (impr_acc > 0)
+            )
+
             if lr_s is not None:
                 msg += f"{Style.DIM} LR: {lr_s.get_last_lr()[0]:.6f} {Style.RESET_ALL}"
-            print(msg)
+            print(msg + m_extra)
 
-            if epoch % (10 * print_interval) == 0 and epoch > 0:
+            if epoch % (10 * printerval) == 0 and epoch > 0:
                 print()
         if time_limit is not None:
             if default_timer() - tstart > time_limit:

@@ -1,5 +1,6 @@
 import unittest
 from src import text_process
+from src.text_process import process_regex
 
 
 class TestCleanUp(unittest.TestCase):
@@ -31,36 +32,36 @@ class TestCleanUp(unittest.TestCase):
 
 class TestInitialRegex(unittest.TestCase):
     def test_single_stmt(self):
-        tk, ta = text_process.process_regex("x = 3")
+        tk, ta = process_regex("x = 3")
         self.assertListEqual(["x", " ", "=", " ", "3"], tk)
-        tk, ta = text_process.process_regex("3+f(y)")
+        tk, ta = process_regex("3+f(y)")
         self.assertListEqual(["3", "+", "f", "(", "y", ")"], tk)
         self.assertEqual("nu", ta[0])
 
     def test_strs(self):
-        tk, ta = text_process.process_regex("name = 'abc';")
+        tk, ta = process_regex("name = 'abc';")
         self.assertListEqual(["name", " ", "=", " ", "'abc'", ";"], tk)
-        tk, ta = text_process.process_regex('name = "abc"')
+        tk, ta = process_regex('name = "abc"')
         self.assertListEqual(["name", " ", "=", " ", '"abc"'], tk)
         # tk, ta = text_process.tokenize_plus('a "nested" string')
         # self.assertListEqual(["a", " ", '"', "nested", '"', " ", "string"], tk)
 
     def test_lambda_arrow_big(self):
-        tk, ta = text_process.process_regex("(m) => parse(m)")
+        tk, ta = process_regex("(m) => parse(m)")
         self.assertListEqual(
             ["(", "m", ")", " ", "=>", " ", "parse", "(", "m", ")"],
             tk,
         )
 
     def test_lambda_arrow_small(self):
-        tk, ta = text_process.process_regex("(m) -> parse(m)")
+        tk, ta = process_regex("(m) -> parse(m)")
         self.assertListEqual(
             ["(", "m", ")", " ", "->", " ", "parse", "(", "m", ")"],
             tk,
         )
 
     def test_multiline(self):
-        tk, ta = text_process.process_regex("name='abc'\nx=2")
+        tk, ta = process_regex("name='abc'\nx=2")
         self.assertListEqual(["name", "=", "'abc'", "\n", "x", "=", "2"], tk)
 
         self.assertEqual("nl", ta[3])
@@ -89,14 +90,14 @@ class TestInitialRegex(unittest.TestCase):
         self.assertListEqual(["nu", "nl", "id", "nu", "nl", "id", "nu"], ta)
 
     def test_number(self):
-        tk, ta = text_process.process_regex("1337, 12")
+        tk, ta = process_regex("1337, 12")
         self.assertListEqual(
             ["1337", ",", " ", "12"],
             tk,
             "two ints",
         )
 
-        tk, ta = text_process.process_regex("1337.0, 12.55")
+        tk, ta = process_regex("1337.0, 12.55")
         self.assertListEqual(
             ["1337.0", ",", " ", "12.55"],
             tk,
@@ -108,41 +109,41 @@ class TestInitialRegex(unittest.TestCase):
         self.assertEqual("nu", ta[3])
 
     def test_numbers_advanced(self):
-        tk, ta = text_process.process_regex("1337usize>2i32")
+        tk, ta = process_regex("1337usize>2i32")
         self.assertListEqual(
             ["1337usize", ">", "2i32"],
             tk,
             "annotated nums",
         )
 
-        tk, ta = text_process.process_regex("1_000>1.0f64")
+        tk, ta = process_regex("1_000>1.0f64")
         self.assertListEqual(
             ["1_000", ">", "1.0f64"],
             tk,
             "annotated nums",
         )
 
-        tk, ta = text_process.process_regex("1337_usize>2_i32")
+        tk, ta = process_regex("1337_usize>2_i32")
         self.assertListEqual(
             ["1337_usize", ">", "2_i32"],
             tk,
             "annotated nums with underscores",
         )
 
-        tk, ta = text_process.process_regex("1337_000 < 2_000.123")
+        tk, ta = process_regex("1337_000 < 2_000.123")
         self.assertListEqual(
             ["1337_000", " ", "<", " ", "2_000.123"],
             tk,
             "nums with underscores",
         )
 
-        tk, ta = text_process.process_regex("3+1i")
+        tk, ta = process_regex("3+1i")
         self.assertListEqual(
             ["3", "+", "1i"],
             tk,
             "complex number",
         )
-        tk, ta = text_process.process_regex("1.5j")
+        tk, ta = process_regex("1.5j")
         self.assertListEqual(
             ["1.5j"],
             tk,
@@ -150,7 +151,7 @@ class TestInitialRegex(unittest.TestCase):
         )
         self.assertEqual("nu", ta[0])
 
-        tk, ta = text_process.process_regex("1f 1.333f")
+        tk, ta = process_regex("1f 1.333f")
         self.assertListEqual(
             ["1f", " ", "1.333f"],
             tk,
@@ -159,27 +160,27 @@ class TestInitialRegex(unittest.TestCase):
         self.assertEqual("nu", ta[0])
         self.assertEqual("nu", ta[2])
 
-        tk, ta = text_process.process_regex("1.5j")
+        tk, ta = process_regex("1.5j")
         self.assertListEqual(
             ["1.5j"],
             tk,
             "complex decimal number",
         )
 
-        tk, ta = text_process.process_regex("x3 = 3*1i")
+        tk, ta = process_regex("x3 = 3*1i")
         self.assertListEqual(
             ["x3", " ", "=", " ", "3", "*", "1i"],
             tk,
         )
 
-        tk, ta = text_process.process_regex("22/7")
+        tk, ta = process_regex("22/7")
         self.assertListEqual(
             ["22", "/", "7"],
             tk,
             "division of ints",
         )
 
-        tk, ta = text_process.process_regex("22.02/7.12")
+        tk, ta = process_regex("22.02/7.12")
         self.assertListEqual(
             ["22.02", "/", "7.12"],
             tk,
@@ -187,33 +188,33 @@ class TestInitialRegex(unittest.TestCase):
         )
 
     def test_numbers_hex(self):
-        tk, ta = text_process.process_regex("0x0")
+        tk, ta = process_regex("0x0")
         self.assertListEqual(
             ["0x0"],
             tk,
         )
 
-        tk, ta = text_process.process_regex("a=0xA")
+        tk, ta = process_regex("a=0xA")
         self.assertListEqual(
             ["a", "=", "0xA"],
             tk,
         )
         self.assertEqual("nu", ta[2])
 
-        tk, ta = text_process.process_regex("a=0x1a2B + 33")
+        tk, ta = process_regex("a=0x1a2B + 33")
         self.assertListEqual(
             ["a", "=", "0x1a2B", " ", "+", " ", "33"],
             tk,
         )
 
-        tk, ta = text_process.process_regex("a==0xdeadbeef")
+        tk, ta = process_regex("a==0xdeadbeef")
         self.assertListEqual(
             ["a", "==", "0xdeadbeef"],
             tk,
         )
 
     def test_numbers_scientific(self):
-        tk, ta = text_process.process_regex("1e0,-1e3,7e77,33.5e-12,1e-10")
+        tk, ta = process_regex("1e0,-1e3,7e77,33.5e-12,1e-10")
         self.assertListEqual(
             ["1e0", ",", "-", "1e3", ",", "7e77", ",", "33.5e-12", ",", "1e-10"],
             tk,
@@ -224,28 +225,28 @@ class TestInitialRegex(unittest.TestCase):
         self.assertEqual("nu", ta[7])
 
     def test_num_and_var(self):
-        tk, ta = text_process.process_regex("_player = 3")
+        tk, ta = process_regex("_player = 3")
         self.assertEqual(["_player", " ", "=", " ", "3"], tk)
         self.assertNotEqual("nu", ta[0])
 
     def test_num_range(self):
-        tk, ta = text_process.process_regex("1...9")
+        tk, ta = process_regex("1...9")
         self.assertListEqual(["1", "...", "9"], tk)
         self.assertListEqual(["nu", "sy", "nu"], ta)
 
-        tk, ta = text_process.process_regex("1..9")
+        tk, ta = process_regex("1..9")
         self.assertListEqual(["1", "..", "9"], tk)
         self.assertListEqual(["nu", "sy", "nu"], ta)
 
     def test_rust_lifetime(self):
         t = "&'a str"
-        tk, ta = text_process.process_regex(t)
+        tk, ta = process_regex(t)
         self.assertListEqual(["&", "'a", " ", "str"], tk)
         self.assertEqual("an", ta[1])
 
     def test_rust_lifetime_fun(self):
         t = "fn longest<'a>(x: &'a str)"
-        tk, ta = text_process.process_regex(t)
+        tk, ta = process_regex(t)
         self.assertListEqual(
             [
                 "fn",
@@ -268,13 +269,13 @@ class TestInitialRegex(unittest.TestCase):
         )
 
     def test_rust_lifetime_two(self):
-        tk, ta = text_process.process_regex("fn foo<'a, 'b>")
+        tk, ta = process_regex("fn foo<'a, 'b>")
         self.assertListEqual(["fn", " ", "foo", "<", "'a", ",", " ", "'b", ">"], tk)
         self.assertEqual("an", ta[4])
         self.assertEqual("an", ta[7])
 
     def test_rust_lifetime_tworef(self):
-        tk, ta = text_process.process_regex("x: &'a str, y: &'b str")
+        tk, ta = process_regex("x: &'a str, y: &'b str")
         self.assertListEqual(
             [
                 "x",
@@ -301,32 +302,32 @@ class TestInitialRegex(unittest.TestCase):
 
     def test_php_assoc(self):
         t = "'attr' => 'xyz1234?'"
-        tk, ta = text_process.process_regex(t)
+        tk, ta = process_regex(t)
         self.assertListEqual(["'attr'", " ", "=>", " ", "'xyz1234?'"], tk)
         self.assertEqual("st", ta[0])
         self.assertEqual("st", ta[4])
 
     def test_empty_singlestr(self):
         t = "x = ''"
-        tk, ta = text_process.process_regex(t)
+        tk, ta = process_regex(t)
         self.assertListEqual(["x", " ", "=", " ", "''"], tk)
         self.assertEqual("st", ta[4])
 
     def test_empty_doublestr(self):
         t = 'x = ""'
-        tk, ta = text_process.process_regex(t)
+        tk, ta = process_regex(t)
         self.assertListEqual(["x", " ", "=", " ", '""'], tk)
         self.assertEqual("st", ta[4])
 
     def test_empty_triplesstr(self):
         t = '""""""'
-        tk, ta = text_process.process_regex(t)
+        tk, ta = process_regex(t)
         self.assertListEqual(['""""""'], tk)
         self.assertEqual("st", ta[0])
 
     def test_py_docstr(self):
         t = 'def y(x):\n    """This is a..."""\n'
-        tk, ta = text_process.process_regex(t)
+        tk, ta = process_regex(t)
         self.assertListEqual(
             [
                 "def",
@@ -344,18 +345,74 @@ class TestInitialRegex(unittest.TestCase):
             tk,
         )
 
+    def test_py_docstr_ml(self):
+        t = 'def y():\n    """This is a...\n    ## parameters\n"""'
+        tk, ta = process_regex(t)
+        self.assertListEqual(
+            [
+                "def",
+                " ",
+                "y",
+                "(",
+                ")",
+                ":",
+                "\n",
+                "    ",
+                '"""This is a...\n    ## parameters\n"""',
+            ],
+            tk,
+        )
+
     def test_singlestring(self):
-        tk, ta = text_process.process_regex("s = [ 'some ']")
+        tk, ta = process_regex("s = [ 'some ']")
         self.assertEqual(["s", " ", "=", " ", "[", " ", "'some '", "]"], tk)
         self.assertEqual("st", ta[6])
 
     def test_strs_weird(self):
-        tk, ta = text_process.process_regex("&x<> = 'some' , 'b '")
+        tk, ta = process_regex("&x<> = 'some' , 'b '")
         self.assertListEqual(
             ["&", "x", "<", ">", " ", "=", " ", "'some'", " ", ",", " ", "'b '"], tk
         )
         self.assertEqual("st", ta[7])
         self.assertEqual("st", ta[11])
+
+    def test_bash_vars(self):
+        tk, _ = process_regex("$1 = 'a'")
+        self.assertListEqual(["$1", " ", "=", " ", "'a'"], tk)
+        tk, _ = process_regex("$? = 'a'")
+        self.assertListEqual(["$?", " ", "=", " ", "'a'"], tk)
+
+    def test_bash_specials(self):
+        tk, _ = process_regex("$? $* $# $@ $- $$")
+        self.assertListEqual(
+            ["$?", " ", "$*", " ", "$#", " ", "$@", " ", "$-", " ", "$$"], tk
+        )
+
+    def test_bash_flag(self):
+        tk, _ = process_regex("mkdir -p")
+        self.assertListEqual(["mkdir", " ", "-p"], tk)
+
+    def test_bash_flag_w_val(self):
+        tk, _ = process_regex("--color=auto")
+        self.assertListEqual(["--color", "=", "auto"], tk)
+
+    def test_py_annot(self):
+        tk, ta = process_regex("@staticmethod\ndef load_project(name)")
+        self.assertListEqual(
+            ["@staticmethod", "\n", "def", " ", "load_project", "(", "name", ")"], tk
+        )
+
+    def test_weirdquote(self):
+        tk, ta = process_regex("=“OK”")
+        self.assertListEqual(["=", "“OK”"], tk)
+
+    def test_cssclass(self):
+        tk, ta = process_regex(".my-class {\n")
+        self.assertListEqual([".my-class", " ", "{", "\n"], tk)
+
+    def test_css_attr(self):
+        tk, ta = process_regex("  background-color: red")
+        self.assertListEqual(["  ", "background-color", ":", " ", "red"], tk)
 
 
 class TestMergeAdjacent(unittest.TestCase):

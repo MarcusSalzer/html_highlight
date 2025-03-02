@@ -1,0 +1,6 @@
+class TransformerTagger(nn.Transformer):
+    """Container"""
+
+    def __init__(self, ntoken, n_embd, nhead):
+        super(TransformerTagger, self).__init__(d_model=n_embd, nhead=nhead)
+        # ...

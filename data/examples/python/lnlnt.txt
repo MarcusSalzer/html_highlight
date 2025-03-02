@@ -1,0 +1,3 @@
+        self.decoder = nn.Linear(ninp, ntoken)
+
+        self.init_weights()

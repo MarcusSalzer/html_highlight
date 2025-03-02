@@ -22,12 +22,15 @@ basic_pats = [
     # php/jsdoc multiline comments
     ("coml", r"\/\*{1,2}[\s\S]+?\*\/"),
     # inline comments (NOTE: quite sketchy)
-    ("coil", r"(?<=\s+)\/{2} ?(?:[a-zA-Z]+\s+[a-zA-Z].*)"),
+    ("coil", r"(?<=\s+)\/{2} ?(?:[^+-=]+[\s:]+[^+-=].*)"),
     ("coil", r"(?<=\s+)# ?.*"),  # shell/py style, less confusion with op
     # triple-quote string
-    ("st", r"\"{3}.*\"{3}"),
+    ("st", r"\"{3}[\s\S\n]*\"{3}"),
+    ("st", r"'{3}[\s\S\n]*'{3}"),
     # basic double-quote string
     ("st", r"\"[^\"\n]*\""),
+    # special quote
+    ("st", r"“[^\"\n]*”"),
     # rust lifetime annotations (NOTE: before single-strings)
     ("an", r"(?<=&|<|< |\+ |, )'\p{L}+(?=[>,])"),  # in angle brackets
     ("an", r"(?<=&)'\p{L}+"),  # in references
@@ -36,25 +39,40 @@ basic_pats = [
     ("brop", r"[\(\[\{]"),
     ("brcl", r"[\)\]\}]"),
     # catch some syntax features before numbers
-    ("sy", r"\.{2,3}"),
+    ("sy", r"\.{3}|\.{2}[=?]?"),
     # numbers: scientific
     ("nu", r"(?<!\w)\d+(?:\.\d+)?+e-\d+"),
     # numbers: hex, bin,
     ("nu", r"(?<!\w)0x[0-9a-fA-F]+|0b[01]+"),
-    # numbers: integer, decimal
-    ("nu", r"(?<!\w)\d[\d_]*(?:\.\d+)?\w*"),
+    # numbers: integer, decimal, percent
+    ("nu", r"(?<!\w)\d[\d_]*(?:\.\d+)?[\w%]*"),
     ("id", r"^[\t ]+"),
     ("ws", r"[\r\t\f\v ]+"),
     ("nl", r"\n+"),
     ("sy", r">>>"),
+    # CSS classes (classes are identifiers, elements are type kws)
+    ("va", r"^\.\p{L}\S*(?=.*{)"),
+    # bash flags
+    ("shfl", r"(?<!\S)--\p{L}+(?=\s|=|$)"),
+    # bash flag or op or css attr
+    ("uk", r"\p{L}*-?\p{L}+(?=\s|=|$|:)"),
     # comparison operators
     ("opcm", r"===|!==|<=>|<=|>=|==|!="),
     ("opbi", r"<<|>>|\*\*|\/\/|\.\^|\|\||&&|~\/"),
     ("opun", r"\+\+|--"),
     ("sy", r"->|=>|::|:|(?<=[^\s])\.(?=[^\s])"),
-    ("opas", r"=|<-|\+=|-=|\*=|\/="),
+    ("opas", r"<-|\+=|-=|\*=|\/="),
+    ("uk", r"="),
     ("pu", r",|;"),
-    ("uk", r"\$[_\p{L}][_\p{L}\d]*"),
+    # php/bash variable/parameter
+    ("uk", r"\$[_\p{L}\d]+"),
+    # bash special parameters
+    ("uk", r"\$[*@?-]"),
+    ("uk", r"\$#"),
+    ("uk", r"\$\$"),
+    # annotations
+    ("an", r"^@\S+"),
+    # everything else
     ("uk", r"\w+|[^\w\s]+?"),
 ]
 
@@ -228,7 +246,7 @@ def process_with_inferindent(text: str, verbose: bool = False):
 
 
 def bracket_levels(tags: list[str]) -> tuple[list[str], list[int]]:
-    """Rename bracket tags from br_op/cl to br_{n}.
+    """Rename bracket tags from br_op/cl to br{n}.
 
     ## Returns
     - tags_new (list[str]): modified tags

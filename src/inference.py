@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 
 import torch
@@ -8,20 +9,22 @@ sys.path.append(".")
 
 
 class Inference:
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, model_dir="."):
         # load meta
-        with open(f"./model_inference/{model_name}_meta.json") as f:
+        with open(os.path.join(model_dir, f"{model_name}_meta.json")) as f:
             metadata = json.load(f)
 
-        self.vocab = metadata["vocab"]
+        vocab = metadata["vocab"]
         self.tag_vocab = metadata["tag_vocab"]
         self.tag_map = metadata.get("tag_map")
-        self.token2idx = {t: i for i, t in enumerate(self.vocab)}
+        self.token2idx = {t: i for i, t in enumerate(vocab)}
         self.tag2idx = {t: i for i, t in enumerate(self.tag_vocab)}
 
         # load model weights
-        state_dict = torch.load(f"./models/{model_name}_state.pth", weights_only=True)
-        self.model = torch_util.LSTMTagger(**metadata["constructor_params"])
+        state_dict = torch.load(
+            os.path.join(model_dir, f"{model_name}_state.pth"), weights_only=True
+        )
+        self.model = torch_util.LSTMTagger(**metadata["constructor"])
         self.model.load_state_dict(state_dict)
 
     def run(self, tokens: list[str], tags_det: list[str]) -> list[str]:

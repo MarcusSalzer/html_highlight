@@ -1,28 +1,18 @@
+# mypy: disable-error-code="import-untyped"
+
 """Import and use `hlclip.hlclip()` to highlight clipboard"""
 
 from datetime import datetime
-from datatools.benchmark import SequentialTimer
+import time
+
+import pyperclip as pc
+
+from src import inference
 from src.html_process import format_html
+from src.text_process import process
 from src.util import MAP_TAGS
 
-timer = SequentialTimer()
-
-import pyperclip as pc  # noqa: E402
-
-timer.add("import pyperclip")
-
-from src.text_process import process  # noqa: E402
-
-
-timer.add("import text_process")
-
-from src import inference  # noqa: E402
-
-timer.add("import inference")
-
-print(timer)
-
-infer = inference.Inference("lstm_0113")
+infer = inference.Inference("model_inference")
 
 
 def hlclip():
@@ -37,9 +27,16 @@ def hlclip():
 
     save_to_history(in_text)
 
+    # first, run deterministic process
+    t0 = time.time()
     tokens, tags_det = process(in_text)
+    t_det = time.time() - t0
 
     tags_pred = infer.run(tokens, tags_det)
+    t_infer = time.time() - (t0 + t_det)
+    print(
+        f"Time: deterministic {t_det * 1000:.1f} | inference {t_infer * 1000:.1f} (ms)"
+    )
 
     # combine with deterministic tags
     tags = []

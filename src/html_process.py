@@ -24,17 +24,17 @@ def make_legend_html() -> str:
         with open("data/class_aliases_str.json") as f:
             classes: dict = json.load(f)
 
-        classnames = classes.keys()
     except FileNotFoundError:
         return "<section><p>Could not find classnames.</p></section>"
     except AttributeError:
         return "<section><p>Invalid class alias JSON.</p></section>"
 
+    classnames = classes.keys()
     lines = []
     for c in classnames:
         lines.append(f"""<li><span class="{c}" title="{c}">{c}</span></li>""")
-    lines = "\n".join(lines)
-    return f"""<section><h2>Legend</h2><ul>{lines}</ul></section>"""
+
+    return f"""<section><h2>Legend</h2><ul>{"\n".join(lines)}</ul></section>"""
 
 
 def html_specials(text: str) -> str:
@@ -51,15 +51,22 @@ def html_specials(text: str) -> str:
 def format_html(
     tokens: list[str],
     tags: list[str],
-    override_elements: list[str] | None = None,
-    exclude_tags: list[str] = ["ws", "uk", "id"],
+    override_elements: list[str | None] | None = None,
+    exclude_tags: list[str] = ["ws", "uk", "id", "<unk>"],
     level_brackets: bool = True,
     css_path: str | None = None,
     legend: bool = False,
     tooltips: bool = False,
     errors: list[bool] | None = None,
 ) -> str:
-    """Format HTML document of tagged text."""
+    """Format HTML document of tagged text.
+
+    ## parameters
+    - override_elements: optionally use something else than `<span>`.
+    - exclude_tags: these will be left as plain text
+    - level_brackets: if true, replace brop/brcl with br{n}
+    - css_path: if not None, make document with `<head>` and `<body>`
+    """
     tokens_with_tags = []
 
     # If no overrides
