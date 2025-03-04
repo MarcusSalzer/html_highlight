@@ -14,6 +14,7 @@ class Inference:
         with open(os.path.join(model_dir, f"{model_name}_meta.json")) as f:
             metadata = json.load(f)
 
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
         vocab = metadata["vocab"]
         self.tag_vocab = metadata["tag_vocab"]
         self.tag_map = metadata.get("tag_map")
@@ -22,7 +23,9 @@ class Inference:
 
         # load model weights
         state_dict = torch.load(
-            os.path.join(model_dir, f"{model_name}_state.pth"), weights_only=True
+            os.path.join(model_dir, f"{model_name}_state.pth"),
+            weights_only=True,
+            map_location=dev,
         )
         self.model = torch_util.LSTMTagger(**metadata["constructor"])
         self.model.load_state_dict(state_dict)
