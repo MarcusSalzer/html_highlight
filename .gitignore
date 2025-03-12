@@ -2,7 +2,7 @@
 data/examples_annot.json
 hlclip_history/
 try_example/
-models/
+models_trained/
 output/
 previews/
 search/

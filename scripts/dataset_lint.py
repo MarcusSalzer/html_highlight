@@ -38,9 +38,8 @@ LANG_SPEC_TOKENS = {
         "else": "kwfl",
         "<": "opcm",
         ">": "opcm",
-        "self": "pa",
     },
-    "js": {"this": "pa"},
+    "js": {"this": "va"},
 }
 
 
@@ -70,20 +69,12 @@ def main():
     delete_rows = [False] * len(data)
     for i, ex in enumerate(examples):
         try:
-            lint(ex)
+            lint_example(ex)
         except LintError as err:
             print(f"{ex['name']} ({ex['lang']})", err)
             print("".join(ex["tokens"]))
             err_count += 1
             if interactive:
-                # try:
-                #     tokens_fixed, tags_fixed = auto_fix(ex["tokens"], ex["tags"])
-                #     doFix = input("auto-fix?")
-                #     if doFix.lower() == "y":
-                #         ex["tokens"] = tokens_fixed
-                #         ex["tags"] = tags_fixed
-                # except FixError:
-                #     print("no auto-fix")
                 resp = input("\naction? ")
                 if resp == "delete" or resp == "del":
                     delete_rows[i] = True
@@ -105,19 +96,17 @@ def main():
     print(timer)
 
 
-def lint(ex: dict):
+def lint_example(ex: dict):
     tokens = ex["tokens"]
     tags = ex["tags"]
     lang = ex.get("lang")
-    name = ex.get("name")
 
     reprocess_check(tokens, tags)
     bigram_check(tags)
 
     if lang is not None:
         lang_spec_check(tokens, tags, lang)
-        # if name is not None:
-        #     reload_check(tokens, tags, name, lang)
+
     if tokens[-1] == "\n" or tags[-1] == "nl":
         raise LintError("Trailing NL")
 
@@ -199,7 +188,7 @@ def auto_fix(tokens: list[str], tags: list[str]):
             tokens_new.append(tokens[i])
             tags_new.append(tags[i])
     try:
-        lint({"tokens": tokens_new, "tags": tags_new})
+        lint_example({"tokens": tokens_new, "tags": tags_new})
     except LintError:
         raise FixError("could not fix")
 

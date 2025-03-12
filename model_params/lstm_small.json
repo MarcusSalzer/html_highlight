@@ -7,5 +7,5 @@
     "dropout_lstm": 0.5,
     "bidi": true
   },
-  "train": { "bs": 4, "lr": 0.0005, "lrs": ["exponential", { "gamma": 0.99 }] }
+  "train": { "epochs": 100, "bs": 4, "lr": 0.001 }
 }

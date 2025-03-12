@@ -27,6 +27,8 @@ class Inference:
             weights_only=True,
             map_location=dev,
         )
+        if "n_extra" in metadata["constructor"]:
+            raise NotImplementedError("extra feats not supported here")
         self.model = torch_util.LSTMTagger(**metadata["constructor"])
         self.model.load_state_dict(state_dict)
 
@@ -39,6 +41,7 @@ class Inference:
         token_idxs = [self.token2idx.get(t, 1) for t in tokens]
         tag_det_idxs = [self.tag2idx.get(t, 1) for t in tags_det]
 
+        # TODO ACTUALLY PREPARE DATA (w, extras)
         token_tensors = torch_util.seqs2padded_tensor([token_idxs], verbose=False)
         tag_det_tensors = torch_util.seqs2padded_tensor([tag_det_idxs], verbose=False)
 

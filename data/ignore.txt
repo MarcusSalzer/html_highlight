@@ -50,3 +50,9 @@ nrrp_r
 nwtrm_bash
 tlf_bash
 rptmg_css
+gtls_bash
+rdlnmt_dart
+ff_css
+spjn_python
+prntvrs_rust
+smmrz_r

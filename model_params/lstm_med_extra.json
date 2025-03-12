@@ -5,7 +5,8 @@
     "hidden_dim": 128,
     "n_lstm_layers": 2,
     "dropout_lstm": 0.5,
-    "bidi": true
+    "bidi": true,
+    "n_extra": 3
   },
   "train": { "epochs": 100, "bs": 4, "lr": 0.001 }
 }
