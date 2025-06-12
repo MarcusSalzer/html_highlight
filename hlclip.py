@@ -39,7 +39,7 @@ def hlclip():
     )
 
     # combine with deterministic tags
-    tags = []
+    tags: list[str] = []
     for td, tp in zip(tags_det, tags_pred):
         if td == "uk":
             tags.append(tp)

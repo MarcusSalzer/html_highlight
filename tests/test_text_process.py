@@ -41,10 +41,20 @@ class TestInitialRegex(unittest.TestCase):
     def test_strs(self):
         tk, ta = process_regex("name = 'abc';")
         self.assertListEqual(["name", " ", "=", " ", "'abc'", ";"], tk)
+        self.assertEqual("st", ta[4])
         tk, ta = process_regex('name = "abc"')
+        self.assertEqual("st", ta[4])
         self.assertListEqual(["name", " ", "=", " ", '"abc"'], tk)
-        # tk, ta = text_process.tokenize_plus('a "nested" string')
-        # self.assertListEqual(["a", " ", '"', "nested", '"', " ", "string"], tk)
+
+    def test_str_phpkey(self):
+        t = "\n    'type' => $exData['type']"
+        tk, ta = process_regex(t)
+        self.assertListEqual(
+            ["\n", "    ", "'type'", " ", "=>", " ", "$exData", "[", "'type'", "]"],
+            tk,
+        )
+        self.assertEqual("st", ta[2])
+        self.assertEqual("st", ta[8])
 
     def test_lambda_arrow_big(self):
         tk, ta = process_regex("(m) => parse(m)")
