@@ -12,7 +12,7 @@ from src import torch_util, util
 
 MODEL_PARAM_DIR = "model_params"
 DATA_DIR = "data"
-SAVE_DIR = "tmp"
+SAVE_DIR = "models_trained"
 
 
 def pick_option(options, prompt):

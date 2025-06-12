@@ -4,6 +4,7 @@ import json
 import sys
 from glob import glob
 
+from colorama import Fore, Style
 from tqdm import tqdm
 
 sys.path.append(".")
@@ -12,24 +13,25 @@ from src.inference import Inference
 
 
 def find_models():
-    model_paths = glob("**/*", root_dir="models_trained", recursive=True)
-    names = [
-        f.split(".")[0].replace("_meta", "").replace("_state", "") for f in model_paths
-    ]
+    model_paths = glob("**/*_meta.json", root_dir="models_trained", recursive=True)
+    names = [f.removesuffix("_meta.json") for f in model_paths]
     return sorted(set(names))
 
 
 if __name__ == "__main__":
-    models = find_models()
+    model_ids = find_models()
+    if not model_ids:
+        print(Fore.RED + "No models found" + Style.RESET_ALL)
+        exit(1)
 
     data = util.load_examples_json(verbose=False)
     print(f"Loaded {len(data)} examples")
 
-    print(f"Running {len(models)} model{'s' * (len(models) != 1)}")
-    if len(models) > 1:
-        models = tqdm(models)
+    print(f"Running {len(model_ids)} model{'s' * (len(model_ids) != 1)}")
+    if len(model_ids) > 1:
+        model_ids = tqdm(model_ids)
 
-    for mn in models:
+    for mn in model_ids:
         infer = Inference(mn, model_dir="models_trained")
         outputs = {}
         for ex in data.iter_rows(named=True):

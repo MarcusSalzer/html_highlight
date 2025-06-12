@@ -27,8 +27,7 @@ class Inference:
             weights_only=True,
             map_location=dev,
         )
-        if "n_extra" in metadata["constructor"]:
-            raise NotImplementedError("extra feats not supported here")
+
         self.model = torch_util.LSTMTagger(**metadata["constructor"])
         self.model.load_state_dict(state_dict)
 
@@ -41,13 +40,24 @@ class Inference:
         token_idxs = [self.token2idx.get(t, 1) for t in tokens]
         tag_det_idxs = [self.tag2idx.get(t, 1) for t in tags_det]
 
-        # TODO ACTUALLY PREPARE DATA (w, extras)
-        token_tensors = torch_util.seqs2padded_tensor([token_idxs], verbose=False)
-        tag_det_tensors = torch_util.seqs2padded_tensor([tag_det_idxs], verbose=False)
+        token_tensor = torch_util.seqs2padded_tensor([token_idxs], verbose=False)
+        tag_det_tensor = torch_util.seqs2padded_tensor([tag_det_idxs], verbose=False)
+        # extra features if needed
 
+        extrafeats = (
+            torch_util.make_extra_feats(tokens, padto=token_tensor.shape[1]).unsqueeze(
+                0
+            )
+            if self.model.n_extra
+            else None
+        )
+        # print("tokens", token_tensor.shape)
+        # print("tags_det", tag_det_tensor.shape)
+        # if extrafeats is not None:
+        #     print("extra", extrafeats.shape)
         self.model.eval()
         with torch.no_grad():
-            tag_scores = self.model(token_tensors, tag_det_tensors)
+            tag_scores = self.model(token_tensor, tag_det_tensor, extrafeats)
         predictions = torch.argmax(tag_scores, dim=-1)
 
         tags = [self.tag_vocab[p] for p in predictions.ravel()]

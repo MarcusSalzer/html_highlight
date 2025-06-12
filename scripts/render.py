@@ -18,7 +18,7 @@ def render_data(data, title, correct=None, names=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Renders examples to a HTML file")
-    parser.add_argument("data", choices=["all", "train", "val", "test"], default=all)
+    parser.add_argument("data", choices=["train", "val", "test"])
     parser.add_argument("-l", "--lang")
     parser.add_argument("-s", "--splits")
     parser.add_argument("-n", "--names", action="store_true")
@@ -33,6 +33,7 @@ if __name__ == "__main__":
     if clear:
         for f in glob("previews/*.html"):
             os.remove(f)
+        print("cleared old HTML!")
 
     if isinstance(lang_filter, str):
         lang_filter = [lang_filter]
@@ -41,15 +42,13 @@ if __name__ == "__main__":
     data_true = util.load_examples_json(
         filter_lang=lang_filter, split_idx_id=splits, verbose=False
     )
-    if dataset in ["train", "val", "test"]:
-        if splits is None:
-            print("Error: requires `splits` if data is not 'all'.")
-            files = glob("split_index_*.json", root_dir="data/")
-            print("try: -s ", [n[12:].split(".")[0] for n in files])
-            exit(1)
+    if splits is None:
+        print("Error: requires `splits` if data is not 'all'.")
+        files = glob("split_index_*.json", root_dir="data/")
+        print("try: -s ", [n[12:].split(".")[0] for n in files])
+        exit(1)
 
-        data_true = data_true[dataset]
-
+    data_true = data_true[dataset]
     print(f"Loaded {len(data_true)} examples")
 
     # preview-document title

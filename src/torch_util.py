@@ -331,11 +331,13 @@ def data2torch(
 
 
 def make_extra_feats(tokens: list[str], padto: int = 0):
-    """Prepare extra features for tagger"""
-    assert isinstance(tokens, list)
-    assert isinstance(tokens[0], str)
+    """Prepare extra features for tagger
 
-    # quick and dirty padding
+    Returns: features (len, Nextra)
+    """
+    assert isinstance(tokens[0], str), "should be strings"
+
+    # paddding
     features = torch.zeros((max(len(tokens), padto), 3), dtype=torch.float32)
     laststart = tokens[0]
     for i, token in enumerate(tokens):

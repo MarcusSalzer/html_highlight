@@ -414,6 +414,25 @@ class TestInitialRegex(unittest.TestCase):
         tk, ta = process_regex("  background-color: red")
         self.assertListEqual(["  ", "background-color", ":", " ", "red"], tk)
 
+    def test_htmlco(self):
+        tk, ta = process_regex("<!-- hej -->")
+        self.assertListEqual(["<!-- hej -->"], tk)
+        self.assertListEqual(["cofl"], ta)
+
+    def test_co_in_fn(self):
+        tk, ta = process_regex("f(a: number){\n  a.b(); // OK\n}")
+        self.assertListEqual(
+            "f|(|a|:| |number|)|{|\n|  |a|.|b|(|)|;| |// OK|\n|}".split("|"), tk
+        )
+        self.assertEqual("brcl", ta[-1])
+        self.assertEqual("nl", ta[-2])
+        self.assertEqual("coil", ta[-3])
+
+    def test_docstr_end(self):
+        tk, ta = process_regex('"""A function."""\n    variable')
+        self.assertListEqual('"""A function."""|\n|    |variable'.split("|"), tk)
+        self.assertEqual("st", ta[0])
+
 
 class TestMergeAdjacent(unittest.TestCase):
     def test_nomerge(self):
