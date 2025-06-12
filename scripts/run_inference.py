@@ -1,10 +1,10 @@
 """Run inference on all examples"""
 
-import argparse
 import json
 import sys
 from glob import glob
 
+from colorama import Fore, Style
 from tqdm import tqdm
 
 sys.path.append(".")
@@ -13,34 +13,26 @@ from src.inference import Inference
 
 
 def find_models():
-    fps = glob("**/*", root_dir="models", recursive=True)
-    names = [f.split(".")[0].replace("_meta", "").replace("_state", "") for f in fps]
+    model_paths = glob("**/*_meta.json", root_dir="models_trained", recursive=True)
+    names = [f.removesuffix("_meta.json") for f in model_paths]
     return sorted(set(names))
 
 
 if __name__ == "__main__":
-    models = find_models()
-    parser = argparse.ArgumentParser(description="Run inference on all examples")
-    parser.add_argument("-m", "--model", choices=models)
-    parser.add_argument("-v", "--verbose", action="store_true")
+    model_ids = find_models()
+    if not model_ids:
+        print(Fore.RED + "No models found" + Style.RESET_ALL)
+        exit(1)
 
-    args = parser.parse_args()
-    verbose = args.verbose
-    model_name = args.model
-    if isinstance(model_name, str):
-        models = [model_name]
-
-    # TODO Tagmap?
     data = util.load_examples_json(verbose=False)
-    if verbose:
-        print(f"Loaded {len(data)} examples")
+    print(f"Loaded {len(data)} examples")
 
-    print(f"Running {len(models)} model{'s' * (len(models) != 1)}")
-    if len(models) > 1 and verbose:
-        models = tqdm(models)
+    print(f"Running {len(model_ids)} model{'s' * (len(model_ids) != 1)}")
+    if len(model_ids) > 1:
+        model_ids = tqdm(model_ids)
 
-    for mn in models:
-        infer = Inference(mn, model_dir="models")
+    for mn in model_ids:
+        infer = Inference(mn, model_dir="models_trained")
         outputs = {}
         for ex in data.iter_rows(named=True):
             tags_pred = infer.run(ex["tokens"], ex["tags"])

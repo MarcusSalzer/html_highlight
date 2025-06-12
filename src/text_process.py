@@ -19,10 +19,12 @@ POSSIBLE_PER_TOKEN = {
 basic_pats = [
     ("cofl", r"^(?:\/{2,3}|#|%).+$"),  # one full line comment
     ("cofl", r"(?<=^\s+)(?:\/{2,3}|#|%).+$"),  # comment after indentation
+    # html-comment
+    ("cofl", r"<!--.+-->\s*?$"),
     # php/jsdoc multiline comments
     ("coml", r"\/\*{1,2}[\s\S]+?\*\/"),
     # inline comments (NOTE: quite sketchy)
-    ("coil", r"(?<=\s+)\/{2} ?(?:[^+-=]+[\s:]+[^+-=].*)"),
+    ("coil", r"(?<=\s+)\/{2} ?(?:[^+-=]+[\s:]+[^+-=].*[^\n]+)"),
     ("coil", r"(?<=\s+)# ?.*"),  # shell/py style, less confusion with op
     # triple-quote string
     ("st", r"\"{3}[\s\S\n]*\"{3}"),
@@ -56,11 +58,13 @@ basic_pats = [
     ("shfl", r"(?<!\S)--\p{L}+(?=\s|=|$)"),
     # bash flag or op or css attr
     ("uk", r"\p{L}*-?\p{L}+(?=\s|=|$|:)"),
+    # rust macros
+    ("uk", r"\S+!(?=\()"),
     # comparison operators
     ("opcm", r"===|!==|<=>|<=|>=|==|!="),
     ("opbi", r"<<|>>|\*\*|\/\/|\.\^|\|\||&&|~\/"),
     ("opun", r"\+\+|--"),
-    ("sy", r"->|=>|::|:|(?<=[^\s])\.(?=[^\s])"),
+    ("sy", r"->|=>|\|>|::|:|(?<=[^\s])\.(?=[^\s])"),
     ("opas", r"<-|\+=|-=|\*=|\/="),
     ("uk", r"="),
     ("pu", r",|;"),
@@ -88,9 +92,9 @@ def process_regex(text: str, patterns: list[tuple[str, str]] = basic_pats):
     """Tokenize and find some basic tags"""
 
     regex_token = re.compile("|".join(f"(?P<{t}>{p})" for t, p in patterns), re.M)
+
     tokens = []
     tags = []
-
     # Iterate over all matches
     for m in regex_token.finditer(text):
         tokens.append(m.group())  # matched token

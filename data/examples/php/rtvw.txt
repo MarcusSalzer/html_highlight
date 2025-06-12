@@ -1,0 +1,1 @@
+Route::view('/welcome', 'welcome', ['user' => $user]);

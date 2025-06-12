@@ -1,5 +1,5 @@
 {
-  "split": "0301",
+  "split": "0315",
   "constructor": {
     "embedding_dim": 32,
     "hidden_dim": 128,
@@ -7,5 +7,5 @@
     "dropout_lstm": 0.5,
     "bidi": true
   },
-  "train": { "bs": 4, "lr": 0.0005, "lrs": ["exponential", { "gamma": 0.99 }] }
+  "train": { "epochs": 100, "bs": 4, "lr": 0.001 }
 }

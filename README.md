@@ -7,6 +7,7 @@
   - Features
 - inline mode: try to catch code fragments in text
 - language classifier: if confident, we can put a little language title at the top of the generated block, especially for longer snippets
+- highlighting inside strings
 
 ## Classes
 

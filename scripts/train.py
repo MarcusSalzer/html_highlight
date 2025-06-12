@@ -12,7 +12,7 @@ from src import torch_util, util
 
 MODEL_PARAM_DIR = "model_params"
 DATA_DIR = "data"
-SAVE_DIR = "tmp"
+SAVE_DIR = "models_trained"
 
 
 def pick_option(options, prompt):
@@ -57,10 +57,12 @@ def train_interactive() -> None:
             "label_vocab_size": len(tag_vocab),
         }
     )
-    params.update({"vocab": vocab, "tag_vocab": tag_vocab})
+    meta = dict(**params, vocab=vocab, tag_vocab=tag_vocab)
+
     meta_path = osp.join(SAVE_DIR, model_name + "_meta.json")
     with open(meta_path, "w") as f:
-        json.dump(params, f)
+        json.dump(meta, f)
+
     print(f"saved metadata: {meta_path}")
 
     # model instance
@@ -77,10 +79,10 @@ def train_interactive() -> None:
     model.to(device=dev)
 
     train_dl = torch_util.data2torch(
-        data["train"], train_params["bs"], token2idx, tag2idx, dev
+        data["train"], train_params["bs"], token2idx, tag2idx, dev, model.n_extra
     )
     val_dl = torch_util.data2torch(
-        data["val"], 2 * train_params["bs"], token2idx, tag2idx, dev
+        data["val"], 2 * train_params["bs"], token2idx, tag2idx, dev, model.n_extra
     )
 
     # Training details
@@ -95,17 +97,22 @@ def train_interactive() -> None:
             lr_s = optim.lr_scheduler.ExponentialLR(opt, **lr_s_pars[1])
 
     print(f"\nTraining {model_name} on {dev}")
-    torch_util.train_loop(
+    metrics = torch_util.train_loop(
         model,
         train_dl,
         val_dl,
-        1000,
+        params["train"]["epochs"],
         opt,
         lossfn,
         lr_s,
         name=model_name,
         save_dir=SAVE_DIR,
+        reduce_lr_on_plat={"factor": 0.75, "patience": 5},
     )
+    meta["metrics"] = metrics
+    with open(meta_path, "w") as f:
+        json.dump(meta, f)
+    print(f"updated meta ({meta_path}) with metrics")
 
 
 if __name__ == "__main__":

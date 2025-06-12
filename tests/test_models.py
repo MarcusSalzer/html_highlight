@@ -39,7 +39,7 @@ class TestLSTM(unittest.TestCase):
             hidden_dim=8,
             n_lstm_layers=2,
             dropout_lstm=0.1,
-            n_extra_feats=2,
+            n_extra=2,
         )
 
         tokens_in = torch.tensor([0, 1, 2])

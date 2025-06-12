@@ -22,7 +22,7 @@ class LSTMTagger(nn.Module):
         n_lstm_layers: int = 2,
         dropout_lstm: float = 0.3,
         bidi: bool = True,
-        n_extra_feats: int = 0,
+        n_extra: int = 0,
     ):
         super(LSTMTagger, self).__init__()
         self.embedding_tokens = nn.Embedding(
@@ -33,7 +33,7 @@ class LSTMTagger(nn.Module):
         )
 
         # LSTM will recieve embedded tokens, tags and possibly extra_feats
-        lstm_in_dim = (3 if n_extra_feats > 0 else 2) * embedding_dim
+        lstm_in_dim = (3 if n_extra > 0 else 2) * embedding_dim
 
         self.lstm = nn.LSTM(
             lstm_in_dim,
@@ -44,9 +44,10 @@ class LSTMTagger(nn.Module):
             bidirectional=bidi,
         )
         actual_hidden = hidden_dim * (2 if bidi else 1)
-        if n_extra_feats > 0:
+        self.n_extra = n_extra
+        if n_extra > 0:
             # project extra features to same dim as tokens and labels
-            self.feature_proj = nn.Linear(n_extra_feats, embedding_dim)
+            self.feature_proj = nn.Linear(n_extra, embedding_dim)
 
         # double size if bidirectional
         self.hidden2tag = nn.Linear(actual_hidden, label_vocab_size)
@@ -54,15 +55,16 @@ class LSTMTagger(nn.Module):
     def forward(
         self,
         tokens: torch.Tensor,
-        labels: torch.Tensor,
-        extra_feats: torch.Tensor | None = None,
+        labels_det: torch.Tensor,
+        extra: torch.Tensor | None = None,
     ):
         embeds_tokens = self.embedding_tokens(tokens)
-        embeds_labels = self.embedding_labels(labels)
+        embeds_labels = self.embedding_labels(labels_det)
 
         embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)
-        if extra_feats is not None:
-            feats_emb = self.feature_proj(extra_feats)
+        if hasattr(self, "feature_proj"):
+            assert extra is not None, "needs extra features"
+            feats_emb = self.feature_proj(extra)
             embeds = torch.cat([embeds, feats_emb], dim=-1)
         #  (bs, seq_len, (2 or 3) * emb_dim)
         lstm_out, _ = self.lstm(embeds)
@@ -83,6 +85,7 @@ class SequenceDataset(Dataset):
         token2idx: dict[str, int],
         label2idx: dict[str, int],
         device: str | None = None,
+        extra_feats: int = 0,
     ):
         if not len(tokens) == len(labels_det) == len(labels_true):
             raise ValueError("inconsistent lengths")
@@ -99,12 +102,25 @@ class SequenceDataset(Dataset):
         self.labels_true = seqs2padded_tensor(
             label_true_idx, device=device, verbose=False
         )
+        if extra_feats > 0:
+            self.extra = torch.stack(
+                [make_extra_feats(ts, padto=self.tokens.shape[1]) for ts in tokens],
+                dim=0,
+            ).to(device)
+            assert self.extra.shape[-1] == extra_feats
 
     def __len__(self):
         return len(self.tokens)
 
     def __getitem__(self, idx):
-        return self.tokens[idx], self.labels_det[idx], self.labels_true[idx]
+        inputs = {
+            "tokens": self.tokens[idx],
+            "labels_det": self.labels_det[idx],
+        }
+        if hasattr(self, "extra"):
+            inputs["extra"] = self.extra[idx]
+
+        return inputs, self.labels_true[idx]
 
 
 def seqs2padded_tensor(
@@ -146,12 +162,12 @@ def run_epoch(
 
     loss_agg = 0
     n_elements = 0  # to normalize loss by sequence length
-    for tokens, labels_det, labels_true in loader:
+    for inputs, labels in loader:
         # Forward pass
-        logits: torch.Tensor = model(tokens, labels_det)
+        logits: torch.Tensor = model(**inputs)
         bs = logits.shape[0]
         # Reshape for loss calculation
-        loss = loss_fn(logits.view(-1, logits.size(-1)), labels_true.view(-1))
+        loss = loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
         loss_agg += loss.item() * bs
         n_elements += bs
         if optimizer is not None:
@@ -176,8 +192,13 @@ def train_loop(
     save_wait: int = 5,
     printerval=1,
     time_limit: int | None = None,
-    reduce_lr_on_plat: bool = True,
+    reduce_lr_on_plat: dict | None = None,
 ):
+    """Train a tagger model
+
+    ## returns
+    - metrics: dict with keys "train_loss", "val_loss", "val_acc"
+    """
     if save_dir is not None and not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -188,7 +209,7 @@ def train_loop(
 
     if reduce_lr_on_plat:
         lrs_plat = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, factor=0.5, patience=20
+            optimizer, **reduce_lr_on_plat
         )
     else:
         lrs_plat = None
@@ -239,7 +260,7 @@ def train_loop(
                 )
 
         if (epoch) % printerval == 0:
-            msg = f"{epoch:4d}/{epochs},{Style.DIM} train: {train_loss:.6f},{Style.RESET_ALL} val: {val_loss:.6f},"
+            msg = f"{epoch + 1:4d}/{epochs},{Style.DIM} train: {train_loss:.6f},{Style.RESET_ALL} val: {val_loss:.6f},"
 
             impr_vl, prev_best_vl = prev_best_vl - best_loss, best_loss
             msg += (
@@ -258,6 +279,10 @@ def train_loop(
 
             if lr_s is not None:
                 msg += f"{Style.DIM} LR: {lr_s.get_last_lr()[0]:.6f} {Style.RESET_ALL}"
+            if lrs_plat is not None:
+                msg += (
+                    f"{Style.DIM} LR: {lrs_plat.get_last_lr()[0]:.6f} {Style.RESET_ALL}"
+                )
             print(msg + m_extra)
 
             if epoch % (10 * printerval) == 0 and epoch > 0:
@@ -265,7 +290,11 @@ def train_loop(
         if time_limit is not None:
             if default_timer() - tstart > time_limit:
                 break
-    return losses_train, losses_val, val_accs
+    return {
+        "train_loss": losses_train,
+        "val_loss": losses_val,
+        "val_acc": val_accs,
+    }
 
 
 def data2torch(
@@ -274,6 +303,7 @@ def data2torch(
     token2idx: dict[str, int],
     tag2idx: dict[str, int],
     device="cpu",
+    extra_feats: int = 0,
 ):
     """Dataframe -> Dataloader"""
 
@@ -283,12 +313,13 @@ def data2torch(
         )
     )
     dset = SequenceDataset(
-        df["tokens"],
-        df["tags_det"],
-        df["tags"],
+        df["tokens"].to_list(),
+        df["tags_det"].to_list(),
+        df["tags"].to_list(),
         token2idx,
         tag2idx,
         device=device,
+        extra_feats=extra_feats,
     )
 
     dl = DataLoader(
@@ -299,10 +330,34 @@ def data2torch(
     return dl
 
 
+def make_extra_feats(tokens: list[str], padto: int = 0):
+    """Prepare extra features for tagger
+
+    Returns: features (len, Nextra)
+    """
+    assert isinstance(tokens[0], str), "should be strings"
+
+    # paddding
+    features = torch.zeros((max(len(tokens), padto), 3), dtype=torch.float32)
+    laststart = tokens[0]
+    for i, token in enumerate(tokens):
+        is_capitalized = 1.0 if token[0].isupper() else -1.0
+        word_length = min(len(token), 10) / 16  # normalized token length
+        if i > 0 and tokens[i - 1] == "\n":
+            laststart = token
+        line_starts_with = (hash(laststart) % 10) / 10  # Bucket encoding
+
+        features[i, :] = torch.tensor([is_capitalized, word_length, line_starts_with])
+    return features
+
+
 def val_acc(model, dset: SequenceDataset):
     """Compute mean accuracy for whole dataset"""
     # logits: (n_ex, max_len, n_class)
-    logits = model(dset.tokens, dset.labels_det)
+    if hasattr(dset, "extra"):
+        logits = model(dset.tokens, dset.labels_det, dset.extra)
+    else:
+        logits = model(dset.tokens, dset.labels_det)
 
     # prediction: (n_ex, max_len)
     preds = logits.argmax(dim=-1)

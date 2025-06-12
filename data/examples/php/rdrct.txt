@@ -1,0 +1,3 @@
+use App\Http\Controllers\DashboardController;
+ 
+return redirect()->action([DashboardController::class, 'index']);

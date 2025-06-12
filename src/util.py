@@ -134,6 +134,21 @@ def load_examples_json(
             for k, df in data_splits.items():
                 print(f"    {k}: {len(df)}")
         return data_splits
+    # check for duplicates
+    duplicates = (
+        data.group_by("tokens")
+        .agg("id", pl.len())
+        .filter(pl.col("len") > 1)["id"]
+        .explode()
+        .to_list()
+    )
+
+    if len(duplicates) > 0:
+        raise ValueError(
+            f"found {len(duplicates)} duplicate examples: {', '.join(duplicates)}"
+        )
+    elif verbose:
+        print("No duplicates found :)")
 
     return data
 
