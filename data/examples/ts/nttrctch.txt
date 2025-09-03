@@ -1,8 +1,0 @@
-let questions;
-try {
-    const quizName = document.body.getAttribute('data-quiz')!;
-    questions = await getQuestions(quizName);
-
-} catch (error) {
-    console.error(error);
-}

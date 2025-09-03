@@ -1,7 +1,0 @@
-        if (q.checkAnswer(selectedOption!.value)) {
-            this.#resultOutput.innerHTML = "correct";
-            this.#nextBtn.style.display = "inline";
-        } else {
-            this.#resultOutput.innerHTML = "wrong";
-
-        }

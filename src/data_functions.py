@@ -47,8 +47,10 @@ def make_example_groups(examples: pl.DataFrame, min_group_count: int = 3):
     """add a group column, grouping by:
     - approx length
     - lang
-    - difficulty?
     """
+    examples = examples.with_columns(
+        length=pl.col("tokens").list.len(),
+    )
     examples = examples.with_columns(
         group=(
             pl.when(pl.col("length") < pl.col("length").quantile(1 / 3))
@@ -58,7 +60,7 @@ def make_example_groups(examples: pl.DataFrame, min_group_count: int = 3):
             .otherwise(pl.lit("long"))
             + "_"
             + pl.col("lang")
-        )
+        ),
     )
 
     # keep all these in "other"

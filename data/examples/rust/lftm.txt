@@ -1,5 +1,0 @@
-fn longest_thing<'a, T>(
-    x: &'a str,
-    y: &'a str,
-    ann: T,
-) -> &'a str

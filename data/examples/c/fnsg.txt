@@ -1,1 +1,0 @@
-int checkseq(int *seq, int *states)

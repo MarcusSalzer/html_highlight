@@ -1,7 +1,0 @@
-name = (
-    "abra"
-    if the.thing.is()
-    else "cadabra"
-    if the.thing.could.be()
-    else "nope"
-) 

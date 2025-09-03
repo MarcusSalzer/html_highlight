@@ -1,3 +1,0 @@
-vocab = sorted(set(words))
-idxs = dict(enumerate(vocab))
-tk2idx = {v: k for k, v in idxs.items()}

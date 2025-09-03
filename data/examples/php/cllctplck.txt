@@ -1,6 +1,0 @@
-$collection = collect([
-    ['id' => '99', 'name' => 'Alice'],
-    ['id' => '101', 'name' => 'Bob'],
-]);
- 
-$names = $collection->pluck('name');

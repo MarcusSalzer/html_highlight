@@ -238,6 +238,10 @@ class TestInitialRegex(unittest.TestCase):
         self.assertListEqual(["1", "..", "9"], tk)
         self.assertListEqual(["nu", "sy", "nu"], ta)
 
+    def test_varname_w_num(self):
+        tk, ta = process_regex("a12 xy_3 9")
+        self.assertListEqual(["a12", " ", "xy_3", " ", "9"], tk)
+
     def test_rust_lifetime(self):
         t = "&'a str"
         tk, ta = process_regex(t)
@@ -417,21 +421,23 @@ class TestInitialRegex(unittest.TestCase):
     def test_htmlco(self):
         tk, ta = process_regex("<!-- hej -->")
         self.assertListEqual(["<!-- hej -->"], tk)
-        self.assertListEqual(["cofl"], ta)
+        self.assertListEqual(["co"], ta)
 
     def test_co_in_fn(self):
-        tk, ta = process_regex("f(a: number){\n  a.b(); // OK\n}")
-        self.assertListEqual(
-            "f|(|a|:| |number|)|{|\n|  |a|.|b|(|)|;| |// OK|\n|}".split("|"), tk
-        )
+        tk, ta = process_regex("{\n  a.b(); // OK\n}")
+        self.assertListEqual("{|\n|  |a|.|b|(|)|;| |// OK|\n|}".split("|"), tk)
         self.assertEqual("brcl", ta[-1])
         self.assertEqual("nl", ta[-2])
-        self.assertEqual("coil", ta[-3])
+        self.assertEqual("co", ta[-3])
 
     def test_docstr_end(self):
         tk, ta = process_regex('"""A function."""\n    variable')
         self.assertListEqual('"""A function."""|\n|    |variable'.split("|"), tk)
         self.assertEqual("st", ta[0])
+
+    def test_modop_nospace(self):
+        tk, ta = process_regex("8%2")
+        self.assertListEqual(["8", "%", "2"], tk)
 
 
 class TestMergeAdjacent(unittest.TestCase):

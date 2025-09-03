@@ -1,3 +1,0 @@
-impl<'a> MyStruct<'a> {
-    fn the_get_method(&self) -> &'a i32 { self.x }
-}

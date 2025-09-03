@@ -1,3 +1,0 @@
-/// Maximum value of prime, get more than factorbase size
-const MAXPRIME: usize = 100000;
-const JMAX: usize = 100;

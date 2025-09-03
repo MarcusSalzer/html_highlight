@@ -39,7 +39,7 @@ if __name__ == "__main__":
         lang_filter = [lang_filter]
 
     # RENDER DATASET
-    data_true = util.load_examples_json(
+    data_true = util.load_examples_DEPRECATED(
         filter_lang=lang_filter, split_idx_id=splits, verbose=False
     )
     if splits is None:
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     fps = sorted(glob("./output/*.json"))
     all_data = {}
     for fp in fps:
-        data = util.load_examples_json(
+        data = util.load_examples_DEPRECATED(
             path=fp, split_idx_id=splits, filter_lang=lang_filter, verbose=False
         )
         if dataset is not None and dataset != "all":

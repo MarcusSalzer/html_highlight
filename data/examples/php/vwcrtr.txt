@@ -1,4 +1,0 @@
-use App\View\Creators\MyCreator;
-use Illuminate\Support\Facades\View;
- 
-View::creator('myThing', MyCreator::class);

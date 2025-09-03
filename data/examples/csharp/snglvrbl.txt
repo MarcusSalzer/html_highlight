@@ -1,2 +1,0 @@
-string name = "My Name";
-int myAge = 73;

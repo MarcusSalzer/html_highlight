@@ -1,3 +1,0 @@
-% confidence interval
-upper = rhat_mean + 1.96 * rhat_std;
-lower = rhat_mean - 1.96 * rhat_std;

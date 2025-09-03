@@ -1,2 +1,0 @@
-$name = "myname";
-echo str_contains($name, "a");

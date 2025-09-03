@@ -1,6 +1,0 @@
-#[test]
-fn test_factorbase() {
-    assert_eq!(factorbase(1), [], "n=1");
-    assert_eq!(factorbase(2), [2], "n=2");
-    assert_eq!(factorbase(4), [2, 3], "n=4");
-}

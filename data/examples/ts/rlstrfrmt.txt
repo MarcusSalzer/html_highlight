@@ -1,1 +1,0 @@
-const url: string = `./data/${name}_quiz.json`;

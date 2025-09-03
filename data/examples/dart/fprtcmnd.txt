@@ -1,6 +1,0 @@
-  if (dm < 0 && dh == 0) {
-    dh += 24;
-  }
-
-  // print("$dh, $dm");
-  print(60 * dh + dm);

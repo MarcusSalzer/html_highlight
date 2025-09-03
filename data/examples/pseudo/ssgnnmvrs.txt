@@ -1,6 +1,0 @@
-aVar = 22
-anotherVar = 37.71
-
-fgh = aVar + anotherVar
-
-jk = fgh * 33

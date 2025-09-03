@@ -1,6 +1,0 @@
-    public synchronized void acquire() throws InterruptedException {
-        while(permits<=0){
-            wait();
-        }
-        permits--;
-    }

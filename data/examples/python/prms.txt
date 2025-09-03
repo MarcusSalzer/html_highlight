@@ -1,8 +1,0 @@
-def primes(max: int):
-    "returns all primes lower than or equal to max"
-    primes = [*range(2, max + 1)]
-    for i in range(2, max + 1):
-        for m in range(2, max // i + 1):
-            if i * m in primes:
-                primes.remove(i * m)
-    return primes

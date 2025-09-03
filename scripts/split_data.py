@@ -1,6 +1,7 @@
 """Make a train/val/test split"""
 
 import json
+from pathlib import Path
 import sys
 from datetime import datetime
 
@@ -14,7 +15,7 @@ def make_split(
     min_group_count=4,
     seed: int | None = None,
 ):
-    examples = util.load_examples_json()
+    examples = util.dataset_to_df(util.load_dataset_zip())
 
     examples = data_functions.make_example_groups(
         examples, min_group_count=min_group_count
@@ -22,9 +23,11 @@ def make_split(
 
     print("\nGroups:")
     for g, c in examples["group"].value_counts(sort=True).iter_rows():
-        print(f"  {g}: {c}")
+        print(f"  {g:.<20} {c}")
 
-    splits = data_functions.data_split(examples, ratios, seed=seed)
+    splits = data_functions.data_split(
+        examples, ratios, stratify_col="group", seed=seed
+    )
     result_splits = [len(df) / len(examples) for df in splits]
 
     print(f"\nSplits:{','.join(f' {r * 100:.1f}%' for r in result_splits)}")
@@ -38,7 +41,7 @@ def make_split(
     now = datetime.now()
     name = f"split_index_{now.month:02d}{now.day:02d}"
 
-    with open(f"./data/{name}.json", "w") as f:
+    with open(Path("data") / f"{name}.json", "w") as f:
         json.dump(split_index, f)
 
 

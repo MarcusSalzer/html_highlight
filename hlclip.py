@@ -1,5 +1,3 @@
-# mypy: disable-error-code="import-untyped"
-
 """Import and use `hlclip.hlclip()` to highlight clipboard"""
 
 from datetime import datetime
@@ -10,7 +8,7 @@ import pyperclip as pc
 from src import inference
 from src.html_process import format_html
 from src.text_process import process
-from src.util import MAP_TAGS
+from src._constants import MAP_TAGS_SIMPLE
 
 infer = inference.Inference("model_inference")
 
@@ -39,14 +37,14 @@ def hlclip():
     )
 
     # combine with deterministic tags
-    tags = []
+    tags: list[str] = []
     for td, tp in zip(tags_det, tags_pred):
         if td == "uk":
             tags.append(tp)
         else:
             tags.append(td)
 
-    tags = [MAP_TAGS.get(t, t) for t in tags]
+    tags = [MAP_TAGS_SIMPLE.get(t, t) for t in tags]
 
     out_text = format_html(tokens, tags)
 

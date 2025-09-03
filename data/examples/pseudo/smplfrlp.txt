@@ -1,4 +1,0 @@
-prod = 1
-for i = 1,2,3
-    prod = prod * i
-return prod

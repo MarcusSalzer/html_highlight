@@ -1,0 +1,6 @@
+[optuna_dashboard]
+storage = "sqlite:///optuna/data.db"
+storage_class = "RDBStorage"
+port = 8080
+host = "127.0.0.1"
+server = "auto"

@@ -1,1 +1,0 @@
-Let x be 3. Let y be x plus 7. Then y is 10.

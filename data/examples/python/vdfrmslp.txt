@@ -1,5 +1,0 @@
-for i in range(N_frames):
-    zeros = "0" * (digits - len(str(i)))
-    filename = zeros + str(i) + ".png"
-    imwrite(os.path.join(frames_path, filename), np.asarray(frames[i]))
-    print(filename)

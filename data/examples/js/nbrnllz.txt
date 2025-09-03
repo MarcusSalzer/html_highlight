@@ -1,3 +1,0 @@
-let age = Number(null);
-
-alert(age); 

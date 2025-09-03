@@ -1,1 +1,0 @@
-my_grid = torch.arange(121).reshape(11,11)

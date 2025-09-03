@@ -1,6 +1,7 @@
 import os
+from pathlib import Path
 from timeit import default_timer
-from typing import cast
+from typing import Callable, cast
 
 import polars as pl
 import torch
@@ -8,8 +9,7 @@ from colorama import Fore, Style
 from torch import nn, optim
 from torch.utils.data import DataLoader, Dataset
 
-from src import text_process
-from src.util import ArrayLike
+from src import text_process, types
 
 
 class LSTMTagger(nn.Module):
@@ -79,12 +79,12 @@ class SequenceDataset(Dataset):
 
     def __init__(
         self,
-        tokens: ArrayLike[list[str]],
-        labels_det: ArrayLike[list[str]],
-        labels_true: ArrayLike[list[str]],
+        tokens: types.ArrayLike[list[str]],
+        labels_det: types.ArrayLike[list[str]],
+        labels_true: types.ArrayLike[list[str]],
         token2idx: dict[str, int],
         label2idx: dict[str, int],
-        device: str | None = None,
+        device: str | torch.device | None = None,
         extra_feats: int = 0,
     ):
         if not len(tokens) == len(labels_det) == len(labels_true):
@@ -127,7 +127,7 @@ def seqs2padded_tensor(
     sequences: list[list[int]],
     pad_value=0,
     verbose=True,
-    device: str | None = None,
+    device: torch.device | str | None = None,
 ):
     t = torch.nn.utils.rnn.pad_sequence(
         [torch.tensor(s) for s in sequences],
@@ -188,19 +188,21 @@ def train_loop(
     loss_function=None,
     lr_s: optim.lr_scheduler.LRScheduler | None = None,
     name="",
-    save_dir=None,
+    save_dir: Path | None = None,
     save_wait: int = 5,
-    printerval=1,
+    printerval: int | None = 1,
     time_limit: int | None = None,
-    reduce_lr_on_plat: dict | None = None,
+    reduce_lr_on_plat: types.LrsPlatConfig | None = None,
+    stop_patience: int | None = None,
+    epoch_callback: Callable | None = None,
 ):
     """Train a tagger model
 
     ## returns
     - metrics: dict with keys "train_loss", "val_loss", "val_acc"
     """
-    if save_dir is not None and not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+    if save_dir is not None and not save_dir.exists():
+        save_dir.mkdir(parents=True)
 
     if optimizer is None:
         optimizer = optim.Adam(model.parameters())
@@ -209,7 +211,7 @@ def train_loop(
 
     if reduce_lr_on_plat:
         lrs_plat = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, **reduce_lr_on_plat
+            optimizer, **reduce_lr_on_plat.model_dump()
         )
     else:
         lrs_plat = None
@@ -220,11 +222,16 @@ def train_loop(
 
     prev_best_vl = 0.0
     best_loss = float("inf")
+    best_epoch = 0
     prev_best_acc = 0
     best_acc = 0
     tstart = default_timer()
 
     for epoch in range(epochs):
+        if stop_patience is not None:
+            if epoch > best_epoch + stop_patience:
+                print(f"[EARLY STOPPING at {epoch = }]")
+                break
         # TRAINING
         train_loss = run_epoch(model, train_dl, loss_function, optimizer)
         losses_train.append(train_loss)
@@ -244,8 +251,9 @@ def train_loop(
         m_extra = " "
         if val_loss < best_loss:
             best_loss = val_loss
+            best_epoch = epoch
             if save_dir is not None and epoch > save_wait:
-                fp = os.path.join(save_dir, f"{name}_state.pth")
+                fp = save_dir / f"{name}_state.pth"
                 torch.save(model.state_dict(), fp)
                 m_extra += (
                     f"{Fore.CYAN} Saved in {save_dir} (best VL) {Style.RESET_ALL}"
@@ -259,7 +267,7 @@ def train_loop(
                     f"{Fore.CYAN} Saved in {save_dir} (best Acc) {Style.RESET_ALL}"
                 )
 
-        if (epoch) % printerval == 0:
+        if printerval is not None and (epoch) % printerval == 0:
             msg = f"{epoch + 1:4d}/{epochs},{Style.DIM} train: {train_loss:.6f},{Style.RESET_ALL} val: {val_loss:.6f},"
 
             impr_vl, prev_best_vl = prev_best_vl - best_loss, best_loss
@@ -302,20 +310,21 @@ def data2torch(
     bs: int,
     token2idx: dict[str, int],
     tag2idx: dict[str, int],
-    device="cpu",
+    device: str | torch.device = "cpu",
     extra_feats: int = 0,
 ):
     """Dataframe -> Dataloader"""
 
     df = df.with_columns(
         tags_det=pl.col("tokens").map_elements(
-            lambda tks: text_process.process("".join(tks))[1], pl.List(pl.String)
+            lambda tks: text_process.process("".join(tks))[1],
+            pl.List(pl.String),
         )
     )
     dset = SequenceDataset(
-        df["tokens"].to_list(),
-        df["tags_det"].to_list(),
-        df["tags"].to_list(),
+        cast(types.ArrayLike[list[str]], df["tokens"].to_list()),
+        cast(types.ArrayLike[list[str]], df["tags_det"].to_list()),
+        cast(types.ArrayLike[list[str]], df["tags"].to_list()),
         token2idx,
         tag2idx,
         device=device,
@@ -368,6 +377,6 @@ def val_acc(model, dset: SequenceDataset):
 
 def get_dev():
     if torch.cuda.is_available():
-        return "cuda"
+        return torch.device("cuda")
     else:
-        return "cpu"
+        return torch.device("cpu")

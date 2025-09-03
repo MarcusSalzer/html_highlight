@@ -1,1 +1,0 @@
-    let mut seen: HashSet<Row> = HashSet::new();

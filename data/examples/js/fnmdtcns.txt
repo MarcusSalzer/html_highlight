@@ -1,3 +1,0 @@
-new FormData()
-new FormData(form)
-new FormData(form, submitter)

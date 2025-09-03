@@ -1,2 +1,0 @@
-with zipfile.ZipFile("data_files.zip", mode="a") as archive:
-    archive.write("new_data.txt")

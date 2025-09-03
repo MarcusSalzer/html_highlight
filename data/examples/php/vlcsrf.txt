@@ -1,1 +1,0 @@
-Illuminate\Foundation\Http\Middleware\ValidateCsrfToken

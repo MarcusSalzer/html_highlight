@@ -1,1 +1,0 @@
-external void doSomeThing(int x);

@@ -1,4 +1,0 @@
-pub fn main() {
-    let primes = math_fun::eratosthenes(5000);
-    println!("a few primes: {primes:?}");
-}

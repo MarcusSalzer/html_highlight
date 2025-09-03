@@ -1,4 +1,0 @@
-{
-  "me": ["method"],
-  "kw": ["k", "kw", "keyword"]
-}

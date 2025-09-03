@@ -85,22 +85,22 @@ class TestComment(unittest.TestCase):
     def test_cofl_py(self):
         tk, ta = process("# add (+) two numbers\n1+1")
         self.assertListEqual(["# add (+) two numbers", "\n", "1", "+", "1"], tk)
-        self.assertListEqual(["cofl", "nl", "nu"], ta[:3])
+        self.assertListEqual(["co", "nl", "nu"], ta[:3])
 
     def test_cofl_c(self):
         tk, ta = process("// a comment 123 'str'\n14")
         self.assertListEqual(["// a comment 123 'str'", "\n", "14"], tk)
-        self.assertListEqual(["cofl", "nl", "nu"], ta)
+        self.assertListEqual(["co", "nl", "nu"], ta)
 
     def test_coil_py(self):
         tk, ta = process("x=3 # a number (3)\n14")
         self.assertListEqual(["x", "=", "3", " ", "# a number (3)", "\n", "14"], tk)
-        self.assertEqual("coil", ta[4])
+        self.assertEqual("co", ta[4])
 
     def test_coil_c(self):
-        tk, ta = process("x=3 // a number (3)")
-        self.assertListEqual(["x", "=", "3", " ", "// a number (3)"], tk)
-        self.assertEqual("coil", ta[4])
+        tk, ta = process("x=3; // a number (3)")
+        self.assertListEqual(["x", "=", "3", ";", " ", "// a number (3)"], tk)
+        self.assertEqual("co", ta[5])
 
     def test_coml_php(self):
         tk, ta = process("/**\n * Store user.\n */\npublic function store")
@@ -108,7 +108,7 @@ class TestComment(unittest.TestCase):
             ["/**\n * Store user.\n */", "\n", "public", " ", "function", " ", "store"],
             tk,
         )
-        self.assertEqual("coml", ta[0])
+        self.assertEqual("co", ta[0])
         self.assertEqual("nl", ta[1])
 
     def test_2coml_php(self):
@@ -128,10 +128,10 @@ class TestComment(unittest.TestCase):
             tk,
         )
         self.assertEqual("nl", ta[0])
-        self.assertEqual("coml", ta[1])
+        self.assertEqual("co", ta[1])
         self.assertEqual("nl", ta[2])
         self.assertEqual("nl", ta[8])
-        self.assertEqual("coml", ta[9])
+        self.assertEqual("co", ta[9])
 
 
 if __name__ == "__main__":

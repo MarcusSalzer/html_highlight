@@ -1,3 +1,0 @@
-if ($request->session()->has('athing')) {
-    // ...
-}

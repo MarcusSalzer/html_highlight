@@ -1,5 +1,0 @@
-reload(optical_flow)
-
-frames_flow = [np.float32(f) for f in frames[:8]]
-print(frames_flow[0].shape)
-optical_flow.opt_flow(frames_flow)

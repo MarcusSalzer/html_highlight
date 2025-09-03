@@ -1,6 +1,0 @@
-    if x < 30:
-        for r in range(1, x + 1):
-            if r * r > x:
-                return r - 1
-    else:
-        return binsearch(3, x)

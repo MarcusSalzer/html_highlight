@@ -1,5 +1,0 @@
-clc; clear; close all;
-
-%image size
-H=100;
-W=60;

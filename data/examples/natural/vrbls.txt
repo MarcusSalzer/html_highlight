@@ -1,2 +1,0 @@
-my name is Myname, my age is 33. 
-I am older than 20.

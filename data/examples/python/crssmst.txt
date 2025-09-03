@@ -1,3 +1,0 @@
-curses.nocbreak()
-stdscr.keypad(False)
-curses.echo()

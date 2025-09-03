@@ -24,7 +24,7 @@ if __name__ == "__main__":
         print(Fore.RED + "No models found" + Style.RESET_ALL)
         exit(1)
 
-    data = util.load_examples_json(verbose=False)
+    data = util.load_dataset_zip()
     print(f"Loaded {len(data)} examples")
 
     print(f"Running {len(model_ids)} model{'s' * (len(model_ids) != 1)}")
@@ -34,10 +34,10 @@ if __name__ == "__main__":
     for mn in model_ids:
         infer = Inference(mn, model_dir="models_trained")
         outputs = {}
-        for ex in data.iter_rows(named=True):
-            tags_pred = infer.run(ex["tokens"], ex["tags"])
-            outputs[ex["name"] + "_" + ex["lang"]] = {
-                "tokens": ex["tokens"],
+        for ex in data:
+            tags_pred = infer.run(ex.tokens, ex.tags)
+            outputs[ex.name + "_" + ex.lang] = {
+                "tokens": ex.tokens,
                 "tags": tags_pred,
             }
         with open(f"./output/pred_{mn}.json", "w", encoding="utf-8") as f:

@@ -2,91 +2,104 @@
 
 import json
 import os
+from pathlib import Path
 import sys
 from glob import glob
 from typing import Literal
 import polars as pl
 import regex as re
+from rich.console import Console
+
 
 sys.path.append(".")
-from src import text_process
+from src import cli_util, text_process, util
+from src._constants import LANGS
 
-EXAMPLE_DIR = os.path.join("data", "examples")
-DATASET_FILE = os.path.join("data", "examples_annot.json")
+console = Console()
+
+EXAMPLE_DIR = Path("data/examples")
+DATASET_FILE = Path("data/dataset.ndjson")
 
 
 IGNORE_PRINT = ["ws", "id", "nl", "brop", "brcl"]
 
 
 def main():
-    os.system("cls" if os.name == "nt" else "clear")
-
+    cli_util.clearCLI()
     # get example files
     files = get_example_files()
     if files.is_empty():
         print("No examples left")
         exit(0)
     name, lang, _ = files.sort("size").row(0)
+    assert isinstance(name, str)
+    assert isinstance(lang, str)
 
     # load tag names and aliases
     aliases = load_aliases("data/class_aliases_str.json")
-    print("possible tags:")
-    print("\n".join([f"{t:<6}: {a[-1]}" for t, a in aliases.items()]) + "\n")
+    console.print("-" * 30 + "\n", style="dim")
+    lines = [f"[bold]{t:<6}[/bold][dim]:[/dim] {a[-1]}" for t, a in aliases.items()]
+    width = max(len(li) for li in lines)
 
-    with open(os.path.join(EXAMPLE_DIR, lang, name + ".txt")) as f:
-        text = f.read()
+    for idx, li in enumerate(lines):
+        console.print(li.ljust(width + 2), end="")
+        if idx % 2 == 1:
+            print()
+
+    ex_file = EXAMPLE_DIR / lang / f"{name}.txt"
+    text = ex_file.read_text("utf-8")
 
     # basic initial tagging
     tokens, tags = text_process.process(text)
 
-    print("\ntype `ignore` to save example for later\n")
+    print("\n\ntype `ignore` to save example for later")
     print("type class +`!` to mark all\n")
 
-    print("-" * 15 + f" {name} ({lang}) " + "-" * 15 + "\n")
+    pad = "[green]" + "-" * 15 + "[/green]"
+    console.print(f"{pad} {name} ({lang}) {pad}")
 
-    print(text)
+    tags = [canonicalize_tag(t, aliases) for t in tags]
 
-    tags = [simplify_tag(t, aliases) for t in tags]
+    cli_util.pretty_print_code(tokens, tags)
 
     # annotate unknowns
     tags_new = annotate_loop(tokens, tags, aliases)
 
     if tags_new is None:
         ignore(name, lang)
+        exit()
 
-    # merge adjacent tokens
-    # tokens_m, tags_m, merge_idx = text_process.merge_adjacent(
-    #     tokens, tags_new, dont_merge=DONT_MERGE, interactive=True
-    # )
-
-    print("-" * 30 + "\n")
-    print(text)
-    print("-" * 30 + "\n")
+    console.print("-" * 30 + "\n", style="dim")
+    cli_util.pretty_print_code(tokens, tags_new)
+    console.print("-" * 30 + "\n", style="dim")
 
     # print tokens that might have changed
+    max_t_len = max(len(t) for t in tokens)
     for token, tag_new, tag_old in zip(tokens, tags_new, tags, strict=True):
         if tag_old == "uk":
             # print last alias (most verbose)
-            print(f"{token:<30} -> {aliases[tag_new][-1]}")
+            print(f"{token.ljust(max_t_len + 2)} -> {aliases[tag_new][-1]}")
         if tags_new == "uk":
-            print(f"NOTICE: {token:<30} -> {aliases[tag_new][-1]}")
+            print(f"NOTICE: {token:<30} -> UNKNOWN")
 
-    print("-" * 30 + "\n")
-    # print things that was merged
-    # print("merged:")
-    # for i in merge_idx:
-    #     print(f"  - {tokens_m[i]} ({tags_m[i]})")
+    console.print("-" * 30 + "\n", style="dim")
+    diff = read_difficulty()
+    if diff == "ignore":
+        ignore(name, lang)
+    else:
+        save(name, lang, tokens, tags_new, diff)
+        ex_file.rename(Path("data") / "trash" / f"{name}_{lang}.txt")
 
-    print("-" * 30 + "\n")
 
+def read_difficulty():
     while True:
         diff_response = input(
             "difficulty: (e)asy, (n)ormal, (a)mbiguous, (u)nknown ?\n"
         ).lower()
 
         diff = None
-        if diff_response.lower() == "ignore":
-            ignore(name, lang)
+        if diff_response == "ignore":
+            return "ignore"
         elif diff_response in ["easy", "e"]:
             diff = "easy"
         elif diff_response in ["normal", "n"]:
@@ -97,47 +110,50 @@ def main():
             diff = "unknown"
 
         if diff:
-            save(name, lang, tokens, tags_new, diff)
+            return diff
         else:
             print("enter difficulty or ignore, or ctrl+C to cancel")
 
 
-def save(name, lang, tokens, tags, difficulty: Literal["easy", "normal", "ambiguous"]):
-    with open(DATASET_FILE, "r", encoding="utf-8") as f:
-        dataset: dict = json.load(f)
+def save(
+    name: str,
+    lang: str,
+    tokens: list[str],
+    tags: list[str],
+    difficulty: Literal["easy", "normal", "ambiguous", "unknown"],
+):
+    record = {
+        "name": name,
+        "lang": lang,
+        "difficulty": difficulty,
+        "tokens": tokens,
+        "tags": tags,
+    }
 
-    dataset.update(
-        {
-            f"{name}_{lang}": {
-                "difficulty": difficulty,
-                "tokens": tokens,
-                "tags": tags,
-            }
-        }
-    )
+    # Append as one line of JSON
+    with open(DATASET_FILE, "a", encoding="utf-8") as f:
+        json.dump(record, f, ensure_ascii=False)
+        f.write("\n")
 
-    with open(DATASET_FILE, "w", encoding="utf-8") as f:
-        json.dump(dataset, f)
-
-    print("Done! Saved annotations")
-    exit(0)
+    console.print("Done! Saved annotation", style="bold green")
 
 
 def ignore(name, lang):
     print(f"Ignoring example: {name} ({lang})!")
     with open(os.path.join("data", "ignore.txt"), "a") as f:
         f.write(f"{name}_{lang}\n")
-    exit(0)
 
 
-def get_example_files():
+def get_example_files() -> pl.DataFrame:
     files = glob("**/*txt", root_dir=EXAMPLE_DIR)
-    with open(DATASET_FILE, "r", encoding="utf-8") as f:
-        dataset: dict = json.load(f)
 
-    # strings as "exampleid_lang"
-    done_examples = list(dataset.keys())
-    langs = os.listdir(EXAMPLE_DIR)
+    if not DATASET_FILE.exists():
+        console.print("No dataset file, creates", style="yellow")
+        DATASET_FILE.touch()
+
+    dataset = util.load_dataset_parallel(DATASET_FILE)
+
+    done_examples = [d.id for d in dataset]
 
     try:
         with open(os.path.join("data", "ignore.txt")) as f:
@@ -145,14 +161,14 @@ def get_example_files():
     except FileNotFoundError:
         ignore_files = []
 
-    print(f"found {len(files)} files")
-    print(f"already done {len(done_examples)} files")
-    print(f"ignoring {len(ignore_files)} files")
+    console.print(f"found {len(files)} files")
+    console.print(f"already done {len(done_examples)} files")
+    console.print(f"ignoring {len(ignore_files)} files")
 
     file_data = []
     for f in files:
         lang, name = re.split(r"[\.\/\\]", f)[:2]
-        if lang not in langs:
+        if lang not in LANGS:
             raise ValueError(f"incorrect language: {repr(lang)}")
         size = os.path.getsize(os.path.join(EXAMPLE_DIR, f))
         file_data.append([name.strip(), lang.strip(), size])
@@ -161,14 +177,14 @@ def get_example_files():
     for f in done_examples:
         splts = f.split("_")
         lang = splts[-1].split(".")[0].strip()
-        if lang not in langs:
+        if lang not in LANGS:
             raise ValueError(f"incorrect language: {repr(lang)} (in done)")
         name = "_".join(splts[:-1])
         done_ignore_data.append([name.strip(), lang.strip()])
     for f in ignore_files:
         splts = f.split("_")
         lang = splts[-1].strip()
-        if lang not in langs:
+        if lang not in LANGS:
             raise ValueError(f"incorrect language: {repr(lang)} (in ignore)")
         name = "_".join(splts[:-1])
         done_ignore_data.append([name.strip(), lang.strip()])
@@ -183,7 +199,8 @@ def get_example_files():
 
     if len(done_df) > 0:
         files_df = files_df.join(done_df, ["name", "lang"], how="anti")
-    print(f"{len(files_df)} files left")
+
+    console.print(f"{len(files_df)} files left")
 
     return files_df
 
@@ -200,12 +217,13 @@ def annotate_loop(tokens: list[str], tags: list[str], aliases: dict[str, list[st
     - tags_new (list[str]): New list of tags
     """
     tags_new = tags.copy()
+    max_t_len = max(len(t) for t in tokens)
 
     print("\nAnnotating:\n")
     for i, token in enumerate(tokens):
         # for aligned print
         if tags_new[i] == "uk":
-            t = input(f"{repr(token):<30}: ").lower().strip()
+            t = input(f"{repr(token).ljust(max_t_len + 2)}: ").lower().strip()
 
             # optionally mark all copies of the same token
             if t and t[-1] == "!":
@@ -217,7 +235,7 @@ def annotate_loop(tokens: list[str], tags: list[str], aliases: dict[str, list[st
             if t == "ignore":
                 return None
 
-            t_new = simplify_tag(t, aliases)
+            t_new = canonicalize_tag(t, aliases)
             if t_new == "ignore":
                 return None
             tags_new[i] = t_new
@@ -229,12 +247,15 @@ def annotate_loop(tokens: list[str], tags: list[str], aliases: dict[str, list[st
 
         elif tags_new[i] not in IGNORE_PRINT:
             # if already set, print verbose tag name
-            print(f"{repr(token):<30}: " + aliases[tags_new[i]][-1])
+            console.print(
+                f"{repr(token).ljust(max_t_len + 2):}: " + aliases[tags_new[i]][-1],
+                style="dim",
+            )
 
     return tags_new
 
 
-def simplify_tag(tag: str, aliases: dict[str, list[str]], verbose=False):
+def canonicalize_tag(tag: str, aliases: dict[str, list[str]], verbose=False):
     """Replace aliases to convention"""
     tag_new = None
     if tag in aliases.keys():
@@ -247,7 +268,7 @@ def simplify_tag(tag: str, aliases: dict[str, list[str]], verbose=False):
 
     while tag_new is None:
         print(f"unsupported tag: {tag}. Replace?")
-        tag_new = simplify_tag(input().strip(), aliases)
+        tag_new = canonicalize_tag(input().strip(), aliases)
 
     if verbose:
         print(f"{tag} -> {tag_new}")
@@ -255,15 +276,23 @@ def simplify_tag(tag: str, aliases: dict[str, list[str]], verbose=False):
     return tag_new
 
 
-def load_aliases(path: str) -> dict:
+def load_aliases(path: str) -> dict[str, list[str]]:
     """Load alias dictionary for tags and check uniqueness."""
     with open(path) as f:
-        class_aliases: dict = json.load(f)
+        class_aliases: dict[str, list[str]] = json.load(f)
 
     alias_list = [a for als in class_aliases.values() for a in als]
+    counts = {}
+    for a in alias_list:
+        if a in counts:
+            counts[a] += 1
+        else:
+            counts[a] = 1
 
     if len(alias_list) != len(set(alias_list)):
-        raise ValueError("Duplicate aliases")
+        raise ValueError(
+            f"Duplicate aliases: {', '.join(k for k in counts if counts[k] > 1)}"
+        )
 
     return class_aliases
 

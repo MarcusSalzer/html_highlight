@@ -1,2 +1,0 @@
-% GMRF parameters
-kappa = 1e-2;

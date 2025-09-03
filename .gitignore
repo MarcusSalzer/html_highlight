@@ -1,5 +1,6 @@
 # data things
-data/examples_annot.json
+data/examples/
+data/trash/
 hlclip_history/
 try_example/
 models_trained/
@@ -7,6 +8,12 @@ output/
 previews/
 search/
 tmp/
+media/
+# sqlite
+*.db
+
+# utility
+.last_cleanup
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

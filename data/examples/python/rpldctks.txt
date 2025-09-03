@@ -1,5 +1,0 @@
->>> a = {"x":3}
->>> 3 in a
-False
->>> "x" in a
-True

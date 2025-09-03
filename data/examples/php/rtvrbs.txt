@@ -1,2 +1,0 @@
-Route::get($uri, $callback);
-Route::post($uri, $callback);

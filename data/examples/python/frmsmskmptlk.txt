@@ -1,3 +1,0 @@
-frames_ann = frames_original[:stop_frame]
-
-masks_all = torch.empty_like(frames_ann)

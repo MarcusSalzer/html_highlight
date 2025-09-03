@@ -1,9 +1,0 @@
-    nextQuestion() {
-        this.#currentIndex++;
-        if (this.#currentIndex < this.questions.length) {
-            this.displayQuestion();
-        } else {
-            this.displayCompleted();
-        }
-
-    }

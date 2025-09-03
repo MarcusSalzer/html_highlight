@@ -1,3 +1,0 @@
-.error {
-  text-decoration: underline wavy red 1px;
-}

@@ -7,5 +7,11 @@
     "dropout_lstm": 0.5,
     "bidi": true
   },
-  "train": { "bs": 4, "lr": 0.0005, "lrs": ["exponential", { "gamma": 0.99 }] }
+  "train": {
+    "bs": 4,
+    "lr": 0.0005,
+    "lrs": ["exponential", { "gamma": 0.99 }],
+    "lrs_plat": { "factor": 0.75, "patience": 5 },
+    "stop_patience": 25
+  }
 }

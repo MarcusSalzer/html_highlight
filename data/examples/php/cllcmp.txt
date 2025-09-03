@@ -1,5 +1,0 @@
-$collection = collect([1, 2, 3]);
- 
-$collection->map(function (int $item, int $key) {
-    return $item + 42;
-});

@@ -1,1 +1,0 @@
-set(groot, 'defaultFigureUnits', 'centimeters', 'defaultFigurePosition', [0 0 5 3]);

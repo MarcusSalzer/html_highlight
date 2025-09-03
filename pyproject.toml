@@ -1,0 +1,10 @@
+[project]
+name = "html-highlight"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "torch>=2.7.1",
+    "scikit-learn>=1.7.1",
+]

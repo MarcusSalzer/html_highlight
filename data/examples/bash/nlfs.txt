@@ -1,1 +1,0 @@
-[ $X -ne 0 ] && echo "zero" || echo "not zero"

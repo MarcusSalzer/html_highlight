@@ -1,2 +1,0 @@
-<h1>My Page</h1>
-<p class="my-par">Here is some text</p>

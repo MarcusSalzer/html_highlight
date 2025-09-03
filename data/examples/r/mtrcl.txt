@@ -1,1 +1,0 @@
-thismatrix[, -c(1,2)]

@@ -1,7 +1,0 @@
-// Move to the next pivot row
-row += 1;
-
-// Stop if we've processed all rows
-if row >= m {
-    break;
-}

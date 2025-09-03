@@ -1,5 +1,6 @@
 import json
 from glob import glob
+from typing import Sequence
 
 import polars as pl
 import regex as re
@@ -51,7 +52,7 @@ def html_specials(text: str) -> str:
 def format_html(
     tokens: list[str],
     tags: list[str],
-    override_elements: list[str | None] | None = None,
+    override_elements: Sequence[str | None] | None = None,
     exclude_tags: list[str] = ["ws", "uk", "id", "<unk>"],
     level_brackets: bool = True,
     css_path: str | None = None,
@@ -67,7 +68,7 @@ def format_html(
     - level_brackets: if true, replace brop/brcl with br{n}
     - css_path: if not None, make document with `<head>` and `<body>`
     """
-    tokens_with_tags = []
+    tagged_elements = []
 
     # If no overrides
     if override_elements is None:
@@ -85,7 +86,7 @@ def format_html(
         # fix html specials
         token_text = html_specials(token)
         if tag in exclude_tags:
-            tokens_with_tags.append(token_text)
+            tagged_elements.append(token_text)
         else:
             # if no overwritten element
             if el is None:
@@ -94,11 +95,11 @@ def format_html(
             # mark errors
             tag += " error" * is_err
 
-            tokens_with_tags.append(
+            tagged_elements.append(
                 f'<{el} class="{tag}" {f'title="{tag}"' * tooltips}>{token_text}</{el}>'
             )
 
-    text = "".join(tokens_with_tags)
+    text = "".join(tagged_elements)
     text = f'\n<pre><code class="code-snippet">{text} </code></pre>\n'
 
     if legend:
@@ -109,6 +110,38 @@ def format_html(
         return head + f"\n<body>\n{text}\n</body>"
     else:
         return text
+
+
+def format_html_simple(
+    tokens: list[str],
+    tags: list[str],
+) -> str:
+    """Format HTML document of tagged text.
+
+    ## parameters
+    - override_elements: optionally use something else than `<span>`.
+    - exclude_tags: these will be left as plain text
+    - level_brackets: if true, replace brop/brcl with br{n}
+    - css_path: if not None, make document with `<head>` and `<body>`
+    """
+
+    # no need to tag whitespace/unknown tokens
+    exclude_tags = ["ws", "uk"]
+
+    tagged_elements: list[str] = []
+    for token, tag in zip(tokens, tags):
+        # fix html specials
+        token_text = html_specials(token)
+        if tag in exclude_tags:
+            tagged_elements.append(token_text)
+        else:
+            s = f'<span class="{tag}">{token_text}</span>'
+            tagged_elements.append(s)
+
+    text = "".join(tagged_elements)
+    final_html = f'\n<pre><code class="code-snippet">{text}</code></pre>\n'
+
+    return final_html
 
 
 def render_preview(
@@ -145,8 +178,11 @@ def render_preview(
             ]
             acc = 1 - (sum(errors) / len(errors))
             accs.append(acc)
+
         else:
             errors = None
+            acc = None
+
         if mark_nondet:
             mark = ["mark" if (t == "uk") else None for t in tags_det]
         else:
@@ -159,7 +195,7 @@ def render_preview(
             errors=errors,
         )
         ex_title = f"{(ex['name'] + ' ') * show_names} ({ex['lang']})"
-        if correct is not None:
+        if correct is not None and acc is not None:
             ex_title += f" {acc * 100:.1f}% acc"
         ex_title = f"\n<p>{ex_title}</p>"
         document_examples += ex_title + "\n" + ex_text + "\n<br>\n"

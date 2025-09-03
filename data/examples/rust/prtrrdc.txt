@@ -1,7 +1,0 @@
-let rows: HashSet<_> = (0..NCHUNKS)
-    .into_par_iter()
-    .map(|chunk_idx| gen_chunk(chunk_idx, chunk_size, n, jmax, fb, HashSet::new()))
-    .reduce(HashSet::new, |mut acc, new_rows| {
-        acc.extend(new_rows);
-        acc
-    });

@@ -1,4 +1,0 @@
-if (num % 2 == 0)
-    println("$num even")
-else
-    println("$num odd")

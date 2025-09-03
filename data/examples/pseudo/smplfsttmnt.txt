@@ -1,5 +1,0 @@
-name = "My name"
-if name == "My name"
-    return "Yes, my name"
-else
-    return "Wrong name"

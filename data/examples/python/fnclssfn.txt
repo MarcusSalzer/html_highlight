@@ -1,3 +1,0 @@
-import torch.nn.functional as F
-
-loss_func = F.cross_entropy 

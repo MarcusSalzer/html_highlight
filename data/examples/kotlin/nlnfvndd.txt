@@ -1,1 +1,0 @@
-val res = if (num % 2 == 0) "yes" else "no"

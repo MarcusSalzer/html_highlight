@@ -1,6 +1,0 @@
-import torch._dynamo as dynamo
-
-def my_fun(x, y):
-    pass
- 
-print(dynamo.explain(my_fun)(torch.randn(10), torch.randn(10)))

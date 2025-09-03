@@ -1,4 +1,0 @@
-with profile(activities=activities) as prf:
-    model(inputs)
-
-prf.export_chrome_trace("trace.json")

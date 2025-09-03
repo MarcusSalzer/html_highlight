@@ -1,6 +1,0 @@
-while True:
-    c = stdscr.getch()
-    if c == ord('a'):
-        break
-    elif c == curses.KEY_HOME:
-        x = y = 0

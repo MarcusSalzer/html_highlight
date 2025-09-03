@@ -1,2 +1,0 @@
-[par,beta] = covest_ml(D_kk,Y,covf,par_fixed,X_ols,"ml");
-cov_fitted_d = matern_covariance(d_smooth,par(1),par(2),par(3));

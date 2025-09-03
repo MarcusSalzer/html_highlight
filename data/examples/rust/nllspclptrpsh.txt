@@ -1,6 +1,0 @@
-let mut nullspace = Vec::new();
-for i in 0..m {
-    if mat[i].iter().all(|&x| x == 0) {
-        nullspace.push(null_basis[i].clone());
-    }
-}

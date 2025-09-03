@@ -1,4 +1,0 @@
-t0 = time.time()
-# train one batch...
-t1 = time.time()
-tokens_per_sec = (loader.bs * T)/(t1 - t0)

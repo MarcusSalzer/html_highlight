@@ -1,8 +1,0 @@
-products = []
-for i in range(1, 1000):
-    for j in range(1, 1000):
-        prod = i * j
-        if prod not in products:
-            string = str(prod)
-            if string == string[::-1]:
-                products.append(prod)

@@ -1,5 +1,0 @@
-the_response = ""
-id = 0
-while the_response != "correct":
-    the_response = get_response(id)
-    id++;

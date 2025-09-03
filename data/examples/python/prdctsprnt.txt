@@ -1,2 +1,0 @@
-products = sorted(products, reverse=True)
-print(products[0])

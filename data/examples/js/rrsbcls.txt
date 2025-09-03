@@ -1,6 +1,0 @@
-class ProcessError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ProcessError";
-  }
-}

@@ -1,3 +1,8 @@
+import sys
+
+import polars as pl
+
+sys.path.append(".")
 from src import util
 
 
@@ -7,7 +12,7 @@ def make_css(
     max_br=4,
 ):
     doc = "body {\n  color: white;\n  background-color: black;\n}\n"
-    doc = 'pre {\n  font-family: "Comic Mono", monospace;'
+    doc += 'pre {\n  font-family: "Comic Mono", monospace;\n}\n'
     doc += (
         "mark {\n  color: white;\n  background-color: rgba(129, 129, 129, 0.378);\n}\n"
     )
@@ -21,11 +26,11 @@ def make_css(
             continue
         doc += f".{t}" + " {\n  color: white;\n}\n"
 
-    with open("_style.css", "w", encoding="utf-8") as f:
+    with open("_style.tmp.css", "w", encoding="utf-8") as f:
         f.write(doc)
 
 
 if __name__ == "__main__":
-    data = util.load_examples_json(verbose=False)
-    tags = data["tags"].explode().unique().to_list()
+    data = util.load_dataset_zip()
+    tags = pl.Series("tag", [d.tags for d in data]).explode().unique().to_list()
     make_css(sorted(tags))

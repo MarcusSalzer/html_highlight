@@ -1,1 +1,0 @@
-[x,y] = meshgrid(linspace(2000,3000,50), linspace(5000,6000,50));

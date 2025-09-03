@@ -1,3 +1,0 @@
-Route::get('posts/{post}', function (App\Models\Post $post) {
-    // ...
-});

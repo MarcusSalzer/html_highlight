@@ -1,6 +1,0 @@
-def mask_similarity(m1: torch.tensor, m2: torch.tensor) -> float:
-    intersection = torch.sum((m1 * m2) >= 1)
-    union = torch.sum((m1 + m2) >= 1)
-    if union == 0:
-        return 0
-    return float(intersection / union)

@@ -1,8 +1,0 @@
-subplot(223);
-scatter(data_valid.x, data_valid.y, 30, yhat_v, 'filled', ...
-      'markeredgecolor', 'r')
-axis xy tight;
-title("Validation prediction")
-xlabel("x")
-ylabel("y")
-colorbar

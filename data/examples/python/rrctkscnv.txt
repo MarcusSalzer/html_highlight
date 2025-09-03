@@ -1,1 +1,0 @@
-vocab = ["<pad>", "<unk>"] + list(char_counts.keys())[:10]

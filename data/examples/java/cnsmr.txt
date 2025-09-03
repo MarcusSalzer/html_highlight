@@ -1,1 +1,0 @@
-Consumer<Integer> method = (n) -> { System.out.println(n); };

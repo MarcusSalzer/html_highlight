@@ -1,7 +1,0 @@
-plotting.heatmap(
-    confmat,
-    tag_vocab,
-    log_scale=True,
-    pseudo_count=10,
-    size=500,
-).show()

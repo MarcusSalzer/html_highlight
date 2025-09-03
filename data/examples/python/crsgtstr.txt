@@ -1,2 +1,0 @@
-# Get a string
-s = stdscr.getstr(0,0, 15)

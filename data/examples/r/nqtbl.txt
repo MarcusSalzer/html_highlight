@@ -1,2 +1,0 @@
-uniqs <- unique(x)
-table <- tabulate(match(x, uniqs))

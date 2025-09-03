@@ -1,8 +1,0 @@
-public class Semaphore {
-   
-    private int permits;
-  
-    public Semaphore(int count) {
-        permits=count;
-    }
-}

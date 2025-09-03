@@ -1,4 +1,0 @@
-x = True
-y = False
-
-z = x and y

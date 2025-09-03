@@ -1,2 +1,0 @@
-s = [ 'some ', ' trash  ']
-map(str.strip, s)

@@ -1,1 +1,0 @@
-var zz, xy int = 11, 33

@@ -102,6 +102,7 @@ mark {
 }
 .va {
   color: rgb(253, 255, 195);
+  font-style: italic;
 }
 .br0 {
   color: rgb(182, 255, 179);

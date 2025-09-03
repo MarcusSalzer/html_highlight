@@ -1,6 +1,0 @@
-Person: {name,id}
-
-p = Person("somename", 99)
-
-p.name
-p.id

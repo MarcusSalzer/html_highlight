@@ -1,5 +1,0 @@
-for (let key in thing) {
-  if (typeof thing[key] == 'function') {
-    thing[key] = thing[key].bind(thing);
-  }
-}

@@ -1,3 +1,0 @@
-if (!window.Promise) {
-  window.Promise = ... // implement a polyfill
-} 

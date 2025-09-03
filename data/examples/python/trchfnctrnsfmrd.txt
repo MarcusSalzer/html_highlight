@@ -1,4 +1,0 @@
-original = torch.empty(1, H, W, 3)
-original = transforms.functional.convert_image_dtype(
-    torch.tensor(imread(os.path.join(IMAGE_PATH, "0000.png")))
-)

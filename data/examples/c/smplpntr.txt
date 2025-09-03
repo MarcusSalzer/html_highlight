@@ -1,2 +1,0 @@
-int b = 7;
-int *pb = &b;

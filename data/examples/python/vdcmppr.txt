@@ -1,9 +1,0 @@
-N_frames = len(everything_results)
-
-H, W = 720, 1280
-
-video_mono = torch.empty([N_frames, H, W], dtype=torch.float)
-
-for i, frame in enumerate(everything_results):
-    mask_sum = torch.sum(frame.masks.data, dim=0)
-    video_mono[i, :, :] = mask_sum

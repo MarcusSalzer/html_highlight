@@ -1,5 +1,0 @@
-Route::middleware('auth')->group(function () {
-    Route::get('/dash', function () {
-        return view('home');
-    })->name('dash');
-});

@@ -2,30 +2,17 @@ import math
 import regex as re
 
 
-# which tags are completely deterministic?
-DET_TAGS = ["cofl", "brop", "brcl", "id", "nu", "ws", "nl", "pu"]
-
-# which tokens have a few possible tags?
-# just a few examples...
-POSSIBLE_PER_TOKEN = {
-    "<": ["sy", "opcm"],
-    "+": ["opbi", "opun"],
-    "-": ["opbi", "opun"],
-    "  ": ["ws", "id"],
-}
-
 # patterns for some basic tokens
 # in order
 basic_pats = [
-    ("cofl", r"^(?:\/{2,3}|#|%).+$"),  # one full line comment
-    ("cofl", r"(?<=^\s+)(?:\/{2,3}|#|%).+$"),  # comment after indentation
-    # html-comment
-    ("cofl", r"<!--.+-->\s*?$"),
-    # php/jsdoc multiline comments
-    ("coml", r"\/\*{1,2}[\s\S]+?\*\/"),
-    # inline comments (NOTE: quite sketchy)
-    ("coil", r"(?<=\s+)\/{2} ?(?:[^+-=]+[\s:]+[^+-=].*[^\n]+)"),
-    ("coil", r"(?<=\s+)# ?.*"),  # shell/py style, less confusion with op
+    # comment after indentation or full line
+    ("co", r"(?<=(?:^|[;,])\s*)(?:\/{2,3}|#|%).+$"),
+    ("co", r"<!--.+-->\s*$"),  # html-comment
+    # php/jsdoc/css multiline comments
+    ("co", r"\/\*{1,2}[\s\S\n]+?\*\/"),
+    # c style comments after semicolon/comma
+    # ("co", r"(?<=[;,]\s*)\/{2} ?.+$"),
+    ("co", r"#.*$"),  # shell/py style, less confusion with op
     # triple-quote string
     ("st", r"\"{3}[\s\S\n]*\"{3}"),
     ("st", r"'{3}[\s\S\n]*'{3}"),
@@ -33,6 +20,7 @@ basic_pats = [
     ("st", r"\"[^\"\n]*\""),
     # special quote
     ("st", r"“[^\"\n]*”"),
+    ("st", r"`[^`]*`"),  # backtick-string
     # rust lifetime annotations (NOTE: before single-strings)
     ("an", r"(?<=&|<|< |\+ |, )'\p{L}+(?=[>,])"),  # in angle brackets
     ("an", r"(?<=&)'\p{L}+"),  # in references
@@ -47,26 +35,24 @@ basic_pats = [
     # numbers: hex, bin,
     ("nu", r"(?<!\w)0x[0-9a-fA-F]+|0b[01]+"),
     # numbers: integer, decimal, percent
-    ("nu", r"(?<!\w)\d[\d_]*(?:\.\d+)?[\w%]*"),
+    ("nu", r"(?<!\w)\d[\d_]*(?:\.\d+)?\w*%?(?![\w\d])"),
     ("id", r"^[\t ]+"),
     ("ws", r"[\r\t\f\v ]+"),
     ("nl", r"\n+"),
-    ("sy", r">>>"),
-    # CSS classes (classes are identifiers, elements are type kws)
-    ("va", r"^\.\p{L}\S*(?=.*{)"),
+    ("sy", r"^>>>"),
+    # CSS classes
+    ("uk", r"^\.\p{L}\S*(?=.*{)"),
     # bash flags
     ("shfl", r"(?<!\S)--\p{L}+(?=\s|=|$)"),
     # bash flag or op or css attr
     ("uk", r"\p{L}*-?\p{L}+(?=\s|=|$|:)"),
     # rust macros
     ("uk", r"\S+!(?=\()"),
-    # comparison operators
-    ("opcm", r"===|!==|<=>|<=|>=|==|!="),
-    ("opbi", r"<<|>>|\*\*|\/\/|\.\^|\|\||&&|~\/"),
+    # operators
+    ("opbi", r"===|!==|<=>|<=|>=|==|!=|\*\*|\/\/|\.\^|\|\||&&|~\/|<<|\?\?"),
     ("opun", r"\+\+|--"),
     ("sy", r"->|=>|\|>|::|:|(?<=[^\s])\.(?=[^\s])"),
     ("opas", r"<-|\+=|-=|\*=|\/="),
-    ("uk", r"="),
     ("pu", r",|;"),
     # php/bash variable/parameter
     ("uk", r"\$[_\p{L}\d]+"),
@@ -76,8 +62,7 @@ basic_pats = [
     ("uk", r"\$\$"),
     # annotations
     ("an", r"^@\S+"),
-    # everything else
-    ("uk", r"\w+|[^\w\s]+?"),
+    ("uk", r"\w+|[^\w\s]+?"),  # everything else
 ]
 
 # NOTE: needed priorites:
@@ -85,21 +70,22 @@ basic_pats = [
 # bigger compound operators <= smaller operators
 
 
-# named groups to capture some initial tags
-
-
 def process_regex(text: str, patterns: list[tuple[str, str]] = basic_pats):
     """Tokenize and find some basic tags"""
 
     regex_token = re.compile("|".join(f"(?P<{t}>{p})" for t, p in patterns), re.M)
 
-    tokens = []
-    tags = []
+    tokens: list[str] = []
+    tags: list[str] = []
     # Iterate over all matches
     for m in regex_token.finditer(text):
         tokens.append(m.group())  # matched token
-        tags.append(m.lastgroup)  # corresponding tag
+        ta = m.lastgroup
+        if ta is None:
+            ta = "uk"
+        tags.append(ta)  # corresponding tag
 
+    # safety check
     rec = "".join(tokens)
     if rec != text:
         diffc = len(text) - len(rec)
@@ -260,10 +246,12 @@ def bracket_levels(tags: list[str]) -> tuple[list[str], list[int]]:
     tags_new = tags.copy()
     for i in range(len(tags_new)):
         if tags_new[i] == "brop":
+            # Increased nesting
             brac_level.append(current_level)
             tags_new[i] = f"br{current_level}"
             current_level += 1
         elif tags_new[i] == "brcl":
+            # Decreased nesting
             current_level -= 1
             tags_new[i] = f"br{current_level}"
             brac_level.append(current_level)
@@ -278,3 +266,7 @@ class ProcessError(Exception):
 
     def __init__(self, *args):
         super().__init__(*args)
+
+
+if __name__ == "__main__":
+    print("|".join(f"(?P<{t}>{p})" for t, p in basic_pats))

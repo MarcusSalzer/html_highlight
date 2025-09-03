@@ -1,4 +1,0 @@
-if (line == null) {
-    return null;
-  }
-  int K = int.parse(line);

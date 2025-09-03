@@ -1,4 +1,0 @@
-    // make quiz
-    const quiz = new Quiz(questions);
-
-    quiz.displayQuestion();
