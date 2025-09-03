@@ -82,8 +82,7 @@ POSSIBLE_PER_TOKEN = {
     "=": ["opas", "opbi", "sy"],
     "&": ["opmo", "opun", "opbi"],
     "*": ["opmo", "opun", "opbi"],
-    # Python type constructors
-    "float": ["ty", "tyco"],
+    "float": ["ty", "tyco", "pa"],
     "int": ["ty", "tyco"],
     "str": ["ty", "tyco"],
     "dict": ["ty", "tyco"],

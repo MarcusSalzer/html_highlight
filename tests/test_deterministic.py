@@ -13,7 +13,7 @@ class TestEasy(unittest.TestCase):
 
     def test_str_small(self):
         tk, ta = process("'abc' \"xyz\"")
-        self.assertListEqual(["'abc'", " ", '"xyz"'], tk)
+        self.assertListEqual(["'ab c'", " ", '"xyz"'], tk)
         self.assertListEqual(["st", "ws", "st"], ta)
 
     def test_w_indent_sp(self):
