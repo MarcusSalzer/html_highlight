@@ -5,17 +5,17 @@ import regex as re
 # patterns for some basic tokens
 # in order
 basic_pats = [
-    # comment after indentation or full line
-    ("co", r"(?<=(?:^|[;,])\s*)(?:\/{2,3}|#|%).+$"),
+    # comment after indentation or full line (NOTE variable length lookbehind)
+    ("co", r"(?<=(?:^|[;,])\s*)(?:/{2,3}|#|%).+$"),
     ("co", r"<!--.+-->\s*$"),  # html-comment
     # php/jsdoc/css multiline comments
-    ("co", r"\/\*{1,2}[\s\S\n]+?\*\/"),
+    ("co", r"\/\*{1,2}[\s\S]+?\*\/"),
     # c style comments after semicolon/comma
     # ("co", r"(?<=[;,]\s*)\/{2} ?.+$"),
     ("co", r"#.*$"),  # shell/py style, less confusion with op
     # triple-quote string
-    ("st", r"\"{3}[\s\S\n]*\"{3}"),
-    ("st", r"'{3}[\s\S\n]*'{3}"),
+    ("st", r"\"{3}[\s\S]*?\"{3}"),
+    ("st", r"'{3}[\s\S]*?'{3}"),
     # basic double-quote string
     ("st", r"\"[^\"\n]*\""),
     # special quote

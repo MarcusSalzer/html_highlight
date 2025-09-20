@@ -27,13 +27,7 @@ IGNORE_PRINT = ["ws", "id", "nl", "brop", "brcl"]
 def main():
     cli_util.clearCLI()
     # get example files
-    files = get_example_files()
-    if files.is_empty():
-        print("No examples left")
-        exit(0)
-    name, lang, _ = files.sort("size").row(0)
-    assert isinstance(name, str)
-    assert isinstance(lang, str)
+    name, lang = get_example()
 
     # load tag names and aliases
     aliases = load_aliases("data/class_aliases_str.json")
@@ -144,7 +138,7 @@ def ignore(name, lang):
         f.write(f"{name}_{lang}\n")
 
 
-def get_example_files() -> pl.DataFrame:
+def get_example():
     files = glob("**/*txt", root_dir=EXAMPLE_DIR)
 
     if not DATASET_FILE.exists():
@@ -202,7 +196,14 @@ def get_example_files() -> pl.DataFrame:
 
     console.print(f"{len(files_df)} files left")
 
-    return files_df
+    if files_df.is_empty():
+        print("No examples left")
+        exit(0)
+    name, lang, _ = files_df.sort("size").row(0)
+    assert isinstance(name, str)
+    assert isinstance(lang, str)
+
+    return name, lang
 
 
 def annotate_loop(tokens: list[str], tags: list[str], aliases: dict[str, list[str]]):

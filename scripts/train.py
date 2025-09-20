@@ -35,7 +35,8 @@ def train_interactive() -> None:
     model_name = f"{Path(param_fn).name.split('.')[0]}_{now.month:02d}{now.day:02d}"
 
     # load data, convert to dataframe
-    split_idx = util.load_split_idx(setup.split)
+    split_idx, split_date = util.load_split_idx()
+    print(f"Loaded split {split_date}")
     data = {
         sk: util.dataset_to_df(v)
         for sk, v in util.load_dataset_splits(split_idx).items()
@@ -84,8 +85,8 @@ def train_interactive() -> None:
 
     # Training details
 
-    opt = optim.Adam(model.parameters(), setup.train.lr)
-    lossfn = nn.CrossEntropyLoss()
+    opt = optim.Adam(model.parameters(), setup.train.start_lr)
+    lossfn = nn.CrossEntropyLoss(label_smoothing=setup.train.label_smoothing)
     lr_s_pars = setup.train.lrs
     lr_s = None
     if lr_s_pars is not None:
@@ -94,19 +95,19 @@ def train_interactive() -> None:
             lr_s = optim.lr_scheduler.ExponentialLR(opt, **lr_s_pars[1])
 
     print(f"\nTraining {model_name} on {device}")
-    metrics = torch_util.train_loop(
+    metrics = torch_util.Trainer(
         model,
         train_dl,
         val_dl,
-        setup.train.epochs,
-        opt,
-        lossfn,
-        lr_s,
+        optimizer=opt,
+        loss_function=lossfn,
+        lr_s=lr_s,
         name=model_name,
         save_dir=SAVE_DIR,
         reduce_lr_on_plat=setup.train.lrs_plat,
         stop_patience=setup.train.stop_patience,
-    )
+    ).train_loop(max_epochs=setup.train.epochs)
+
     meta.metrics = metrics
     meta_path.write_text(meta.model_dump_json(indent=2))
 

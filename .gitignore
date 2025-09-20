@@ -1,7 +1,7 @@
 # data things
 data/examples/
 data/trash/
-hlclip_history/
+*history/
 try_example/
 models_trained/
 output/
@@ -9,6 +9,7 @@ previews/
 search/
 tmp/
 media/
+
 # sqlite
 *.db
 

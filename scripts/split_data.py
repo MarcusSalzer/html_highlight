@@ -1,12 +1,18 @@
 """Make a train/val/test split"""
 
+from datetime import datetime
 import json
 from pathlib import Path
 import sys
-from datetime import datetime
 
 sys.path.append(".")
 from src import data_functions, util
+
+filepath = Path("data") / "split_index.json"
+
+if filepath.exists():
+    print("Already exists. delete/move old before making new")
+    exit(1)
 
 
 def make_split(
@@ -15,7 +21,7 @@ def make_split(
     min_group_count=4,
     seed: int | None = None,
 ):
-    examples = util.dataset_to_df(util.load_dataset_zip())
+    examples = util.dataset_to_df(util.load_dataset_parallel())
 
     examples = data_functions.make_example_groups(
         examples, min_group_count=min_group_count
@@ -39,10 +45,14 @@ def make_split(
         split_index.update(dict.fromkeys(split["id"].to_list(), splitname))
 
     now = datetime.now()
-    name = f"split_index_{now.month:02d}{now.day:02d}"
-
-    with open(Path("data") / f"{name}.json", "w") as f:
-        json.dump(split_index, f)
+    with open(filepath, "w") as f:
+        json.dump(
+            {
+                "date": f"{now:%Y-%m-%d}",
+                "examples": split_index,
+            },
+            f,
+        )
 
 
 if __name__ == "__main__":

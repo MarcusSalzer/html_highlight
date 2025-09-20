@@ -114,3 +114,11 @@ rdrbscd_sql
 dtmnfstr_python
 plfl_js
 stccntr_php
+lstbld_scala
+lstprmln_scala
+lstnnmpt_scala
+lcldt_dart
+lclrprp_css
+rsxl_bash
+lcdrtfls_bash
+rmclp_bash

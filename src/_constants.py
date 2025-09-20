@@ -21,6 +21,7 @@ LANGS = [
     "r",
     "ruby",
     "rust",
+    "scala",
     "sql",
     "ts",
 ]

@@ -4,7 +4,7 @@ The idea is to use a regex pattern for tokenization and deterministic tagging. T
 
 ## Classes
 
-We are trying
+We are trying to define some classes, that should work across most languages
 
 ### Keywords
 
@@ -65,9 +65,11 @@ We are trying
 - ✅ Render HTML preview _25-01-19_
 - ✅ NDJSON dataset _25-08-30_
 - ✅ Cleanup labels, linting _25-09-03_
-- Reset indentation: avoid unnecessary indentation of all lines
-- RNN variant comparison
-- Feature based classifier
-- inline mode: try to catch code fragments in text?
-- language classifier?
-- highlighting inside strings?
+- ✅ Optuna, settle for a good LSTM model _25-09-20_
+- ❓ Reset indentation: avoid unnecessary indentation of all lines
+- ❓ RNN variant comparison
+- ❓ Feature based classifier
+- ❓ character level LM
+- ❓ inline mode: try to catch code fragments in text?
+- ❓ language classifier?
+- ❓ highlighting inside strings?

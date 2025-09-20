@@ -11,19 +11,19 @@ from src.DatasetRecord import DatasetRecord
 from src._constants import VOCAB_TAGS
 
 
-def load_split_idx(split_idx_id: str) -> dict[str, str]:
+def load_split_idx(filename: str = "split_index.json"):
     """Find and load the file."""
-    name = f"split_index_{split_idx_id}.json"
-    fps = glob(f"../**/data/**/{name}", recursive=True)
+
+    fps = glob(f"../**/data/**/{filename}", recursive=True)
     if len(fps) > 1:
         raise ValueError(f"Found {len(fps)} matches")
     if not fps:
-        raise ValueError(f"Couldn't find {name}")
+        raise ValueError(f"Couldn't find {filename}")
     with open(fps[0], "r") as f:
         split_index = json.load(f)
 
     assert isinstance(split_index, dict)
-    return split_index
+    return split_index["examples"], split_index["date"]
 
 
 def load_dataset_parallel(
@@ -41,27 +41,27 @@ def load_dataset_parallel(
     return dataset
 
 
-def load_dataset_zip(
-    path=Path("data/dataset.ndjson"),
-    filter_lang: list[str] | None = None,
-) -> list[DatasetRecord]:
-    """Load the annoted data (Newline delimited JSON)"""
+# def load_dataset_zip(
+#     path=Path("data/dataset.ndjson"),
+#     filter_lang: list[str] | None = None,
+# ) -> list[DatasetRecord]:
+#     """Load the annoted data (Newline delimited JSON)"""
 
-    with path.open("r", encoding="utf-8") as f:
-        dataset = []
-        for line in f:
-            record = json.loads(line)
-            if filter_lang is None or record["lang"] in filter_lang:
-                tokens, tags = zip(*record["sequence"])
-                d = DatasetRecord(
-                    record["name"],
-                    record["lang"],
-                    list(tokens),
-                    list(tags),
-                    record["difficulty"],
-                )
-                dataset.append(d)
-    return dataset
+#     with path.open("r", encoding="utf-8") as f:
+#         dataset = []
+#         for line in f:
+#             record = json.loads(line)
+#             if filter_lang is None or record["lang"] in filter_lang:
+#                 tokens, tags = zip(*record["sequence"])
+#                 d = DatasetRecord(
+#                     record["name"],
+#                     record["lang"],
+#                     list(tokens),
+#                     list(tags),
+#                     record["difficulty"],
+#                 )
+#                 dataset.append(d)
+#     return dataset
 
 
 def load_dataset_splits(

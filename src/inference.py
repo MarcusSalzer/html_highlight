@@ -3,7 +3,7 @@ import os
 import sys
 
 import torch
-from src import torch_util
+from src import torch_util, types
 
 sys.path.append(".")
 
@@ -13,6 +13,8 @@ class Inference:
         # load meta
         with open(os.path.join(model_dir, f"{model_name}_meta.json")) as f:
             metadata = json.load(f)
+
+        setup = types.ModelTrainSetup(**metadata["setup"])
 
         dev = "cuda" if torch.cuda.is_available() else "cpu"
         vocab = metadata["vocab"]
@@ -28,7 +30,7 @@ class Inference:
             map_location=dev,
         )
 
-        self.model = torch_util.LSTMTagger(**metadata["constructor"])
+        self.model = torch_util.LSTMTagger(**metadata["setup"]["constructor"])
         self.model.load_state_dict(state_dict)
 
     def run(self, tokens: list[str], tags_det: list[str]) -> list[str]:

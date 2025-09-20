@@ -20,7 +20,8 @@ class LrsPlatConfig(pydantic.BaseModel):
 class TrainConfig(pydantic.BaseModel):
     epochs: int
     bs: int
-    lr: float
+    start_lr: float
+    label_smoothing: float
     lrs: Any | None = None
     lrs_plat: LrsPlatConfig | None = None
     stop_patience: int | None = None
@@ -29,7 +30,6 @@ class TrainConfig(pydantic.BaseModel):
 class ModelTrainSetup(pydantic.BaseModel):
     """Complete config for training model"""
 
-    split: str
     constructor: dict[str, int | float | bool]
     train: TrainConfig
 
