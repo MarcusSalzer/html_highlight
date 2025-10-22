@@ -1,6 +1,9 @@
-# mypy: disable-error-code="misc"
-
+import itertools
 import random
+from collections.abc import Sequence
+from typing import Literal
+
+import numpy as np
 import polars as pl
 
 
@@ -116,3 +119,67 @@ def data_split(
         ]
     else:
         return [pl.concat(dfs) for dfs in split_dfs]
+
+
+def get_ngrams(tokens: list[str], n: int):
+    """Get the set of unique n-grams in tokens"""
+
+    # ngrams = []
+    # for i in range(len(tokens) - n + 1):
+    #     ngrams.append(tuple(tokens[i : i + n]))
+    # return set(ngrams)
+
+    ngrams: set[tuple[str, ...]] = set(zip(*[tokens[i:] for i in range(n)]))
+    return ngrams
+
+
+def get_overlap(a: set, b: set, norm: Literal["iou", "max"] = "iou"):
+    if len(a) == 0 or len(b) == 0:
+        return np.nan
+
+    if norm == "iou":
+        return len(a & b) / len(a | b)  # IoU
+    elif norm == "max":
+        return len(a & b) / max(len(a), len(b))
+    else:
+        raise ValueError(f"unknown normalization: {norm}")
+
+
+def overlap_pairwise_simple(docs: Sequence[list[str]], n: int = 3, thr=0.5):
+    """Compare n-gram overlap for all document pairs"""
+
+    results = np.eye(len(docs))
+    high = []
+    for (i, d1), (j, d2) in itertools.combinations(enumerate(docs), 2):
+        ng1 = get_ngrams(d1, n)
+        ng2 = get_ngrams(d2, n)
+
+        overlap = get_overlap(ng1, ng2)
+
+        # fill matrix
+        results[i, j] = overlap
+        results[j, i] = overlap
+
+        # keep track of highest
+        if overlap > thr:
+            high.append((i, j, overlap))
+
+    # sort by descending overlap
+    high.sort(key=lambda t: -t[-1])
+    return results, high
+
+
+def overlap_splits(splits: dict[str, list[list[str]]], n: int = 3):
+    """Pairwise overlap between sets"""
+
+    all_ngrams: dict[str, set[tuple[str, ...]]] = {}
+    for k, spl in splits.items():
+        all_ngrams[k] = set()
+        for seq in spl:
+            all_ngrams[k].update(get_ngrams(seq, n))
+
+    results: list[tuple[str, str, float]] = []
+    for k1, k2 in itertools.combinations(all_ngrams.keys(), 2):
+        overlap = get_overlap(all_ngrams[k1], all_ngrams[k2])
+        results.append((k1, k2, overlap))
+    return results

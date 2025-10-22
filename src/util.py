@@ -10,6 +10,8 @@ import numpy as np
 from src.DatasetRecord import DatasetRecord
 from src._constants import VOCAB_TAGS
 
+from src import data_functions as datafun
+
 
 def load_split_idx(filename: str = "split_index.json"):
     """Find and load the file."""
@@ -68,7 +70,7 @@ def load_dataset_splits(
     split_idx: dict[str, str],
     path=Path("data/dataset.ndjson"),
 ) -> dict[str, list[DatasetRecord]]:
-    """Load the annoted data (Newline delimited JSON)"""
+    """Load the annoted data (Newline delimited JSON), and get a list for each split"""
     splits: dict[str, list[DatasetRecord]] = {}
     n_skip = 0
     with path.open("r", encoding="utf-8") as f:
@@ -83,6 +85,16 @@ def load_dataset_splits(
 
     if n_skip > 0:
         print(f"[NOTE] skipped {n_skip} examples")
+
+    # measure overlaps
+    n_ngram = 3
+    print(f"Measuring token overlap ({n_ngram}-grams)...")
+
+    results = datafun.overlap_splits(
+        {k: [d.tokens for d in data] for k, data in splits.items()}, n_ngram
+    )
+    for k1, k2, ovr in results:
+        print(f"  overlap({k1}, {k2}) = {ovr:.2%}")
 
     return splits
 

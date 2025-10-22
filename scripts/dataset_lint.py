@@ -40,6 +40,10 @@ def main():
             print("-" * 30 + "\n")
     print(f"{err_count} errors ({err_count / len(data) * 100:0.1f}%)\n")
 
+    N = 3  # overlap ngram length
+    print(f"Overlap check ({N=})")
+    data_lint.n_gram_overlap_check(data, N)
+
     # print("DF validation...")
     # result = data_lint.lint_data_df(util.dataset_to_df(data))
     # Path("media").mkdir(exist_ok=True)

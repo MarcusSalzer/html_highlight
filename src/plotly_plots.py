@@ -1,5 +1,7 @@
-from typing import Any, Sequence
+from typing import Any
 import numpy as np
+from numpy.typing import NDArray
+
 from plotly import graph_objects as go, io as pio, subplots
 
 
@@ -38,3 +40,15 @@ def train_metrics_single_run(metrics: dict[str, Any]):
             )
 
     return fig
+
+
+def heatmap(mat: NDArray, width: int = 400):
+    return go.Figure(
+        go.Heatmap(z=mat),
+        go.Layout(
+            yaxis=go.layout.YAxis(scaleanchor="x"),
+            width=width,
+            height=width - 20,
+            margin=dict(t=20, l=20, r=20, b=20),
+        ),
+    )
