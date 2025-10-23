@@ -3,7 +3,7 @@ import os
 import sys
 
 import torch
-from src import torch_util, types
+from src import torch_util
 
 sys.path.append(".")
 
@@ -13,8 +13,6 @@ class Inference:
         # load meta
         with open(os.path.join(model_dir, f"{model_name}_meta.json")) as f:
             metadata = json.load(f)
-
-        setup = types.ModelTrainSetup(**metadata["setup"])
 
         dev = "cuda" if torch.cuda.is_available() else "cpu"
         vocab = metadata["vocab"]

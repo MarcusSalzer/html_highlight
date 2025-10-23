@@ -100,6 +100,7 @@ def load_dataset_splits(
 
 
 def dataset_to_df(data: Iterable[DatasetRecord]):
+    """Convert DatasetRecords to a DF"""
     df = pl.DataFrame([d.toDict(with_id=True) for d in data])
     return df
 

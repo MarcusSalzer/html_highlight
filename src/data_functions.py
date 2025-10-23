@@ -1,8 +1,9 @@
 import itertools
 import random
 from collections.abc import Sequence
-from typing import Literal
+from typing import Any, Literal, cast
 
+from joblib import Parallel, delayed
 import numpy as np
 import polars as pl
 
@@ -133,7 +134,30 @@ def get_ngrams(tokens: list[str], n: int):
     return ngrams
 
 
-def get_overlap(a: set, b: set, norm: Literal["iou", "max"] = "iou"):
+def get_ngrams_all(docs: Sequence[list[str]], n: int, n_jobs: int = 1):
+    """Get the ngrams from each doc
+
+    NOTE: n_jobs>1 makes it slower for small/medium datasets
+    """
+    if n_jobs == 1:
+        return [get_ngrams(d, n) for d in docs]
+
+    ngram_sets = Parallel(n_jobs)(delayed(lambda x: get_ngrams(x, n))(s) for s in docs)
+    assert isinstance(ngram_sets, list)
+    ngram_sets = cast(list[set[tuple[str, ...]]], ngram_sets)
+    return ngram_sets
+
+
+def get_overlap(a: set[Any], b: set[Any], norm: Literal["iou", "max"] = "iou"):
+    """Measure overlap between two sets
+
+    parameters
+    ----------
+    a, b: set
+      sets to compare
+    norm: str
+      how to normalize the result
+    """
     if len(a) == 0 or len(b) == 0:
         return np.nan
 
@@ -150,11 +174,12 @@ def overlap_pairwise_simple(docs: Sequence[list[str]], n: int = 3, thr=0.5):
 
     results = np.eye(len(docs))
     high = []
-    for (i, d1), (j, d2) in itertools.combinations(enumerate(docs), 2):
-        ng1 = get_ngrams(d1, n)
-        ng2 = get_ngrams(d2, n)
 
-        overlap = get_overlap(ng1, ng2)
+    # store all ngram sets ahead of time to avoid recomputing
+    # shouldnt need too much memory
+    ngram_sets = [get_ngrams(s, n) for s in docs]
+    for i, j in itertools.combinations(range(len(docs)), 2):
+        overlap = get_overlap(ngram_sets[i], ngram_sets[j])
 
         # fill matrix
         results[i, j] = overlap
@@ -172,6 +197,7 @@ def overlap_pairwise_simple(docs: Sequence[list[str]], n: int = 3, thr=0.5):
 def overlap_splits(splits: dict[str, list[list[str]]], n: int = 3):
     """Pairwise overlap between sets"""
 
+    # Collect all ngrams for each split
     all_ngrams: dict[str, set[tuple[str, ...]]] = {}
     for k, spl in splits.items():
         all_ngrams[k] = set()
