@@ -3,13 +3,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-import optuna
 import torch
 from torch import nn, optim
 
-sys.path.append(".")
-from src import torch_util, types, util, plotly_plots
+import optuna
 
+sys.path.append(".")
+from src import plotly_plots, torch_util, types, util
 
 ntrials = int(sys.argv[1])
 

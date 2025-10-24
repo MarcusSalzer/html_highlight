@@ -1,9 +1,10 @@
 from typing import Any
+
 import numpy as np
 from numpy.typing import NDArray
-
-from plotly import graph_objects as go, io as pio, subplots
-
+from plotly import graph_objects as go
+from plotly import io as pio
+from plotly import subplots
 
 pio.templates.default = "plotly_dark"
 

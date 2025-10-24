@@ -1,7 +1,8 @@
 import unittest
 
-from src import torch_util
 import torch
+
+from src import torch_util
 
 
 class TestSeqPad(unittest.TestCase):

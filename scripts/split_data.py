@@ -1,12 +1,13 @@
 """Make a train/val/test split"""
 
-from datetime import datetime
 import json
-from pathlib import Path
 import sys
+from datetime import datetime
+from pathlib import Path
 
 sys.path.append(".")
-from src import data_functions as datafun, util
+from src import data_functions as datafun
+from src import util
 
 filepath = Path("data") / "split_index.json"
 logpath = Path("data") / "split_stats.txt"

@@ -1,6 +1,7 @@
 import pointblank as pb
 import polars as pl
 
+from src import data_functions as datafun
 from src import text_process
 from src._constants import (
     DET_TAGS,
@@ -11,7 +12,6 @@ from src._constants import (
     REQUIRES_PRE,
 )
 from src.DatasetRecord import DatasetRecord
-from src import data_functions as datafun
 
 
 def lint_data_df(df: pl.DataFrame):
@@ -131,4 +131,4 @@ def n_gram_overlap_check(records: list[DatasetRecord], n_ngram=3, thr=0.5):
 
         if k == "token" and highest[-1] >= 1:
             names = records[highest[0]].name, records[highest[1]].name
-            raise LintError(f"max token overlap {highest[-1]} (between {names})")
+            return f"max token overlap {highest[-1]} (between {names})"

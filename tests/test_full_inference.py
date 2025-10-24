@@ -1,13 +1,11 @@
 """Test easy examples. Inference should never fail on these"""
 
-import unittest
-
 import sys
+import unittest
 
 sys.path.append(".")
 
-from src import text_process
-from src import inference
+from src import inference, text_process
 
 infer = inference.Inference("model_inference")
 

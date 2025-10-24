@@ -1,6 +1,6 @@
 import json
+from collections.abc import Sequence
 from glob import glob
-from typing import Sequence
 
 import polars as pl
 import regex as re

@@ -1,17 +1,13 @@
 """A few rules for checking the quality of the dataset."""
 
 import json
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 sys.path.append(".")
-from src import data_lint
-from src.data_lint import LintError
-
 import src.util as util
-
-from src import cli_util
+from src import cli_util, data_lint
+from src.data_lint import LintError
 
 allowed_tags = list(json.loads(Path("data/class_aliases_str.json").read_text()).keys())
 

@@ -2,7 +2,7 @@ import unittest
 
 import polars as pl
 
-from src.data_functions import modify_name, randomize_names, data_split
+from src.data_functions import data_split, modify_name, randomize_names
 
 
 class TestModName(unittest.TestCase):

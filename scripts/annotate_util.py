@@ -2,14 +2,14 @@
 
 import json
 import os
-from pathlib import Path
 import sys
 from glob import glob
+from pathlib import Path
 from typing import Literal
+
 import polars as pl
 import regex as re
 from rich.console import Console
-
 
 sys.path.append(".")
 from src import cli_util, text_process, util

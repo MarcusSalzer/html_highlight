@@ -3,9 +3,9 @@ import random
 from collections.abc import Sequence
 from typing import Any, Literal, cast
 
-from joblib import Parallel, delayed
 import numpy as np
 import polars as pl
+from joblib import Parallel, delayed
 
 
 def modify_name(name: str):
@@ -35,7 +35,7 @@ def randomize_names(tokens: list[str], tags: list[str]):
 
     renamed = [False] * len(tokens)
     tokens_new = tokens.copy()
-    for i, (token, tag) in enumerate(zip(tokens, tags)):
+    for i, (token, tag) in enumerate(zip(tokens, tags, strict=True)):
         if tag in renameable and not renamed[i]:
             newname = modify_name(token)
             # print(token + "->" + newname)
@@ -82,7 +82,7 @@ def make_example_groups(examples: pl.DataFrame, min_group_count: int = 3):
 
 def data_split(
     data: pl.DataFrame,
-    ratios: list[float] = [0.6, 0.2, 0.2],
+    ratios: Sequence[float] = (0.6, 0.2, 0.2),
     stratify_col: str | None = "group",
     shuffle: bool = True,
     seed: int | None = None,
@@ -130,7 +130,9 @@ def get_ngrams(tokens: list[str], n: int):
     #     ngrams.append(tuple(tokens[i : i + n]))
     # return set(ngrams)
 
-    ngrams: set[tuple[str, ...]] = set(zip(*[tokens[i:] for i in range(n)]))
+    ngrams: set[tuple[str, ...]] = set(
+        zip(*[tokens[i:] for i in range(n)], strict=False)
+    )
     return ngrams
 
 
