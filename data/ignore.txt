@@ -122,3 +122,11 @@ lclrprp_css
 rsxl_bash
 lcdrtfls_bash
 rmclp_bash
+tmslpp_bash
+strctsr_php
+mltfln_bash
+mdltrnjs_python
+rmdr_php
+fmnttm_rust
+llsm_c
+xpcmp_bash

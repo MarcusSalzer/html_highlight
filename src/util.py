@@ -1,14 +1,15 @@
 # For mapping to a smaller label space
 import json
+from collections.abc import Iterable
 from glob import glob
 from pathlib import Path
-from typing import Iterable, Literal
+from typing import Literal
 
-import polars as pl
 import numpy as np
+import polars as pl
 
-from src.DatasetRecord import DatasetRecord
 from src._constants import VOCAB_TAGS
+from src.DatasetRecord import DatasetRecord
 
 
 def load_split_idx(filename: str = "split_index.json"):

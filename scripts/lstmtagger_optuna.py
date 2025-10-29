@@ -107,7 +107,9 @@ def objective(trial: optuna.Trial):
         reduce_lr_on_plat=setup.train.lrs_plat,
         stop_patience=10,
         epoch_callback=lambda x: epoch_callback(
-            trial, value=-x["val_acc"], step=x["epoch"]
+            trial,
+            value=-x["val_acc"],
+            step=x["epoch"],
         ),
     )
     metrics = trainer.train_loop(max_epochs=1000)

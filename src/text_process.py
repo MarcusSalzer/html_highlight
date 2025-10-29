@@ -2,6 +2,14 @@ import math
 import regex as re
 
 
+basic_pats_simple = [
+    ("co", r"#.*$"),  # shell/py style comment
+    ("co", r"\/\*{1,2}[\s\S]+?\*\/"),  # multiline/doc comments
+    ("brop", r"[\(\[\{]"),
+    ("brcl", r"[\)\]\}]"),
+]
+
+
 # patterns for some basic tokens
 # in order
 basic_pats = [

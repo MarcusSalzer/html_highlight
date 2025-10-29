@@ -1,6 +1,6 @@
 import json
+from collections.abc import Sequence
 from glob import glob
-from typing import Sequence
 
 import polars as pl
 import regex as re
@@ -10,7 +10,7 @@ from src.text_process import bracket_levels
 
 
 def make_head_html(css_path: str, title: str | None = None):
-    """Make document-head with css link"""
+    """Make document-head with css link."""
     content = ""
     if title:
         content += f"<title>{title}</title>\n"
@@ -20,11 +20,10 @@ def make_head_html(css_path: str, title: str | None = None):
 
 
 def make_legend_html() -> str:
-    """Load class names and display in a list"""
+    """Load class names and display in a list."""
     try:
         with open("data/class_aliases_str.json") as f:
             classes: dict = json.load(f)
-
     except FileNotFoundError:
         return "<section><p>Could not find classnames.</p></section>"
     except AttributeError:
