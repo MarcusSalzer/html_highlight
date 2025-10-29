@@ -1,6 +1,6 @@
 import math
-import regex as re
 
+import regex as re
 
 basic_pats_simple = [
     ("co", r"#.*$"),  # shell/py style comment
@@ -136,14 +136,11 @@ def merge_adjacent(
 
         if tag == tag_next:
             if (merge_only is None or tag in merge_only) and tag not in dont_merge:
-                if interactive:
-                    if (
-                        input(
-                            f"merge: `{token}` + `{tokens[i + 1]}` ({tag}) ? "
-                        ).lower()
-                        != "y"
-                    ):
-                        continue
+                if interactive and (
+                    input(f"merge: `{token}` + `{tokens[i + 1]}` ({tag}) ? ").lower()
+                    != "y"
+                ):
+                    continue
 
                 current_seq.append(token)
                 continue

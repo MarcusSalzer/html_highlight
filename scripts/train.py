@@ -1,17 +1,15 @@
 """CLI for model training"""
 
 import json
-from pathlib import Path
 import sys
 from datetime import datetime
+from pathlib import Path
+
 from torch import nn, optim
 
-
 sys.path.append(".")
-from src import types
-from src import torch_util, util
+from src import plotly_plots, torch_util, types, util
 from src.cli_util import pick_option
-from src import plotly_plots
 
 MODEL_PARAM_DIR = Path("model_params")
 DATA_DIR = Path("data")

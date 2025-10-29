@@ -1,10 +1,9 @@
 import os
-from typing import Any, Iterable
+
+from rich.markup import escape
 
 from scripts.annotate_util import console
 from src import _constants
-
-from rich.markup import escape
 
 
 def clearCLI():

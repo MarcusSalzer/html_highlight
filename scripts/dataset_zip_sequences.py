@@ -1,9 +1,8 @@
-"""COnvert parallel dataset to zip-version (MAYBE NOPE)"""
+"""Convert parallel dataset to zip-version (MAYBE NOPE)"""
 
 import json
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 sys.path.append(".")
 

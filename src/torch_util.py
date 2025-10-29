@@ -1,19 +1,101 @@
-from dataclasses import dataclass
 import os
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from timeit import default_timer
-from typing import Callable, cast
+from typing import Any, Literal, cast
 
 import polars as pl
+import pydantic
 import torch
 from colorama import Fore, Style
 from torch import nn, optim
+from torch.types import Tensor
 from torch.utils.data import DataLoader, Dataset
 
 from src import text_process, types
 
 
+class RNNTaggerConfig(pydantic.BaseModel):
+    """Config for the RNN tagger model"""
+
+    model_config = pydantic.ConfigDict(extra="forbid")  # dont allow extra trash
+
+    # vocabs
+    vocab_sz_token: int
+    vocab_sz_tag: int
+    # dimensions
+    d_emb_token: int = 12
+    d_emb_tag: int = 8
+    d_hidden_rnn: int = 64
+    # layers
+    rnn_variant: Literal["rnn", "gru", "lstm"] = "lstm"
+    n_rnn_layers: int = 1
+    mlp_sizes: list[int] | None = None
+    bidi: bool = True
+    dropout_rnn: float = 0.0
+
+    def model_post_init(self, context: Any) -> None:
+        if self.n_rnn_layers == 1:
+            assert self.dropout_rnn == 0, "Cannot apply dropout with single RNN layer"
+
+
+class RNNTagger(nn.Module):
+    """A recurrent network for sequence tagging"""
+
+    rnn_variants = {"rnn": nn.RNN, "gru": nn.GRU, "lstm": nn.LSTM}
+
+    def __init__(self, conf: RNNTaggerConfig):
+        super().__init__()
+
+        self.embedding_tokens = nn.Embedding(conf.vocab_sz_token, conf.d_emb_token, padding_idx=0)
+        self.embedding_labels = nn.Embedding(conf.vocab_sz_tag, conf.d_emb_tag, padding_idx=0)
+
+        # choose layer type for recurrent layers
+        self.rnn = self.rnn_variants[conf.rnn_variant](
+            conf.d_emb_token + conf.d_emb_tag,  # LSTM will receive tokens, tags stacked
+            conf.d_hidden_rnn,
+            conf.n_rnn_layers,
+            batch_first=True,
+            dropout=conf.dropout_rnn,
+            bidirectional=conf.bidi,
+        )
+        # what dimension will the hidden state have, double if bidirectional
+        d_hidden = conf.d_hidden_rnn * (2 if conf.bidi else 1)
+
+        # Build FF layers if sizes given
+        if conf.mlp_sizes:
+            self.mlp = nn.Sequential()
+            for sz in conf.mlp_sizes:
+                self.mlp.append(nn.Linear(d_hidden, sz))
+                self.mlp.append(nn.ReLU())
+                d_hidden = sz  # input size for next layer
+        else:
+            self.mlp = None
+
+        # output
+        self.tag_clf = nn.Linear(d_hidden, conf.vocab_sz_tag)
+
+    @property
+    def tot_weights(self):
+        return sum(p.numel() for p in self.parameters())
+
+    def forward(self, tokens: Tensor, labels_det: Tensor):
+        embeds_tokens = self.embedding_tokens(tokens)
+        embeds_labels = self.embedding_labels(labels_det)
+
+        embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)  # -> (bs, seq_len, (2 * emb_dim)
+        lstm_out, _ = self.rnn(embeds)  #  -> (bs, seq_len, actual_hidden)
+        # optionally FFN
+        last_hidden = self.mlp(lstm_out) if self.mlp else lstm_out
+        # final clf layer
+        logits = self.tag_clf(last_hidden)  # -> (bs, seq_len, tagset_size)
+        return logits
+
+
 class LSTMTagger(nn.Module):
+    """DEPRECATED?"""
+
     def __init__(
         self,
         token_vocab_size: int,
@@ -25,15 +107,11 @@ class LSTMTagger(nn.Module):
         bidi: bool = True,
         n_extra: int = 0,
     ):
-        super(LSTMTagger, self).__init__()
-        self.embedding_tokens = nn.Embedding(
-            token_vocab_size, embedding_dim, padding_idx=0
-        )
-        self.embedding_labels = nn.Embedding(
-            label_vocab_size, embedding_dim, padding_idx=0
-        )
+        super().__init__()
+        self.embedding_tokens = nn.Embedding(token_vocab_size, embedding_dim, padding_idx=0)
+        self.embedding_labels = nn.Embedding(label_vocab_size, embedding_dim, padding_idx=0)
 
-        # LSTM will recieve embedded tokens, tags and possibly extra_feats
+        # LSTM will receive embedded tokens, tags and possibly extra_feats
         lstm_in_dim = (3 if n_extra > 0 else 2) * embedding_dim
 
         self.lstm = nn.LSTM(
@@ -95,14 +173,10 @@ class SequenceDataset(Dataset):
         self.tokens = seqs2padded_tensor(token_idx, device=device, verbose=False)
 
         label_det_idx = [[label2idx.get(t, 1) for t in seq] for seq in labels_det]
-        self.labels_det = seqs2padded_tensor(
-            label_det_idx, device=device, verbose=False
-        )
+        self.labels_det = seqs2padded_tensor(label_det_idx, device=device, verbose=False)
 
         label_true_idx = [[label2idx.get(t, 1) for t in seq] for seq in labels_true]
-        self.labels_true = seqs2padded_tensor(
-            label_true_idx, device=device, verbose=False
-        )
+        self.labels_true = seqs2padded_tensor(label_true_idx, device=device, verbose=False)
         if extra_feats > 0:
             self.extra = torch.stack(
                 [make_extra_feats(ts, padto=self.tokens.shape[1]) for ts in tokens],
@@ -142,9 +216,7 @@ def seqs2padded_tensor(
 
 def class_weights(tag_counts: dict, tag_vocab: list[str], smoothing=1.0):
     """Compute class weights for unbalanced data"""
-    tag_weights = torch.tensor(
-        [1 / tag_counts.get(k, torch.inf) + smoothing for k in tag_vocab]
-    )
+    tag_weights = torch.tensor([1 / tag_counts.get(k, torch.inf) + smoothing for k in tag_vocab])
     tag_weights /= sum(tag_weights)
     return tag_weights
 
@@ -223,23 +295,19 @@ class Trainer:
         tstart = default_timer()
 
         for epoch in range(max_epochs):
-            if self.stop_patience is not None:
-                if epoch > best_epoch + self.stop_patience:
-                    print(f"[EARLY STOPPING at {epoch = }]")
-                    break
+            if self.stop_patience is not None and epoch > best_epoch + self.stop_patience:
+                print(f"[EARLY STOPPING at {epoch = }]")
+                break
+
             # TRAINING
-            train_loss = run_epoch(
-                self.model, self.train_dl, self.loss_function, self.optimizer
-            )
+            train_loss = run_epoch(self.model, self.train_dl, self.loss_function, self.optimizer)
             losses_train.append(train_loss)
 
             # VALIDATION
             with torch.no_grad():
                 val_loss = run_epoch(self.model, self.val_dl, self.loss_function)
                 losses_val.append(val_loss)
-                val_acc_now = val_acc(
-                    self.model, cast(SequenceDataset, self.val_dl.dataset)
-                )
+                val_acc_now = val_acc(self.model, cast(SequenceDataset, self.val_dl.dataset))
                 val_accs.append(val_acc_now)
 
             if self.lr_s is not None:
@@ -264,9 +332,8 @@ class Trainer:
 
             self.epoch_print(epoch, train_loss, val_loss, val_accs[-1], m_extra)
 
-            if self.time_limit is not None:
-                if default_timer() - tstart > self.time_limit:
-                    break
+            if self.time_limit is not None and default_timer() - tstart > self.time_limit:
+                break
 
             if self.epoch_callback is not None:
                 self.epoch_callback({"val_acc": val_accs[-1], "epoch": epoch})

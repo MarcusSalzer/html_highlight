@@ -16,7 +16,7 @@ except IndexError:
 
 path = os.path.join("data", "examples", ex.lang, name + ".txt")
 try:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         original = text_process.clean_text(f.read())
     print("\n= original =\n" + original + "\n==\n")
 except FileNotFoundError:

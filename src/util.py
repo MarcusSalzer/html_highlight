@@ -1,13 +1,17 @@
 # For mapping to a smaller label space
 import json
 from collections.abc import Iterable
+from collections.abc import Iterable
 from glob import glob
 from pathlib import Path
 from typing import Literal
+from typing import Literal
 
+import numpy as np
 import numpy as np
 import polars as pl
 
+from src import data_functions as datafun
 from src._constants import VOCAB_TAGS
 from src.DatasetRecord import DatasetRecord
 
@@ -20,7 +24,7 @@ def load_split_idx(filename: str = "split_index.json"):
         raise ValueError(f"Found {len(fps)} matches")
     if not fps:
         raise ValueError(f"Couldn't find {filename}")
-    with open(fps[0], "r") as f:
+    with open(fps[0]) as f:
         split_index = json.load(f)
 
     assert isinstance(split_index, dict)
@@ -31,7 +35,10 @@ def load_dataset_parallel(
     path=Path("data/dataset.ndjson"),
     filter_lang: list[str] | None = None,
 ) -> list[DatasetRecord]:
-    """Load the annoted data (Newline delimited JSON)"""
+    """Load the annoted data (Newline delimited JSON)
+
+    - Tokens and tags stored as parallel lists.
+    """
     with path.open("r", encoding="utf-8") as f:
         dataset = [
             d
@@ -42,34 +49,35 @@ def load_dataset_parallel(
     return dataset
 
 
-# def load_dataset_zip(
-#     path=Path("data/dataset.ndjson"),
-#     filter_lang: list[str] | None = None,
-# ) -> list[DatasetRecord]:
-#     """Load the annoted data (Newline delimited JSON)"""
+def load_dataset_zip(
+    path=Path("data/dataset.ndjson"),
+    filter_lang: list[str] | None = None,
+) -> list[DatasetRecord]:
+    """Load the annoted data (Newline delimited JSON)"""
 
-#     with path.open("r", encoding="utf-8") as f:
-#         dataset = []
-#         for line in f:
-#             record = json.loads(line)
-#             if filter_lang is None or record["lang"] in filter_lang:
-#                 tokens, tags = zip(*record["sequence"])
-#                 d = DatasetRecord(
-#                     record["name"],
-#                     record["lang"],
-#                     list(tokens),
-#                     list(tags),
-#                     record["difficulty"],
-#                 )
-#                 dataset.append(d)
-#     return dataset
+    raise DeprecationWarning("use parallel instead...")
+    with path.open("r", encoding="utf-8") as f:
+        dataset = []
+        for line in f:
+            record = json.loads(line)
+            if filter_lang is None or record["lang"] in filter_lang:
+                tokens, tags = zip(*record["sequence"])
+                d = DatasetRecord(
+                    record["name"],
+                    record["lang"],
+                    list(tokens),
+                    list(tags),
+                    record["difficulty"],
+                )
+                dataset.append(d)
+    return dataset
 
 
 def load_dataset_splits(
     split_idx: dict[str, str],
     path=Path("data/dataset.ndjson"),
 ) -> dict[str, list[DatasetRecord]]:
-    """Load the annoted data (Newline delimited JSON)"""
+    """Load the annoted data (Newline delimited JSON), and get a list for each split"""
     splits: dict[str, list[DatasetRecord]] = {}
     n_skip = 0
     with path.open("r", encoding="utf-8") as f:
@@ -85,10 +93,21 @@ def load_dataset_splits(
     if n_skip > 0:
         print(f"[NOTE] skipped {n_skip} examples")
 
+    # measure overlaps
+    n_ngram = 3
+    print(f"Measuring token overlap ({n_ngram}-grams)...")
+
+    results = datafun.overlap_splits(
+        {k: [d.tokens for d in data] for k, data in splits.items()}, n_ngram
+    )
+    for k1, k2, ovr in results:
+        print(f"  overlap({k1}, {k2}) = {ovr:.2%}")
+
     return splits
 
 
 def dataset_to_df(data: Iterable[DatasetRecord]):
+    """Convert DatasetRecords to a DF"""
     df = pl.DataFrame([d.toDict(with_id=True) for d in data])
     return df
 
@@ -96,7 +115,7 @@ def dataset_to_df(data: Iterable[DatasetRecord]):
 def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):
     chars: list[str] = []
     char_tags = []
-    for token, tag in zip(tokens, tags):
+    for token, tag in zip(tokens, tags, strict=True):
         chars.extend(token)
         if only_starts:
             char_tags.extend(["start"] + ["-"] * (len(token) - 1))
@@ -108,7 +127,7 @@ def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):
 
 def make_vocab(
     examples: pl.DataFrame,
-    insert=["<pad>", "<unk>"],
+    insert: tuple[str, ...] = ("<pad>", "<unk>"),
     vocab_allowed_tags: list[str] | None = VOCAB_TAGS,
 ) -> tuple[list, dict[str, int], list, dict[str, int]]:
     """Make vocab, and inverse map"""
@@ -130,11 +149,11 @@ def make_vocab(
     )
 
     # token vocab
-    vocab = insert + token_cands["tokens"].to_list()
+    vocab = list(insert) + token_cands["tokens"].to_list()
     token2idx = {t: i for i, t in enumerate(vocab)}
 
     # tag vocab
-    tag_vocab = insert + tag_cands["tags"].to_list()
+    tag_vocab = list(insert) + tag_cands["tags"].to_list()
     tag2idx = {t: i for i, t in enumerate(tag_vocab)}
     return vocab, token2idx, tag_vocab, tag2idx
 

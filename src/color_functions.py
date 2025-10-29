@@ -1,5 +1,6 @@
-import numpy as np
 from colorsys import hsv_to_rgb
+
+import numpy as np
 
 
 def palette_from_background(
@@ -22,19 +23,16 @@ def palette_from_background(
 
     s_vec: np.ndarray = 0.6 * np.ones(n_colors)
     v_vec = np.ones(n_colors)
-    return [hsv_to_rgb(*hsv) for hsv in zip(h_vec, s_vec, v_vec)]
+    return [hsv_to_rgb(*hsv) for hsv in zip(h_vec, s_vec, v_vec, strict=True)]
 
 
-def rgb2hex(r, g, b):
+def rgb2hex(r: int | float, g: int | float, b: int | float) -> str:
     """Convert rgb color to hex.
 
     ## Parameters
     r,g,b: int (0-255) or float(0-1)"""
 
-    if isinstance(r, int):
-        f = 1
-    else:
-        f = 255
+    f = 1 if isinstance(r, int) else 255
     return "#" + "".join(f"{round(i * f):02x}" for i in (r, g, b))
 
 

@@ -1,8 +1,7 @@
-import os
-
 import pointblank as pb
 import polars as pl
 
+from src import data_functions as datafun
 from src import text_process
 from src._constants import (
     DET_TAGS,
@@ -111,3 +110,25 @@ def lang_spec_check(tokens: list[str], tags: list[str], lang: str):
                 raise LintError(
                     f"({lang}) need `{token}`->`{req_tag}`, got  `{token}`->`{tag}`"
                 )
+
+
+def n_gram_overlap_check(records: list[DatasetRecord], n_ngram=3, thr=0.5):
+    high = {}
+    _, high["tag"] = datafun.overlap_pairwise_simple(
+        [d.tags for d in records], n_ngram, thr=thr
+    )
+    _, high["token"] = datafun.overlap_pairwise_simple(
+        [d.tokens for d in records], n_ngram, thr=thr
+    )
+
+    for k, res in high.items():
+        highest = res[0]
+        print(
+            f"  overlap({k}) > {thr:.0%} : "
+            + f"{len(res) / len(records):.1%} of records"
+            + f" (max: {highest[-1]:.1%})"
+        )
+
+        if k == "token" and highest[-1] >= 1:
+            names = records[highest[0]].name, records[highest[1]].name
+            return f"max token overlap {highest[-1]} (between {names})"

@@ -1,7 +1,11 @@
-# mypy: disable-error-code="misc"
-
+import itertools
 import random
+from collections.abc import Sequence
+from typing import Any, Literal, cast
+
+import numpy as np
 import polars as pl
+from joblib import Parallel, delayed
 
 
 def modify_name(name: str):
@@ -31,7 +35,7 @@ def randomize_names(tokens: list[str], tags: list[str]):
 
     renamed = [False] * len(tokens)
     tokens_new = tokens.copy()
-    for i, (token, tag) in enumerate(zip(tokens, tags)):
+    for i, (token, tag) in enumerate(zip(tokens, tags, strict=True)):
         if tag in renameable and not renamed[i]:
             newname = modify_name(token)
             # print(token + "->" + newname)
@@ -78,7 +82,7 @@ def make_example_groups(examples: pl.DataFrame, min_group_count: int = 3):
 
 def data_split(
     data: pl.DataFrame,
-    ratios: list[float] = [0.6, 0.2, 0.2],
+    ratios: Sequence[float] = (0.6, 0.2, 0.2),
     stratify_col: str | None = "group",
     shuffle: bool = True,
     seed: int | None = None,
@@ -116,3 +120,94 @@ def data_split(
         ]
     else:
         return [pl.concat(dfs) for dfs in split_dfs]
+
+
+def get_ngrams(tokens: list[str], n: int):
+    """Get the set of unique n-grams in tokens"""
+
+    # ngrams = []
+    # for i in range(len(tokens) - n + 1):
+    #     ngrams.append(tuple(tokens[i : i + n]))
+    # return set(ngrams)
+
+    ngrams: set[tuple[str, ...]] = set(
+        zip(*[tokens[i:] for i in range(n)], strict=False)
+    )
+    return ngrams
+
+
+def get_ngrams_all(docs: Sequence[list[str]], n: int, n_jobs: int = 1):
+    """Get the ngrams from each doc
+
+    NOTE: n_jobs>1 makes it slower for small/medium datasets
+    """
+    if n_jobs == 1:
+        return [get_ngrams(d, n) for d in docs]
+
+    ngram_sets = Parallel(n_jobs)(delayed(lambda x: get_ngrams(x, n))(s) for s in docs)
+    assert isinstance(ngram_sets, list)
+    ngram_sets = cast(list[set[tuple[str, ...]]], ngram_sets)
+    return ngram_sets
+
+
+def get_overlap(a: set[Any], b: set[Any], norm: Literal["iou", "max"] = "iou"):
+    """Measure overlap between two sets
+
+    parameters
+    ----------
+    a, b: set
+      sets to compare
+    norm: str
+      how to normalize the result
+    """
+    if len(a) == 0 or len(b) == 0:
+        return np.nan
+
+    if norm == "iou":
+        return len(a & b) / len(a | b)  # IoU
+    elif norm == "max":
+        return len(a & b) / max(len(a), len(b))
+    else:
+        raise ValueError(f"unknown normalization: {norm}")
+
+
+def overlap_pairwise_simple(docs: Sequence[list[str]], n: int = 3, thr=0.5):
+    """Compare n-gram overlap for all document pairs"""
+
+    results = np.eye(len(docs))
+    high = []
+
+    # store all ngram sets ahead of time to avoid recomputing
+    # shouldnt need too much memory
+    ngram_sets = [get_ngrams(s, n) for s in docs]
+    for i, j in itertools.combinations(range(len(docs)), 2):
+        overlap = get_overlap(ngram_sets[i], ngram_sets[j])
+
+        # fill matrix
+        results[i, j] = overlap
+        results[j, i] = overlap
+
+        # keep track of highest
+        if overlap > thr:
+            high.append((i, j, overlap))
+
+    # sort by descending overlap
+    high.sort(key=lambda t: -t[-1])
+    return results, high
+
+
+def overlap_splits(splits: dict[str, list[list[str]]], n: int = 3):
+    """Pairwise overlap between sets"""
+
+    # Collect all ngrams for each split
+    all_ngrams: dict[str, set[tuple[str, ...]]] = {}
+    for k, spl in splits.items():
+        all_ngrams[k] = set()
+        for seq in spl:
+            all_ngrams[k].update(get_ngrams(seq, n))
+
+    results: list[tuple[str, str, float]] = []
+    for k1, k2 in itertools.combinations(all_ngrams.keys(), 2):
+        overlap = get_overlap(all_ngrams[k1], all_ngrams[k2])
+        results.append((k1, k2, overlap))
+    return results

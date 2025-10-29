@@ -1,14 +1,14 @@
 """Import and use `hlclip.hlclip()` to highlight clipboard"""
 
-from datetime import datetime
 import time
+from datetime import datetime
 
 import pyperclip as pc
 
 from src import inference
+from src._constants import MAP_TAGS_SIMPLE
 from src.html_process import format_html
 from src.text_process import process
-from src._constants import MAP_TAGS_SIMPLE
 
 infer = inference.Inference("model_inference")
 

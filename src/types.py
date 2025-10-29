@@ -1,7 +1,7 @@
-from typing import Any, Mapping
-import pydantic
-from typing import Iterator, Protocol, TypeVar
+from collections.abc import Iterator, Mapping
+from typing import Any, Protocol, TypeVar
 
+import pydantic
 
 T = TypeVar("T", covariant=True)
 
