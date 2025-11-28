@@ -3,94 +3,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from timeit import default_timer
-from typing import Any, Literal, cast
+from typing import cast
 
 import polars as pl
-import pydantic
 import torch
 from colorama import Fore, Style
 from torch import nn, optim
-from torch.types import Tensor
 from torch.utils.data import DataLoader, Dataset
 
 from src import text_process, types
-
-
-class RNNTaggerConfig(pydantic.BaseModel):
-    """Config for the RNN tagger model"""
-
-    model_config = pydantic.ConfigDict(extra="forbid")  # dont allow extra trash
-
-    # vocabs
-    vocab_sz_token: int
-    vocab_sz_tag: int
-    # dimensions
-    d_emb_token: int = 12
-    d_emb_tag: int = 8
-    d_hidden_rnn: int = 64
-    # layers
-    rnn_variant: Literal["rnn", "gru", "lstm"] = "lstm"
-    n_rnn_layers: int = 1
-    mlp_sizes: list[int] | None = None
-    bidi: bool = True
-    dropout_rnn: float = 0.0
-
-    def model_post_init(self, context: Any) -> None:
-        if self.n_rnn_layers == 1:
-            assert self.dropout_rnn == 0, "Cannot apply dropout with single RNN layer"
-
-
-class RNNTagger(nn.Module):
-    """A recurrent network for sequence tagging"""
-
-    rnn_variants = {"rnn": nn.RNN, "gru": nn.GRU, "lstm": nn.LSTM}
-
-    def __init__(self, conf: RNNTaggerConfig):
-        super().__init__()
-
-        self.embedding_tokens = nn.Embedding(conf.vocab_sz_token, conf.d_emb_token, padding_idx=0)
-        self.embedding_labels = nn.Embedding(conf.vocab_sz_tag, conf.d_emb_tag, padding_idx=0)
-
-        # choose layer type for recurrent layers
-        self.rnn = self.rnn_variants[conf.rnn_variant](
-            conf.d_emb_token + conf.d_emb_tag,  # LSTM will receive tokens, tags stacked
-            conf.d_hidden_rnn,
-            conf.n_rnn_layers,
-            batch_first=True,
-            dropout=conf.dropout_rnn,
-            bidirectional=conf.bidi,
-        )
-        # what dimension will the hidden state have, double if bidirectional
-        d_hidden = conf.d_hidden_rnn * (2 if conf.bidi else 1)
-
-        # Build FF layers if sizes given
-        if conf.mlp_sizes:
-            self.mlp = nn.Sequential()
-            for sz in conf.mlp_sizes:
-                self.mlp.append(nn.Linear(d_hidden, sz))
-                self.mlp.append(nn.ReLU())
-                d_hidden = sz  # input size for next layer
-        else:
-            self.mlp = None
-
-        # output
-        self.tag_clf = nn.Linear(d_hidden, conf.vocab_sz_tag)
-
-    @property
-    def tot_weights(self):
-        return sum(p.numel() for p in self.parameters())
-
-    def forward(self, tokens: Tensor, labels_det: Tensor):
-        embeds_tokens = self.embedding_tokens(tokens)
-        embeds_labels = self.embedding_labels(labels_det)
-
-        embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)  # -> (bs, seq_len, (2 * emb_dim)
-        lstm_out, _ = self.rnn(embeds)  #  -> (bs, seq_len, actual_hidden)
-        # optionally FFN
-        last_hidden = self.mlp(lstm_out) if self.mlp else lstm_out
-        # final clf layer
-        logits = self.tag_clf(last_hidden)  # -> (bs, seq_len, tagset_size)
-        return logits
 
 
 class LSTMTagger(nn.Module):
@@ -154,7 +75,7 @@ class LSTMTagger(nn.Module):
 
 
 class SequenceDataset(Dataset):
-    """Dataset of sequences."""
+    """Dataset of sequences. NOTE: in memory dataset."""
 
     def __init__(
         self,
@@ -184,6 +105,9 @@ class SequenceDataset(Dataset):
             ).to(device)
             assert self.extra.shape[-1] == extra_feats
 
+    def __str__(self) -> str:
+        return f"SequenceDataset({len(self)} items, {self.tokens.device})"
+
     def __len__(self):
         return len(self.tokens)
 
@@ -196,6 +120,45 @@ class SequenceDataset(Dataset):
             inputs["extra"] = self.extra[idx]
 
         return inputs, self.labels_true[idx]
+
+    def to_device(self, device: str | torch.device):
+        self.tokens = self.tokens.to(device)
+        self.labels_det = self.labels_det.to(device)
+        self.labels_true = self.labels_true.to(device)
+
+    def get_all(self):
+        """Get all samples at once"""
+        if hasattr(self, "extra"):
+            raise NotImplementedError("get all not implemented with extra features")
+
+        inputs = {
+            "tokens": self.tokens,
+            "labels_det": self.labels_det,
+        }
+        return inputs, self.labels_true
+
+    @classmethod
+    def from_dataframe(
+        cls,
+        df: pl.DataFrame,
+        token2idx: dict[str, int],
+        tag2idx: dict[str, int],
+        device: str | torch.device | None = None,
+    ):
+        df = df.with_columns(
+            tags_det=pl.col("tokens").map_elements(
+                lambda tks: text_process.process("".join(tks))[1],
+                pl.List(pl.String),
+            )
+        )
+        return cls(
+            cast(types.ArrayLike[list[str]], df["tokens"].to_list()),
+            cast(types.ArrayLike[list[str]], df["tags_det"].to_list()),
+            cast(types.ArrayLike[list[str]], df["tags"].to_list()),
+            token2idx,
+            tag2idx,
+            device,
+        )
 
 
 def seqs2padded_tensor(
@@ -353,7 +316,7 @@ class Trainer:
         m_extra: str,
     ):
         if self.printerval is not None and (epoch) % self.printerval == 0:
-            msg = f"{epoch + 1:4d}, {Style.DIM} train_loss: {train_loss:.6f},{Style.RESET_ALL} _loss: {val_loss:.6f}, val_acc: {val_acc:.2%}"
+            msg = f"{epoch + 1:4d} | {train_loss=:.6f} | {val_loss=:.6f}, {val_acc=:.2%}"
 
             if self.lr_s is not None:
                 msg += f"{Style.DIM} LR: {self.lr_s.get_last_lr()[0]:.6f} {Style.RESET_ALL}"

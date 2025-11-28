@@ -1,3 +1,5 @@
+"""NOTE: most of this is deprecated?"""
+
 from collections.abc import Iterator, Mapping
 from typing import Any, Protocol, TypeVar
 

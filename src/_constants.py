@@ -90,7 +90,7 @@ POSSIBLE_PER_TOKEN = {
     "set": ["ty", "tyco"],
 }
 # allow these in vocab
-VOCAB_TAGS = [
+VOCAB_TAGS = (
     "kwfl",
     "kwty",
     "kwop",
@@ -111,7 +111,7 @@ VOCAB_TAGS = [
     "opas",
     "an",
     "uk",
-]
+)
 MAP_TAGS_SIMPLE = {
     "opun": "op",
     "opbi": "op",

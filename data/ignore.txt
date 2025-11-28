@@ -130,3 +130,17 @@ rmdr_php
 fmnttm_rust
 llsm_c
 xpcmp_bash
+grdtm_css
+fnsnhdr_c
+sncfldct_bash
+vgscr_bash
+pplpsh_c
+mrgnnn_css
+pfmsgcls_python
+rmclnp_bash
+rscgnr_bash
+ptplsf_c
+nlf_bash
+trchprfcp_python
+spcrplld_python
+prflsctrst_bash

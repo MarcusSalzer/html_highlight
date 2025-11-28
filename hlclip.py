@@ -1,4 +1,4 @@
-"""Import and use `hlclip.hlclip()` to highlight clipboard"""
+"""Import and use `hlclip.hlclip()` to highlight clipboard."""
 
 import time
 from datetime import datetime
@@ -32,9 +32,7 @@ def hlclip():
 
     tags_pred = infer.run(tokens, tags_det)
     t_infer = time.time() - (t0 + t_det)
-    print(
-        f"Time: deterministic {t_det * 1000:.1f} | inference {t_infer * 1000:.1f} (ms)"
-    )
+    print(f"Time: deterministic {t_det * 1000:.1f} | inference {t_infer * 1000:.1f} (ms)")
 
     # combine with deterministic tags
     tags: list[str] = []

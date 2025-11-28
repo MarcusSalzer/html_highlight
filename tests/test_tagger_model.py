@@ -1,19 +1,19 @@
 import torch
-from pytest import mark
 
-from src import torch_util as tu
+import src.tagger_model
 
 VOCAB_TOKENS = 40
 VOCAB_TAGS = 7
 
 
 def test_init_default():
-    conf = tu.RNNTaggerConfig(
+    conf = src.tagger_model.RNNTaggerConfig()
+
+    model = src.tagger_model.RNNTagger(
+        conf,
         vocab_sz_token=VOCAB_TOKENS,
         vocab_sz_tag=VOCAB_TAGS,
     )
-
-    model = tu.RNNTagger(conf)
 
     tokens = torch.tensor([[1, 2, 3], [3, 4, 0]])
     tags = torch.tensor([[1, 1, 4], [3, 5, 0]])
@@ -24,27 +24,27 @@ def test_init_default():
 
 
 def test_init_w_mlp():
-    conf = tu.RNNTaggerConfig(
-        vocab_sz_token=VOCAB_TOKENS,
-        vocab_sz_tag=VOCAB_TAGS,
+    conf = src.tagger_model.RNNTaggerConfig(
         mlp_sizes=[16, 16],
     )
 
-    model = tu.RNNTagger(conf)
+    model = src.tagger_model.RNNTagger(
+        conf,
+        vocab_sz_tag=VOCAB_TAGS,
+        vocab_sz_token=VOCAB_TOKENS,
+    )
 
     tokens = torch.tensor([[1, 2, 3], [3, 4, 0]])
     tags = torch.tensor([[1, 1, 4], [3, 5, 0]])
 
     out = model(tokens, tags)
 
-    assert model.mlp is not None, "should have MLP when specified"
+    assert isinstance(model.mlp, torch.nn.Sequential), "should have MLP when specified"
     assert out.shape == (2, 3, VOCAB_TAGS)
 
 
 def test_tot_weights_small():
-    conf = tu.RNNTaggerConfig(
-        vocab_sz_token=4,
-        vocab_sz_tag=4,
+    conf = src.tagger_model.RNNTaggerConfig(
         d_emb_token=2,
         d_emb_tag=2,
         d_hidden_rnn=2,
@@ -54,6 +54,10 @@ def test_tot_weights_small():
         mlp_sizes=None,
     )
 
-    model = tu.RNNTagger(conf)
+    model = src.tagger_model.RNNTagger(
+        conf,
+        vocab_sz_token=4,
+        vocab_sz_tag=4,
+    )
     assert model.tot_weights == 44
-    assert model.mlp is None, "shouldnt have MLP unless specified"
+    assert isinstance(model.mlp, torch.nn.Identity), "shouldnt have MLP unless specified"

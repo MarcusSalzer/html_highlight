@@ -1,61 +1,24 @@
 import itertools
-import random
 from collections.abc import Sequence
 from typing import Any, Literal, cast
 
 import numpy as np
 import polars as pl
 from joblib import Parallel, delayed
+from sklearn.model_selection import KFold
 
 
-def modify_name(name: str):
-    """Make a new name, with similar structure"""
+def make_example_groups(df: pl.DataFrame, min_group_count: int = 3):
+    """Add a group column to examples dataframe.
 
-    newname = ""
-    for c in name:
-        if c.isalpha():
-            c2 = chr(random.randint(97, 122))
-            if c.isupper():
-                c2 = c2.upper()
-        elif c.isnumeric():
-            c2 = str(random.randint(0, 9))
-        else:
-            c2 = c
-        newname += c2
-    return newname
-
-
-def randomize_names(tokens: list[str], tags: list[str]):
-    """Randomize names of tokens with arbitrary names.
-
-    Affected classes: `pa`, `mo`, `fnme`, `fnas`, `fnsa`, `va`, `at`
-    """
-
-    renameable = ["pa", "mo", "fnme", "fnas", "fnsa", "va", "at"]
-
-    renamed = [False] * len(tokens)
-    tokens_new = tokens.copy()
-    for i, (token, tag) in enumerate(zip(tokens, tags, strict=True)):
-        if tag in renameable and not renamed[i]:
-            newname = modify_name(token)
-            # print(token + "->" + newname)
-            for j in range(i, len(tokens)):
-                if tokens[j] == token:
-                    renamed[j] = True
-                    tokens_new[j] = newname
-
-    return tokens_new
-
-
-def make_example_groups(examples: pl.DataFrame, min_group_count: int = 3):
-    """add a group column, grouping by:
-    - approx length
+    Grouping by:
+    - length quantile
     - lang
     """
-    examples = examples.with_columns(
+    df = df.with_columns(
         length=pl.col("tokens").list.len(),
     )
-    examples = examples.with_columns(
+    df = df.with_columns(
         group=(
             pl.when(pl.col("length") < pl.col("length").quantile(1 / 3))
             .then(pl.lit("short"))
@@ -68,16 +31,16 @@ def make_example_groups(examples: pl.DataFrame, min_group_count: int = 3):
     )
 
     # keep all these in "other"
-    rare_groups = (
-        examples.group_by("group").agg(pl.len()).filter(pl.col("len") < min_group_count)
-    )["group"]
+    rare_groups = (df.group_by("group").agg(pl.len()).filter(pl.col("len") < min_group_count))[
+        "group"
+    ]
 
-    examples = examples.with_columns(
-        group=pl.when(pl.col("group").is_in(rare_groups))
-        .then(pl.lit("other"))
-        .otherwise("group")
+    df_updated = df.with_columns(
+        group=pl.when(pl.col("group").is_in(rare_groups)).then(pl.lit("other")).otherwise("group")
     )
-    return examples
+
+    group_counts = dict(df_updated["group"].value_counts(sort=True).iter_rows())
+    return df_updated, group_counts
 
 
 def data_split(
@@ -114,10 +77,7 @@ def data_split(
             split_dfs[split_id].append(group_df[s:e])
 
     if shuffle:
-        return [
-            pl.concat(dfs).sample(fraction=1.0, shuffle=True, seed=seed)
-            for dfs in split_dfs
-        ]
+        return [pl.concat(dfs).sample(fraction=1.0, shuffle=True, seed=seed) for dfs in split_dfs]
     else:
         return [pl.concat(dfs) for dfs in split_dfs]
 
@@ -130,9 +90,7 @@ def get_ngrams(tokens: list[str], n: int):
     #     ngrams.append(tuple(tokens[i : i + n]))
     # return set(ngrams)
 
-    ngrams: set[tuple[str, ...]] = set(
-        zip(*[tokens[i:] for i in range(n)], strict=False)
-    )
+    ngrams: set[tuple[str, ...]] = set(zip(*[tokens[i:] for i in range(n)], strict=False))
     return ngrams
 
 
@@ -196,9 +154,22 @@ def overlap_pairwise_simple(docs: Sequence[list[str]], n: int = 3, thr=0.5):
     return results, high
 
 
+def overlap_split_pair(
+    a: list[list[str]],
+    b: list[list[str]],
+    n: int,
+    norm: Literal["iou", "max"] = "iou",
+):
+    ngrams_a, ngrams_b = set(), set()
+    ngrams_a.update(*[get_ngrams(seq, n) for seq in a])
+    ngrams_b.update(*[get_ngrams(seq, n) for seq in b])
+    return get_overlap(ngrams_a, ngrams_b, norm=norm)
+
+
 def overlap_splits(splits: dict[str, list[list[str]]], n: int = 3):
     """Pairwise overlap between sets"""
 
+    assert len(splits) > 1, "expects more than 1 split"
     # Collect all ngrams for each split
     all_ngrams: dict[str, set[tuple[str, ...]]] = {}
     for k, spl in splits.items():
@@ -211,3 +182,63 @@ def overlap_splits(splits: dict[str, list[list[str]]], n: int = 3):
         overlap = get_overlap(all_ngrams[k1], all_ngrams[k2])
         results.append((k1, k2, overlap))
     return results
+
+
+def simple_folds(df: pl.DataFrame, k: int, shuffle: bool, seed: int | None = None):
+    """Split data in k folds with k-1 for training and 1 for test"""
+    kf = KFold(k, shuffle=shuffle, random_state=seed)
+    all_idxs = np.arange(len(df))
+    splits = [(df[ix_train], df[ix_test]) for (ix_train, ix_test) in kf.split(all_idxs)]
+    return splits
+
+
+# =================================
+# Ideas on how to get better splits
+
+
+def js_divergence(p: np.ndarray, q: np.ndarray, eps: float = 1e-12):
+    """Compute Jensen Shannon Divergence.
+
+    Idea
+    ----
+    Measure how similiar the feature distribution is between splits/folds.
+
+    """
+    # Normalize
+    # KL-divergence (nested function?)
+    # JS divergence (is symmetric?)
+    pass
+
+
+def fold_feature_js(folds: list[pl.DataFrame], feature: str):
+    """Compute mean JSD between each fold and global distribution for a categorical feature."""
+    # TODO: does not need whole dataframes?
+    pass
+
+
+def partition_distr_overlap_combo_score():
+    """Compute score.
+
+    Idea
+    ----
+    When splitting data for train/val, we want to:
+
+    - Minimize distribution variance
+    - Minimize overlap (leakage)
+
+    Or concretely, we want to evenly split groups,
+    but, there is more overlap within groups.
+
+    """
+    pass
+
+
+def group_based_greedy_partition(
+    groups_map: dict,  # maybe?
+    n_folds=4,
+    alpha=0.7,  # balance objectives
+    features=("lang", "group"),
+    ngram_n: int = 3,  # for overlap computation
+    restarts: int = 5,
+):
+    pass

@@ -1,13 +1,10 @@
 # For mapping to a smaller label space
 import json
 from collections.abc import Iterable
-from collections.abc import Iterable
 from glob import glob
 from pathlib import Path
 from typing import Literal
-from typing import Literal
 
-import numpy as np
 import numpy as np
 import polars as pl
 
@@ -76,12 +73,13 @@ def load_dataset_zip(
 def load_dataset_splits(
     split_idx: dict[str, str],
     path=Path("data/dataset.ndjson"),
+    limit: int | None = None,
 ) -> dict[str, list[DatasetRecord]]:
     """Load the annoted data (Newline delimited JSON), and get a list for each split"""
     splits: dict[str, list[DatasetRecord]] = {}
     n_skip = 0
     with path.open("r", encoding="utf-8") as f:
-        for line in f:
+        for i, line in enumerate(f):
             d = DatasetRecord(**json.loads(line))
             # where should this example go?
             sk = split_idx.get(d.id)
@@ -89,6 +87,9 @@ def load_dataset_splits(
                 n_skip += 1
             else:
                 splits.setdefault(sk, []).append(d)
+
+            if limit is not None and i > limit:
+                break
 
     if n_skip > 0:
         print(f"[NOTE] skipped {n_skip} examples")
@@ -106,9 +107,18 @@ def load_dataset_splits(
     return splits
 
 
+def remap_val_train(splits: dict[str, list[DatasetRecord]]):
+    """Make a new train set that includes original validation data.
+
+    Useful for re-training a final model, with maximum data.
+    """
+    assert set(splits.keys()) == {"train", "val", "test"}, f"unexpected {splits.keys()=}"
+    return {"train": splits["train"] + splits["val"], "test": splits["test"]}
+
+
 def dataset_to_df(data: Iterable[DatasetRecord]):
     """Convert DatasetRecords to a DF"""
-    df = pl.DataFrame([d.toDict(with_id=True) for d in data])
+    df = pl.DataFrame(data=[d.toDict(with_id=True) for d in data])
     return df
 
 
@@ -128,8 +138,8 @@ def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):
 def make_vocab(
     examples: pl.DataFrame,
     insert: tuple[str, ...] = ("<pad>", "<unk>"),
-    vocab_allowed_tags: list[str] | None = VOCAB_TAGS,
-) -> tuple[list, dict[str, int], list, dict[str, int]]:
+    vocab_allowed_tags: tuple[str, ...] | None = VOCAB_TAGS,
+):
     """Make vocab, and inverse map"""
     vocab_cands = examples.select(pl.col("tokens", "tags").explode())
     if vocab_allowed_tags is not None:
@@ -155,6 +165,7 @@ def make_vocab(
     # tag vocab
     tag_vocab = list(insert) + tag_cands["tags"].to_list()
     tag2idx = {t: i for i, t in enumerate(tag_vocab)}
+
     return vocab, token2idx, tag_vocab, tag2idx
 
 

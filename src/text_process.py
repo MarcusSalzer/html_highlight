@@ -16,7 +16,7 @@ basic_pats = [
     # comment after indentation or full line (NOTE variable length lookbehind)
     ("co", r"(?<=(?:^|[;,])\s*)(?:/{2,3}|#|%).+$"),
     ("co", r"<!--.+-->\s*$"),  # html-comment
-    # php/jsdoc/css multiline comments
+    # multiline comments
     ("co", r"\/\*{1,2}[\s\S]+?\*\/"),
     # c style comments after semicolon/comma
     # ("co", r"(?<=[;,]\s*)\/{2} ?.+$"),
@@ -51,13 +51,13 @@ basic_pats = [
     # CSS classes
     ("uk", r"^\.\p{L}\S*(?=.*{)"),
     # bash flags
-    ("shfl", r"(?<!\S)--\p{L}+(?=\s|=|$)"),
+    # ("uk", r"(?<!\S)--\p{L}+(?=\s|=|$)"),
     # bash flag or op or css attr
     ("uk", r"\p{L}*-?\p{L}+(?=\s|=|$|:)"),
     # rust macros
     ("uk", r"\S+!(?=\()"),
     # operators
-    ("opbi", r"===|!==|<=>|<=|>=|==|!=|\*\*|\/\/|\.\^|\|\||&&|~\/|<<|\?\?"),
+    ("opbi", r"===|!==|<=>|<=|>=|==|!=|\/\/|\.\^|\|\||&&|~\/|<<|\?\?"),
     ("opun", r"\+\+|--"),
     ("sy", r"->|=>|\|>|::|:|(?<=[^\s])\.(?=[^\s])"),
     ("opas", r"<-|\+=|-=|\*=|\/="),
@@ -67,7 +67,7 @@ basic_pats = [
     # bash special parameters
     ("uk", r"\$[*@?-]"),
     ("uk", r"\$#"),
-    ("uk", r"\$\$"),
+    ("uk", r"\$\$|\*\*"),
     # annotations
     ("an", r"^@\S+"),
     ("uk", r"\w+|[^\w\s]+?"),  # everything else
@@ -137,8 +137,7 @@ def merge_adjacent(
         if tag == tag_next:
             if (merge_only is None or tag in merge_only) and tag not in dont_merge:
                 if interactive and (
-                    input(f"merge: `{token}` + `{tokens[i + 1]}` ({tag}) ? ").lower()
-                    != "y"
+                    input(f"merge: `{token}` + `{tokens[i + 1]}` ({tag}) ? ").lower() != "y"
                 ):
                     continue
 
@@ -180,11 +179,8 @@ def infer_indent(text: str, max_symbols=4) -> str | None:
     if id_token == "\t":
         c = 1
     else:
-        if {1, 4}.issubset(counts):
-            # Avoid rare short indentation
-            c = 4
-        else:
-            c = min(math.gcd(*counts), max_symbols)
+        # Avoid rare short indentation
+        c = 4 if {1, 4}.issubset(counts) else min(math.gcd(*counts), max_symbols)
 
     return id_token * c
 

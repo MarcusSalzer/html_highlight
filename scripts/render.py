@@ -11,9 +11,7 @@ from src import html_process, util
 
 
 def render_data(data, title, correct=None, names=False):
-    html_process.render_preview(
-        data, "./_style.css", title, correct=correct, show_names=names
-    )
+    html_process.render_preview(data, "./_style.css", title, correct=correct, show_names=names)
 
 
 if __name__ == "__main__":
@@ -70,10 +68,7 @@ if __name__ == "__main__":
             data = data[dataset]
         all_data[fp.split("/")[-1].split(".")[0]] = data
     lens = [str(len(df)) for df in all_data.values()]
-    if len(set(lens)) == 1:
-        d = f"{len(all_data)} * {lens[0]}"
-    else:
-        d = " + ".join(lens)
+    d = f"{len(all_data)} * {lens[0]}" if len(set(lens)) == 1 else " + ".join(lens)
     print(f"Loaded {d} predictions")
     for k, df in all_data.items():
         render_data(df, title=title + "_" + k, correct=data_true, names=include_names)
