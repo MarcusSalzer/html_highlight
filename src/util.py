@@ -9,7 +9,7 @@ import numpy as np
 import polars as pl
 
 from src import data_functions as datafun
-from src._constants import VOCAB_TAGS
+from src.constants import VOCAB_TAGS
 from src.DatasetRecord import DatasetRecord
 
 

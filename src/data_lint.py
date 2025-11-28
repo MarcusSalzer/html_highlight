@@ -3,7 +3,7 @@ import polars as pl
 
 from src import data_functions as datafun
 from src import text_process
-from src._constants import (
+from src.constants import (
     DET_TAGS,
     ILLEGAL_BIGRAMS,
     LANG_SPEC_TOKENS,
@@ -107,16 +107,12 @@ def lang_spec_check(tokens: list[str], tags: list[str], lang: str):
         if token_spec:
             req_tag = token_spec.get(token)
             if req_tag and tag != req_tag:
-                raise LintError(
-                    f"({lang}) need `{token}`->`{req_tag}`, got  `{token}`->`{tag}`"
-                )
+                raise LintError(f"({lang}) need `{token}`->`{req_tag}`, got  `{token}`->`{tag}`")
 
 
 def n_gram_overlap_check(records: list[DatasetRecord], n_ngram=3, thr=0.5):
     high = {}
-    _, high["tag"] = datafun.overlap_pairwise_simple(
-        [d.tags for d in records], n_ngram, thr=thr
-    )
+    _, high["tag"] = datafun.overlap_pairwise_simple([d.tags for d in records], n_ngram, thr=thr)
     _, high["token"] = datafun.overlap_pairwise_simple(
         [d.tokens for d in records], n_ngram, thr=thr
     )

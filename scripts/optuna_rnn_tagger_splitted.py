@@ -10,7 +10,8 @@ from src import torch_util as tu
 NTRIALS = int(sys.argv[1])
 VARIANT = sys.argv[2]
 assert VARIANT in ("rnn", "gru", "lstm")
-OPT_METRIC = "acc"
+
+OPT_METRIC = "balanced_acc"
 MET_FACTOR = tm.METRIC_DIR[OPT_METRIC]
 
 # load data, convert to dataframe

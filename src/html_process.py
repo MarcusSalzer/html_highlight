@@ -1,3 +1,4 @@
+import contextlib
 import json
 from collections.abc import Sequence
 from glob import glob
@@ -52,7 +53,7 @@ def format_html(
     tokens: list[str],
     tags: list[str],
     override_elements: Sequence[str | None] | None = None,
-    exclude_tags: list[str] = ["ws", "uk", "id", "<unk>"],
+    exclude_tags: tuple[str, ...] = ("ws", "uk", "id", "<unk>"),
     level_brackets: bool = True,
     css_path: str | None = None,
     legend: bool = False,
@@ -79,9 +80,7 @@ def format_html(
 
     if level_brackets:
         tags, _ = bracket_levels(tags)
-    for token, tag, el, is_err in zip(
-        tokens, tags, override_elements, errors, strict=True
-    ):
+    for token, tag, el, is_err in zip(tokens, tags, override_elements, errors, strict=True):
         # fix html specials
         token_text = html_specials(token)
         if tag in exclude_tags:
@@ -128,7 +127,7 @@ def format_html_simple(
     exclude_tags = ["ws", "uk"]
 
     tagged_elements: list[str] = []
-    for token, tag in zip(tokens, tags):
+    for token, tag in zip(tokens, tags, strict=True):
         # fix html specials
         token_text = html_specials(token)
         if tag in exclude_tags:
@@ -172,9 +171,7 @@ def render_preview(
     for ex in data.iter_rows(named=True):
         _, tags_det = text_process.process("".join(ex["tokens"]))
         if correct is not None:
-            errors = [
-                t != tc for t, tc in zip(ex["tags"], ex["tags_correct"], strict=True)
-            ]
+            errors = [t != tc for t, tc in zip(ex["tags"], ex["tags_correct"], strict=True)]
             acc = 1 - (sum(errors) / len(errors))
             accs.append(acc)
 
@@ -182,10 +179,7 @@ def render_preview(
             errors = None
             acc = None
 
-        if mark_nondet:
-            mark = ["mark" if (t == "uk") else None for t in tags_det]
-        else:
-            mark = None
+        mark = ["mark" if t == "uk" else None for t in tags_det] if mark_nondet else None
         ex_text = format_html(
             ex["tokens"],
             ex["tags"],
@@ -208,10 +202,7 @@ def render_preview(
 
     document_full += document_examples + "</body>\n"
 
-    if title:
-        filename = re.sub(r"[\\\/\.]", "_", title)
-    else:
-        filename = "output"
+    filename = re.sub(r"[\\\/\.]", "_", title) if title else "output"
 
     with open(f"./previews/{filename}.html", "w", encoding="utf-8") as f:
         f.write(document_full)
@@ -222,10 +213,9 @@ def make_previews_index():
     """Create a index with links to previews"""
 
     paths = sorted(glob("*.html", root_dir="previews/"))
-    try:
+
+    with contextlib.suppress(ValueError):
         paths.remove("index.html")
-    except ValueError:
-        pass
 
     links = [f'<li><a href = "{p}">{p.split(".")[0]}</a></li>' for p in paths]
     content = "<ul>" + "\n".join(links) + "</ul>"

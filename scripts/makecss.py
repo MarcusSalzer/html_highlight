@@ -8,14 +8,12 @@ from src import util
 
 def make_css(
     tags: list,
-    exclude: list[str] = ["ws", "id", "nl", "brcl", "brop", "<unk>"],
+    exclude: tuple[str, ...] = ("ws", "id", "nl", "brcl", "brop", "<unk>"),
     max_br=4,
 ):
     doc = "body {\n  color: white;\n  background-color: black;\n}\n"
     doc += 'pre {\n  font-family: "Comic Mono", monospace;\n}\n'
-    doc += (
-        "mark {\n  color: white;\n  background-color: rgba(129, 129, 129, 0.378);\n}\n"
-    )
+    doc += "mark {\n  color: white;\n  background-color: rgba(129, 129, 129, 0.378);\n}\n"
     doc += ".error {\n  text-decoration: underline wavy red 1px;\n}\n"
 
     for k in range(max_br):

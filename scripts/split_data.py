@@ -13,8 +13,8 @@ from src import util
 
 # TODO instead of add_log, save meta in the file
 def make_split(
-    ratios=[0.7, 0.2, 0.1],
-    splitnames=["train", "val", "test"],
+    ratios=(0.7, 0.2, 0.1),
+    splitnames=("train", "val", "test"),
     min_group_count=4,
     seed: int | None = None,
     max_data: int | None = None,
@@ -53,19 +53,19 @@ def make_split(
     print(f"Measuring token overlap ({n_ngram}-grams)...")
 
     meta["overlap"] = datafun.overlap_splits(
-        {k: df["tokens"].to_list() for k, df in zip(splitnames, splits)}, n_ngram
+        {k: df["tokens"].to_list() for k, df in zip(splitnames, splits, strict=True)}, n_ngram
     )
     for k1, k2, ovr in meta["overlap"]:
         print(f"  overlap({k1}, {k2}) = {ovr:.2%}")
 
     # compute index instead of saving copies of data
     split_index = {}
-    for split, splitname in zip(splits, splitnames):
+    for split, splitname in zip(splits, splitnames, strict=True):
         split_index.update(dict.fromkeys(split["id"].to_list(), splitname))
 
     now = datetime.now()
     alldata = {"date": f"{now:%Y-%m-%d}", "meta": meta, "examples": split_index}
-    filepath.write_text(json.dumps(alldata))
+    filepath.write_text(json.dumps(alldata, indent=4))
 
     print(f"date: {alldata['date']}")
 

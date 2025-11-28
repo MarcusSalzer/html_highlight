@@ -73,7 +73,7 @@ def data_split(
             group_df = group_df.sample(fraction=1.0, shuffle=True, seed=seed)
 
         # split one group
-        for split_id, (s, e) in enumerate(zip(*get_splits(n_group, ratios))):
+        for split_id, (s, e) in enumerate(zip(*get_splits(n_group, ratios), strict=True)):
             split_dfs[split_id].append(group_df[s:e])
 
     if shuffle:

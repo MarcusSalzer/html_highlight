@@ -3,7 +3,7 @@ import os
 from rich.markup import escape
 
 from scripts.annotate_util import console
-from src import _constants
+from src import constants
 
 
 def clearCLI():
@@ -34,7 +34,7 @@ def pretty_print_code(tokens: list[str], tags: list[str]):
         "li": "rosy_brown",
     }
     for token, tag in zip(tokens, tags, strict=True):
-        t_simple = _constants.MAP_TAGS_SIMPLE.get(tag, tag)
+        t_simple = constants.MAP_TAGS_SIMPLE.get(tag, tag)
         st = styles.get(t_simple)
         if st is not None:
             text += f"[{st}]{escape(token)}[/{st}]"

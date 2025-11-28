@@ -436,14 +436,14 @@ class TestInitialRegex(unittest.TestCase):
 
     def test_co_in_fn(self):
         tk, ta = process_regex("{\n  a.b(); // OK\n}")
-        self.assertListEqual("{|\n|  |a|.|b|(|)|;| |// OK|\n|}".split("|"), tk)
+        self.assertListEqual(["{", "\n", "  ", "a", ".", "b", "(", ")", ";", " ", "// OK", "\n", "}"], tk)
         self.assertEqual("brcl", ta[-1])
         self.assertEqual("nl", ta[-2])
         self.assertEqual("co", ta[-3])
 
     def test_docstr_end(self):
         tk, ta = process_regex('"""A function."""\n    variable')
-        self.assertListEqual('"""A function."""|\n|    |variable'.split("|"), tk)
+        self.assertListEqual(['"""A function."""', '\n', '    ', 'variable'], tk)
         self.assertEqual("st", ta[0])
 
     def test_modop_nospace(self):

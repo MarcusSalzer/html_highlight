@@ -6,7 +6,7 @@ from datetime import datetime
 import pyperclip as pc
 
 from src import inference
-from src._constants import MAP_TAGS_SIMPLE
+from src.constants import MAP_TAGS_SIMPLE
 from src.html_process import format_html
 from src.text_process import process
 
