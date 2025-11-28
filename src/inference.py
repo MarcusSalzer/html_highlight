@@ -1,24 +1,29 @@
 import json
 import os
 import sys
+from pathlib import Path
 
 import torch
 
-from src import torch_util
+from src import tagger_model, torch_util
 
 sys.path.append(".")
 
 
 class Inference:
-    def __init__(self, model_name: str, model_dir="."):
-        # load meta
-        with open(os.path.join(model_dir, f"{model_name}_meta.json")) as f:
-            metadata = json.load(f)
+    """Utility for performing model inference."""
+
+    def __init__(self, model_name: str, model_dir=Path(".")):
+        # load metadata
+        conf_data = json.loads((model_dir / f"{model_name}_config.json").read_text())
+
+        model_conf = tagger_model.RNNTaggerConfig(**conf_data["config"])
 
         dev = "cuda" if torch.cuda.is_available() else "cpu"
-        vocab = metadata["vocab"]
-        self.tag_vocab = metadata["tag_vocab"]
-        self.tag_map = metadata.get("tag_map")
+        vocab = conf_data["vocab"]
+        self.tag_vocab = conf_data["tag_vocab"]
+        self.tag_map = conf_data.get("tag_map")  # Optional!
+
         self.token2idx = {t: i for i, t in enumerate(vocab)}
         self.tag2idx = {t: i for i, t in enumerate(self.tag_vocab)}
 
@@ -28,8 +33,8 @@ class Inference:
             weights_only=True,
             map_location=dev,
         )
-
-        self.model = torch_util.LSTMTagger(**metadata["setup"]["constructor"])
+        # Prepare model
+        self.model = tagger_model.RNNTagger(model_conf, len(vocab), len(self.tag_vocab))
         self.model.load_state_dict(state_dict)
 
     def run(self, tokens: list[str], tags_det: list[str]) -> list[str]:
@@ -43,22 +48,10 @@ class Inference:
 
         token_tensor = torch_util.seqs2padded_tensor([token_idxs], verbose=False)
         tag_det_tensor = torch_util.seqs2padded_tensor([tag_det_idxs], verbose=False)
-        # extra features if needed
 
-        extrafeats = (
-            torch_util.make_extra_feats(tokens, padto=token_tensor.shape[1]).unsqueeze(
-                0
-            )
-            if self.model.n_extra
-            else None
-        )
-        # print("tokens", token_tensor.shape)
-        # print("tags_det", tag_det_tensor.shape)
-        # if extrafeats is not None:
-        #     print("extra", extrafeats.shape)
         self.model.eval()
         with torch.no_grad():
-            tag_scores = self.model(token_tensor, tag_det_tensor, extrafeats)
+            tag_scores = self.model(token_tensor, tag_det_tensor)
         predictions = torch.argmax(tag_scores, dim=-1)
 
         tags = [self.tag_vocab[p] for p in predictions.ravel()]
