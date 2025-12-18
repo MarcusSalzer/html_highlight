@@ -144,3 +144,5 @@ nlf_bash
 trchprfcp_python
 spcrplld_python
 prflsctrst_bash
+fltvf_python
+tstssr_rust

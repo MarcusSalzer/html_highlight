@@ -33,8 +33,11 @@ class Inference:
             weights_only=True,
             map_location=dev,
         )
+        # TODO EXTRA FEATURES
         # Prepare model
-        self.model = tagger_model.RNNTagger(model_conf, len(vocab), len(self.tag_vocab))
+        self.model = tagger_model.RNNTagger(
+            model_conf, len(vocab), len(self.tag_vocab), n_extra=None
+        )
         self.model.load_state_dict(state_dict)
 
     def run(self, tokens: list[str], tags_det: list[str]) -> list[str]:
@@ -49,9 +52,11 @@ class Inference:
         token_tensor = torch_util.seqs2padded_tensor([token_idxs], verbose=False)
         tag_det_tensor = torch_util.seqs2padded_tensor([tag_det_idxs], verbose=False)
 
+        extra_feats = None  # TODO
+
         self.model.eval()
         with torch.no_grad():
-            tag_scores = self.model(token_tensor, tag_det_tensor)
+            tag_scores = self.model(token_tensor, tag_det_tensor, extra_feats)
         predictions = torch.argmax(tag_scores, dim=-1)
 
         tags = [self.tag_vocab[p] for p in predictions.ravel()]

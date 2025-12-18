@@ -14,64 +14,64 @@ from torch.utils.data import DataLoader, Dataset
 from src import text_process, types
 
 
-class LSTMTagger(nn.Module):
-    """DEPRECATED?"""
+# class LSTMTagger(nn.Module):
+#     """DEPRECATED?"""
 
-    def __init__(
-        self,
-        token_vocab_size: int,
-        label_vocab_size: int,
-        embedding_dim: int = 12,
-        hidden_dim: int = 128,
-        n_lstm_layers: int = 2,
-        dropout_lstm: float = 0.3,
-        bidi: bool = True,
-        n_extra: int = 0,
-    ):
-        super().__init__()
-        self.embedding_tokens = nn.Embedding(token_vocab_size, embedding_dim, padding_idx=0)
-        self.embedding_labels = nn.Embedding(label_vocab_size, embedding_dim, padding_idx=0)
+#     def __init__(
+#         self,
+#         token_vocab_size: int,
+#         label_vocab_size: int,
+#         embedding_dim: int = 12,
+#         hidden_dim: int = 128,
+#         n_lstm_layers: int = 2,
+#         dropout_lstm: float = 0.3,
+#         bidi: bool = True,
+#         n_extra: int = 0,
+#     ):
+#         super().__init__()
+#         self.embedding_tokens = nn.Embedding(token_vocab_size, embedding_dim, padding_idx=0)
+#         self.embedding_labels = nn.Embedding(label_vocab_size, embedding_dim, padding_idx=0)
 
-        # LSTM will receive embedded tokens, tags and possibly extra_feats
-        lstm_in_dim = (3 if n_extra > 0 else 2) * embedding_dim
+#         # LSTM will receive embedded tokens, tags and possibly extra_feats
+#         lstm_in_dim = (3 if n_extra > 0 else 2) * embedding_dim
 
-        self.lstm = nn.LSTM(
-            lstm_in_dim,
-            hidden_dim,
-            n_lstm_layers,
-            batch_first=True,
-            dropout=dropout_lstm,
-            bidirectional=bidi,
-        )
-        actual_hidden = hidden_dim * (2 if bidi else 1)
-        self.n_extra = n_extra
-        if n_extra > 0:
-            # project extra features to same dim as tokens and labels
-            self.feature_proj = nn.Linear(n_extra, embedding_dim)
+#         self.lstm = nn.LSTM(
+#             lstm_in_dim,
+#             hidden_dim,
+#             n_lstm_layers,
+#             batch_first=True,
+#             dropout=dropout_lstm,
+#             bidirectional=bidi,
+#         )
+#         actual_hidden = hidden_dim * (2 if bidi else 1)
+#         self.n_extra = n_extra
+#         if n_extra > 0:
+#             # project extra features to same dim as tokens and labels
+#             self.feature_proj = nn.Linear(n_extra, embedding_dim)
 
-        # double size if bidirectional
-        self.hidden2tag = nn.Linear(actual_hidden, label_vocab_size)
+#         # double size if bidirectional
+#         self.hidden2tag = nn.Linear(actual_hidden, label_vocab_size)
 
-    def forward(
-        self,
-        tokens: torch.Tensor,
-        labels_det: torch.Tensor,
-        extra: torch.Tensor | None = None,
-    ):
-        embeds_tokens = self.embedding_tokens(tokens)
-        embeds_labels = self.embedding_labels(labels_det)
+#     def forward(
+#         self,
+#         tokens: torch.Tensor,
+#         labels_det: torch.Tensor,
+#         extra: torch.Tensor | None = None,
+#     ):
+#         embeds_tokens = self.embedding_tokens(tokens)
+#         embeds_labels = self.embedding_labels(labels_det)
 
-        embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)
-        if hasattr(self, "feature_proj"):
-            assert extra is not None, "needs extra features"
-            feats_emb = self.feature_proj(extra)
-            embeds = torch.cat([embeds, feats_emb], dim=-1)
-        #  (bs, seq_len, (2 or 3) * emb_dim)
-        lstm_out, _ = self.lstm(embeds)
-        #  (bs, seq_len, actual_hidden)
-        logits = self.hidden2tag(lstm_out)
-        # (bs, seq_len, tagset_size)
-        return logits
+#         embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)
+#         if hasattr(self, "feature_proj"):
+#             assert extra is not None, "needs extra features"
+#             feats_emb = self.feature_proj(extra)
+#             embeds = torch.cat([embeds, feats_emb], dim=-1)
+#         #  (bs, seq_len, (2 or 3) * emb_dim)
+#         lstm_out, _ = self.lstm(embeds)
+#         #  (bs, seq_len, actual_hidden)
+#         logits = self.hidden2tag(lstm_out)
+#         # (bs, seq_len, tagset_size)
+#         return logits
 
 
 class SequenceDataset(Dataset):
@@ -361,25 +361,26 @@ def data2torch(
     return dl
 
 
-def make_extra_feats(tokens: list[str], padto: int = 0):
+def make_extra_feats(tokens: list[str], padto: int = 0, t_len_max: int = 24):
     """Prepare extra features for tagger
+
 
     Returns: features (len, Nextra)
     """
     assert isinstance(tokens[0], str), "should be strings"
 
-    # paddding
-    features = torch.zeros((max(len(tokens), padto), 3), dtype=torch.float32)
-    laststart = tokens[0]
-    for i, token in enumerate(tokens):
-        is_capitalized = 1.0 if token[0].isupper() else -1.0
-        word_length = min(len(token), 10) / 16  # normalized token length
-        if i > 0 and tokens[i - 1] == "\n":
-            laststart = token
-        line_starts_with = (hash(laststart) % 10) / 10  # Bucket encoding
+    n_cases = len(text_process.WordCase)
+    # padding
+    wordcase_oh = torch.zeros((max(len(tokens), padto), n_cases), dtype=torch.float32)
+    for i, t in enumerate(tokens):
+        wc = text_process.get_word_case(t)
+        wordcase_oh[i, wc.value] = 1
+    # normalized token length
+    t_lens = torch.clamp(
+        torch.tensor([len(t) for t in tokens], dtype=torch.float32) / t_len_max, min=0, max=1
+    )
 
-        features[i, :] = torch.tensor([is_capitalized, word_length, line_starts_with])
-    return features
+    return torch.concatenate((wordcase_oh, t_lens), dim=-1)
 
 
 def val_acc(model, dset: SequenceDataset):

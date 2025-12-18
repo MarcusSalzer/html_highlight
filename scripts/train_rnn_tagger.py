@@ -79,12 +79,14 @@ def main() -> None:
     for k, d in dsets.items():
         print(f"{k}: {d}")
 
+    # TODO EXTRA FEATS?
+
     # ===========     MODEL & TRAINING     ===========
 
     device = tu.get_dev()
 
     # model instance
-    model = tagger_model.RNNTagger(model_conf, len(vocab), len(tag_vocab))
+    model = tagger_model.RNNTagger(model_conf, len(vocab), len(tag_vocab), n_extra=None)
     model.to(device=device)
 
     # Where to store results
@@ -120,7 +122,7 @@ def main() -> None:
         maxmem = torch.cuda.max_memory_allocated()
         print(f"max memory use (cuda): {maxmem / 10**6:.0f} MB")
 
-    plot = plotly_plots.train_metrics_single_run(metrics)
+    plot = plotly_plots.train_metrics_single_run(metrics, acc_range=(0.5, 1.0))
     plot_file = MEDIA_DIR / f"{model}_metrics.png"
     plot.write_image(plot_file, width=1200, height=600)
     print(f"saved plot at {plot_file}")

@@ -20,6 +20,7 @@ class RNNTaggerConfig(pydantic.BaseModel):
     # dimensions
     d_emb_token: int = 12
     d_emb_tag: int = 8
+    d_emb_extra: int = 8
     d_hidden_rnn: int = 64
     # layers
     rnn_variant: str = "lstm"
@@ -229,11 +230,13 @@ class RNNTagger(TaggerModel):
         conf: RNNTaggerConfig,
         vocab_sz_token: int,
         vocab_sz_tag: int,
+        n_extra: int | None,
     ):
         super().__init__(vocab_sz_token, vocab_sz_tag)
 
         self.embedding_tokens = nn.Embedding(vocab_sz_token, conf.d_emb_token, padding_idx=0)
         self.embedding_labels = nn.Embedding(vocab_sz_tag, conf.d_emb_tag, padding_idx=0)
+        self.proj_extra = nn.Linear(n_extra, conf.d_emb_extra) if n_extra is not None else None
 
         # choose layer type for recurrent layers
         self.rnn = self.rnn_variants[conf.rnn_variant](
@@ -270,15 +273,22 @@ class RNNTagger(TaggerModel):
     def __str__(self):
         return f"RNNTagger_{type(self.rnn).__name__}"
 
-    def forward(self, tokens: Tensor, labels_det: Tensor) -> Tensor:
+    def forward(self, tokens: Tensor, labels_det: Tensor, extra: Tensor | None) -> Tensor:
         bs, seq_len = tokens.shape[:2]
 
         # embed tokens and inital labels
         embeds_tokens = self.embedding_tokens(tokens)
         embeds_labels = self.embedding_labels(labels_det)
 
-        # Cat -> (bs, seq_len, emb_token + emb_tag)
-        embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)
+        if extra is None:
+            # Cat -> (bs, seq_len, emb_token + emb_tag)
+            embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)
+        else:
+            # optionally take extra features
+            assert self.proj_extra is not None, "Needs extra feature embeddings"
+            embeds_extra = self.proj_extra(extra)
+            # Cat -> (bs, seq_len, emb_token + emb_tag + emb_extra)
+            embeds = torch.cat([embeds_tokens, embeds_labels, embeds_extra], dim=-1)
 
         lstm_out, _ = self.rnn(embeds)  #  -> (bs, seq_len, actual_hidden)
         lstm_out = self.dropout_between(lstm_out)  # Dropout or Identity

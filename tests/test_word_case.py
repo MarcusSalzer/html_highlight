@@ -16,3 +16,8 @@ def test_lower_camel(w):
 @mark.parametrize("w", ["my-component"])
 def test_kebab(w):
     assert get_word_case(w) == WordCase.KEBAB
+
+
+@mark.parametrize("w", ["+", "?", "++", " "])
+def test_none(w):
+    assert get_word_case(w) == WordCase.NONE

@@ -82,6 +82,7 @@ basic_pats = [
 class WordCase(Enum):
     """What case is a word in."""
 
+    NONE = 0
     LOWER = 1
     UPPER = 2
     LOWER_CAMEL = 3
@@ -102,8 +103,10 @@ def get_word_case(word: str) -> WordCase:
 
     if word[0].islower():
         return WordCase.LOWER_CAMEL
-    else:
+    elif word.isalpha():
         return WordCase.UPPER_CAMEL
+
+    return WordCase.NONE
 
 
 def process_regex(text: str, patterns: list[tuple[str, str]] = basic_pats):
