@@ -3,6 +3,7 @@ from enum import Enum
 
 import regex as re
 
+# Another try, cleaner patterns?
 basic_pats_simple = [
     ("co", r"#.*$"),  # shell/py style comment
     ("co", r"\/\*{1,2}[\s\S]+?\*\/"),  # multiline/doc comments
@@ -15,7 +16,7 @@ basic_pats_simple = [
 # in order
 basic_pats = [
     # comment after indentation or full line (NOTE variable length lookbehind)
-    ("co", r"(?<=(?:^|[;,])\s*)(?:/{2,3}|#|%).+$"),
+    ("co", r"(?<=(?:^|[;,])\s*)(?:[/\-]{2,3}|#|%).+$"),
     ("co", r"<!--.+-->\s*$"),  # html-comment
     # multiline comments
     ("co", r"\/\*{1,2}[\s\S]+?\*\/"),

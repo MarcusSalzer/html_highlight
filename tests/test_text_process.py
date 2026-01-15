@@ -399,17 +399,15 @@ class TestInitialRegex(unittest.TestCase):
 
     def test_bash_specials(self):
         tk, _ = process_regex("$? $* $# $@ $- $$")
-        self.assertListEqual(
-            ["$?", " ", "$*", " ", "$#", " ", "$@", " ", "$-", " ", "$$"], tk
-        )
+        self.assertListEqual(["$?", " ", "$*", " ", "$#", " ", "$@", " ", "$-", " ", "$$"], tk)
 
     def test_bash_flag(self):
         tk, _ = process_regex("mkdir -p")
         self.assertListEqual(["mkdir", " ", "-p"], tk)
 
     def test_bash_flag_w_val(self):
-        tk, _ = process_regex("--color=auto")
-        self.assertListEqual(["--color", "=", "auto"], tk)
+        tk, _ = process_regex("grep --color=auto")
+        self.assertListEqual(["grep", " ", "--color", "=", "auto"], tk)
 
     def test_py_annot(self):
         tk, ta = process_regex("@staticmethod\ndef load_project(name)")
@@ -436,19 +434,26 @@ class TestInitialRegex(unittest.TestCase):
 
     def test_co_in_fn(self):
         tk, ta = process_regex("{\n  a.b(); // OK\n}")
-        self.assertListEqual(["{", "\n", "  ", "a", ".", "b", "(", ")", ";", " ", "// OK", "\n", "}"], tk)
+        self.assertListEqual(
+            ["{", "\n", "  ", "a", ".", "b", "(", ")", ";", " ", "// OK", "\n", "}"], tk
+        )
         self.assertEqual("brcl", ta[-1])
         self.assertEqual("nl", ta[-2])
         self.assertEqual("co", ta[-3])
 
     def test_docstr_end(self):
         tk, ta = process_regex('"""A function."""\n    variable')
-        self.assertListEqual(['"""A function."""', '\n', '    ', 'variable'], tk)
+        self.assertListEqual(['"""A function."""', "\n", "    ", "variable"], tk)
         self.assertEqual("st", ta[0])
 
     def test_modop_nospace(self):
         tk, ta = process_regex("8%2")
         self.assertListEqual(["8", "%", "2"], tk)
+
+    def test_lua_cofl(self):
+        tk, ta = process_regex("-- a comment")
+        self.assertListEqual(["-- a comment"], tk)
+        self.assertEqual("co", ta[0])
 
 
 class TestMergeAdjacent(unittest.TestCase):
@@ -479,7 +484,7 @@ class TestMergeAdjacent(unittest.TestCase):
     def test_merge_excl(self):
         tk = ["a", "b", "c", "d"]
         ta = ["y", "y", "x", "x"]
-        tkm, tam, midx = text_process.merge_adjacent(tk, ta, merge_only=["x", "z"])
+        tkm, tam, midx = text_process.merge_adjacent(tk, ta, merge_only={"x", "z"})
         self.assertListEqual(["a", "b", "cd"], tkm)
         self.assertListEqual(["y", "y", "x"], tam)
         self.assertListEqual([2], midx)
@@ -530,9 +535,7 @@ class TestBracLevel(unittest.TestCase):
     def test_2(self):
         t = ["fnfr", "brop", "va", "opbi", "va", "brop", "nu", "brcl", "brcl"]
         tn, levels = text_process.bracket_levels(t)
-        self.assertListEqual(
-            ["fnfr", "br0", "va", "opbi", "va", "br1", "nu", "br1", "br0"], tn
-        )
+        self.assertListEqual(["fnfr", "br0", "va", "opbi", "va", "br1", "nu", "br1", "br0"], tn)
         self.assertListEqual([0, 0, 1, 1, 1, 1, 2, 1, 0], levels)
 
 
