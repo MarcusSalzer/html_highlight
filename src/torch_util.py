@@ -1,5 +1,5 @@
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from timeit import default_timer
@@ -8,70 +8,11 @@ from typing import cast
 import polars as pl
 import torch
 from colorama import Fore, Style
-from torch import nn, optim
+from torch import optim
 from torch.utils.data import DataLoader, Dataset
 
 from src import text_process, types
-
-
-# class LSTMTagger(nn.Module):
-#     """DEPRECATED?"""
-
-#     def __init__(
-#         self,
-#         token_vocab_size: int,
-#         label_vocab_size: int,
-#         embedding_dim: int = 12,
-#         hidden_dim: int = 128,
-#         n_lstm_layers: int = 2,
-#         dropout_lstm: float = 0.3,
-#         bidi: bool = True,
-#         n_extra: int = 0,
-#     ):
-#         super().__init__()
-#         self.embedding_tokens = nn.Embedding(token_vocab_size, embedding_dim, padding_idx=0)
-#         self.embedding_labels = nn.Embedding(label_vocab_size, embedding_dim, padding_idx=0)
-
-#         # LSTM will receive embedded tokens, tags and possibly extra_feats
-#         lstm_in_dim = (3 if n_extra > 0 else 2) * embedding_dim
-
-#         self.lstm = nn.LSTM(
-#             lstm_in_dim,
-#             hidden_dim,
-#             n_lstm_layers,
-#             batch_first=True,
-#             dropout=dropout_lstm,
-#             bidirectional=bidi,
-#         )
-#         actual_hidden = hidden_dim * (2 if bidi else 1)
-#         self.n_extra = n_extra
-#         if n_extra > 0:
-#             # project extra features to same dim as tokens and labels
-#             self.feature_proj = nn.Linear(n_extra, embedding_dim)
-
-#         # double size if bidirectional
-#         self.hidden2tag = nn.Linear(actual_hidden, label_vocab_size)
-
-#     def forward(
-#         self,
-#         tokens: torch.Tensor,
-#         labels_det: torch.Tensor,
-#         extra: torch.Tensor | None = None,
-#     ):
-#         embeds_tokens = self.embedding_tokens(tokens)
-#         embeds_labels = self.embedding_labels(labels_det)
-
-#         embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)
-#         if hasattr(self, "feature_proj"):
-#             assert extra is not None, "needs extra features"
-#             feats_emb = self.feature_proj(extra)
-#             embeds = torch.cat([embeds, feats_emb], dim=-1)
-#         #  (bs, seq_len, (2 or 3) * emb_dim)
-#         lstm_out, _ = self.lstm(embeds)
-#         #  (bs, seq_len, actual_hidden)
-#         logits = self.hidden2tag(lstm_out)
-#         # (bs, seq_len, tagset_size)
-#         return logits
+from src.vocab import VocabDuo
 
 
 class SequenceDataset(Dataset):
@@ -79,25 +20,27 @@ class SequenceDataset(Dataset):
 
     def __init__(
         self,
-        tokens: types.ArrayLike[list[str]],
-        labels_det: types.ArrayLike[list[str]],
-        labels_true: types.ArrayLike[list[str]],
-        token2idx: dict[str, int],
-        label2idx: dict[str, int],
+        tokens: Sequence[list[str]],
+        labels_det: Sequence[list[str]],
+        labels_true: Sequence[list[str]],
+        vocs: VocabDuo,
         device: str | torch.device | None = None,
         extra_feats: int = 0,
     ):
         if not len(tokens) == len(labels_det) == len(labels_true):
             raise ValueError("inconsistent lengths")
 
-        token_idx = [[token2idx.get(t, 1) for t in seq] for seq in tokens]
+        # Encode each sequence
+        token_idx = [vocs.token.encode(seq) for seq in tokens]
         self.tokens = seqs2padded_tensor(token_idx, device=device, verbose=False)
 
-        label_det_idx = [[label2idx.get(t, 1) for t in seq] for seq in labels_det]
+        label_det_idx = [vocs.tag.encode(seq) for seq in labels_det]
         self.labels_det = seqs2padded_tensor(label_det_idx, device=device, verbose=False)
 
-        label_true_idx = [[label2idx.get(t, 1) for t in seq] for seq in labels_true]
+        label_true_idx = [vocs.tag.encode(seq) for seq in labels_true]
         self.labels_true = seqs2padded_tensor(label_true_idx, device=device, verbose=False)
+
+        # Optionally add extra features
         if extra_feats > 0:
             self.extra = torch.stack(
                 [make_extra_feats(ts, padto=self.tokens.shape[1]) for ts in tokens],
@@ -111,7 +54,7 @@ class SequenceDataset(Dataset):
     def __len__(self):
         return len(self.tokens)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
         inputs = {
             "tokens": self.tokens[idx],
             "labels_det": self.labels_det[idx],
@@ -141,10 +84,10 @@ class SequenceDataset(Dataset):
     def from_dataframe(
         cls,
         df: pl.DataFrame,
-        token2idx: dict[str, int],
-        tag2idx: dict[str, int],
+        vocs: VocabDuo,
         device: str | torch.device | None = None,
     ):
+        assert {"tokens", "tags"}.issubset(df.columns)
         df = df.with_columns(
             tags_det=pl.col("tokens").map_elements(
                 lambda tks: text_process.process("".join(tks))[1],
@@ -152,17 +95,16 @@ class SequenceDataset(Dataset):
             )
         )
         return cls(
-            cast(types.ArrayLike[list[str]], df["tokens"].to_list()),
-            cast(types.ArrayLike[list[str]], df["tags_det"].to_list()),
-            cast(types.ArrayLike[list[str]], df["tags"].to_list()),
-            token2idx,
-            tag2idx,
+            df["tokens"].to_list(),
+            df["tags_det"].to_list(),
+            df["tags"].to_list(),
+            vocs,
             device,
         )
 
 
 def seqs2padded_tensor(
-    sequences: list[list[int]],
+    sequences: Iterable[list[int]],
     pad_value=0,
     verbose=True,
     device: torch.device | str | None = None,
@@ -330,8 +272,7 @@ class Trainer:
 def data2torch(
     df: pl.DataFrame,
     bs: int,
-    token2idx: dict[str, int],
-    tag2idx: dict[str, int],
+    vocs: VocabDuo,
     device: str | torch.device = "cpu",
     extra_feats: int = 0,
 ):
@@ -344,11 +285,10 @@ def data2torch(
         )
     )
     dset = SequenceDataset(
-        cast(types.ArrayLike[list[str]], df["tokens"].to_list()),
-        cast(types.ArrayLike[list[str]], df["tags_det"].to_list()),
-        cast(types.ArrayLike[list[str]], df["tags"].to_list()),
-        token2idx,
-        tag2idx,
+        df["tokens"].to_list(),
+        df["tags_det"].to_list(),
+        df["tags"].to_list(),
+        vocs,
         device=device,
         extra_feats=extra_feats,
     )

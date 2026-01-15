@@ -273,7 +273,7 @@ class RNNTagger(TaggerModel):
     def __str__(self):
         return f"RNNTagger_{type(self.rnn).__name__}"
 
-    def forward(self, tokens: Tensor, labels_det: Tensor, extra: Tensor | None) -> Tensor:
+    def forward(self, tokens: Tensor, labels_det: Tensor, extra: Tensor | None = None) -> Tensor:
         bs, seq_len = tokens.shape[:2]
 
         # embed tokens and inital labels

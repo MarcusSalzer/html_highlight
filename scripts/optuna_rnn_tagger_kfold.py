@@ -53,8 +53,8 @@ overlaps = [
 ]
 fold_dsets = [
     {
-        "train": tu.SequenceDataset.from_dataframe(df_tr, token2idx, tag2idx, device="cpu"),
-        "test": tu.SequenceDataset.from_dataframe(df_test, token2idx, tag2idx, device="cpu"),
+        "train": tu.SequenceDatasetOLD.from_dataframe(df_tr, token2idx, tag2idx, device="cpu"),
+        "test": tu.SequenceDatasetOLD.from_dataframe(df_test, token2idx, tag2idx, device="cpu"),
     }
     for df_tr, df_test in folds
 ]

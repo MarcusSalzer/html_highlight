@@ -66,8 +66,8 @@ We are trying to define some classes, that should work across most languages
 - ✅ NDJSON dataset _25-08-30_
 - ✅ Cleanup labels, linting _25-09-03_
 - ✅ Optuna, settle for a good LSTM model _25-09-20_
-- ❓ Balance dataset split criterion?
 - ❓ Multiple unknown-tokens. Allow recognizing out of vocab
+- ❓ Balance dataset split criterion?
 - ❓ Lightweight inference program.
 - ❓ Reset indentation: avoid unnecessary indentation of all lines
 - ❓ RNN variant comparison

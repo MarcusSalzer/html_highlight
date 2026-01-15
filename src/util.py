@@ -9,7 +9,6 @@ import numpy as np
 import polars as pl
 
 from src import data_functions as datafun
-from src.constants import VOCAB_TAGS
 from src.DatasetRecord import DatasetRecord
 
 
@@ -133,40 +132,6 @@ def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):
             char_tags.extend(["start-" + tag] + [tag] * (len(token) - 1))
 
     return chars, char_tags
-
-
-def make_vocab(
-    examples: pl.DataFrame,
-    insert: tuple[str, ...] = ("<pad>", "<unk>"),
-    vocab_allowed_tags: tuple[str, ...] | None = VOCAB_TAGS,
-):
-    """Make vocab, and inverse map"""
-    vocab_cands = examples.select(pl.col("tokens", "tags").explode())
-    if vocab_allowed_tags is not None:
-        vocab_cands = vocab_cands.filter(pl.col("tags").is_in(vocab_allowed_tags))
-
-    token_cands = (
-        vocab_cands.group_by("tokens")
-        .agg(pl.len().alias("count"))
-        .sort("count", "tokens", descending=True)
-    )
-    tag_cands = (
-        examples.select("tags")
-        .explode("tags")
-        .group_by("tags")
-        .agg(pl.len().alias("count"))
-        .sort("count", "tags", descending=True)
-    )
-
-    # token vocab
-    vocab = list(insert) + token_cands["tokens"].to_list()
-    token2idx = {t: i for i, t in enumerate(vocab)}
-
-    # tag vocab
-    tag_vocab = list(insert) + tag_cands["tags"].to_list()
-    tag2idx = {t: i for i, t in enumerate(tag_vocab)}
-
-    return vocab, token2idx, tag_vocab, tag2idx
 
 
 def MAPE(y_true, y_pred, symmetric=False):

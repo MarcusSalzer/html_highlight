@@ -27,7 +27,8 @@ device = tu.get_dev()
 print(f"\n{len(vocab)=} | {len(tag_vocab)=} | {device=}\n")
 
 dsets = {
-    k: tu.SequenceDataset.from_dataframe(df, token2idx, tag2idx, device) for k, df in data.items()
+    k: tu.SequenceDatasetOLD.from_dataframe(df, token2idx, tag2idx, device)
+    for k, df in data.items()
 }
 print(f"\nTraining {model_key}")
 
