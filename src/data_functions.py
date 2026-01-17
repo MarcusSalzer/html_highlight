@@ -177,11 +177,12 @@ def overlap_splits(splits: dict[str, list[list[str]]], n: int = 3):
         for seq in spl:
             all_ngrams[k].update(get_ngrams(seq, n))
 
-    results: list[tuple[str, str, float]] = []
+    results: dict[tuple[str, str], float] = {}  # overlap for each pair
     for k1, k2 in itertools.combinations(all_ngrams.keys(), 2):
         overlap = get_overlap(all_ngrams[k1], all_ngrams[k2])
-        results.append((k1, k2, overlap))
-    return results
+        results[(k1, k2)] = overlap
+
+    return list(results.items())
 
 
 def simple_folds(df: pl.DataFrame, k: int, shuffle: bool, seed: int | None = None):

@@ -8,11 +8,11 @@ from typing import Literal
 import numpy as np
 import polars as pl
 
-from src import data_functions as datafun
+from src.datamodels.split_index import SplitIndex
 from src.DatasetRecord import DatasetRecord
 
 
-def load_split_idx(filename: str = "split_index.json"):
+def load_split_idx(filename: str = "split_index.json") -> SplitIndex:
     """Find and load the file."""
 
     fps = glob(f"../**/data/**/{filename}", recursive=True)
@@ -21,10 +21,9 @@ def load_split_idx(filename: str = "split_index.json"):
     if not fps:
         raise ValueError(f"Couldn't find {filename}")
     with open(fps[0]) as f:
-        split_index = json.load(f)
+        raw = json.load(f)
 
-    assert isinstance(split_index, dict)
-    return split_index["examples"], split_index["date"]
+    return SplitIndex(**raw)
 
 
 def load_dataset_parallel(
@@ -57,7 +56,7 @@ def load_dataset_zip(
         for line in f:
             record = json.loads(line)
             if filter_lang is None or record["lang"] in filter_lang:
-                tokens, tags = zip(*record["sequence"])
+                tokens, tags = zip(*record["sequence"], strict=True)
                 d = DatasetRecord(
                     record["name"],
                     record["lang"],
@@ -73,6 +72,7 @@ def load_dataset_splits(
     split_idx: dict[str, str],
     path=Path("data/dataset.ndjson"),
     limit: int | None = None,
+    filter_lang: set[str] | None = None,
 ) -> dict[str, list[DatasetRecord]]:
     """Load the annoted data (Newline delimited JSON), and get a list for each split"""
     splits: dict[str, list[DatasetRecord]] = {}
@@ -80,6 +80,11 @@ def load_dataset_splits(
     with path.open("r", encoding="utf-8") as f:
         for i, line in enumerate(f):
             d = DatasetRecord(**json.loads(line))
+
+            # optionally filter by lang
+            if filter_lang and d.lang not in filter_lang:
+                continue
+
             # where should this example go?
             sk = split_idx.get(d.id)
             if sk is None:
@@ -94,14 +99,14 @@ def load_dataset_splits(
         print(f"[NOTE] skipped {n_skip} examples")
 
     # measure overlaps
-    n_ngram = 3
-    print(f"Measuring token overlap ({n_ngram}-grams)...")
+    # n_ngram = 3
+    # print(f"Measuring token overlap ({n_ngram}-grams)...")
 
-    results = datafun.overlap_splits(
-        {k: [d.tokens for d in data] for k, data in splits.items()}, n_ngram
-    )
-    for k1, k2, ovr in results:
-        print(f"  overlap({k1}, {k2}) = {ovr:.2%}")
+    # results = datafun.overlap_splits(
+    #     {k: [d.tokens for d in data] for k, data in splits.items()}, n_ngram
+    # )
+    # for k1, k2, ovr in results:
+    #     print(f"  overlap({k1}, {k2}) = {ovr:.2%}")
 
     return splits
 

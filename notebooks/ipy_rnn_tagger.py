@@ -22,11 +22,13 @@ reload(tu)
 reload(util)
 reload(tagger_model)
 
-split_idx, split_date = util.load_split_idx()
-print(f"Loaded split {split_date}")
+split_idx = util.load_split_idx()
+print(f"Loaded split {split_idx.date}")
 data = {
     sk: util.dataset_to_df(v)
-    for sk, v in util.load_dataset_splits(split_idx, path=Path("../data/dataset.ndjson")).items()
+    for sk, v in util.load_dataset_splits(
+        split_idx.id_to_group, path=Path("../data/dataset.ndjson")
+    ).items()
 }
 # get a vocab
 vocs = vocab.both_vocabs(

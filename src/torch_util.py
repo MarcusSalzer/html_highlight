@@ -7,7 +7,6 @@ from typing import cast
 
 import polars as pl
 import torch
-from colorama import Fore, Style
 from torch import optim
 from torch.utils.data import DataLoader, Dataset
 
@@ -227,13 +226,13 @@ class Trainer:
                 if self.save_dir is not None and epoch > self.save_wait:
                     fp = self.save_dir / f"{self.name}_state.pth"
                     torch.save(self.model.state_dict(), fp)
-                    m_extra += f"{Fore.CYAN} Saved in {self.save_dir} (best VL) {Style.RESET_ALL}"
+                    m_extra += f"Saved in {self.save_dir} (best VL)"
             if val_acc_now > best_acc:
                 best_acc = val_acc_now
                 if self.save_dir is not None and epoch > self.save_wait:
                     fp = os.path.join(self.save_dir, f"{self.name}_acc_state.pth")
                     torch.save(self.model.state_dict(), fp)
-                    m_extra += f"{Fore.CYAN} Saved in {self.save_dir} (best Acc) {Style.RESET_ALL}"
+                    m_extra += f"Saved in {self.save_dir} (best Acc)"
 
             self.epoch_print(epoch, train_loss, val_loss, val_accs[-1], m_extra)
 
@@ -261,9 +260,9 @@ class Trainer:
             msg = f"{epoch + 1:4d} | {train_loss=:.6f} | {val_loss=:.6f}, {val_acc=:.2%}"
 
             if self.lr_s is not None:
-                msg += f"{Style.DIM} LR: {self.lr_s.get_last_lr()[0]:.6f} {Style.RESET_ALL}"
+                msg += f" LR: {self.lr_s.get_last_lr()[0]:.6f}"
             if self.lrs_plat is not None:
-                msg += f"{Style.DIM} LR: {self.lrs_plat.get_last_lr()[0]:.6f} {Style.RESET_ALL}"
+                msg += f" LR: {self.lrs_plat.get_last_lr()[0]:.6f}"
             print(msg + m_extra)
             if epoch % (10 * self.printerval) == 0 and epoch > 0:
                 print()

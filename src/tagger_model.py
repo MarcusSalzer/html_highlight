@@ -236,7 +236,7 @@ class RNNTagger(TaggerModel):
 
         self.embedding_tokens = nn.Embedding(vocab_sz_token, conf.d_emb_token, padding_idx=0)
         self.embedding_labels = nn.Embedding(vocab_sz_tag, conf.d_emb_tag, padding_idx=0)
-        self.proj_extra = nn.Linear(n_extra, conf.d_emb_extra) if n_extra is not None else None
+        self.proj_extra = nn.Linear(n_extra, conf.d_emb_extra) if n_extra else None
 
         # choose layer type for recurrent layers
         self.rnn = self.rnn_variants[conf.rnn_variant](
