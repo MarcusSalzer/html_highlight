@@ -85,8 +85,7 @@ model = tagger_model.RNNTagger(
     vocab_sz_token=len(vocs.token),
     vocab_sz_tag=len(vocs.tag),
     n_extra=0,  # EXTRA FEATURES?
-)
-model.to(device=device)
+).to(device=device)
 
 # Manually set the initial CLF bias, seems to help a little
 with torch.no_grad():

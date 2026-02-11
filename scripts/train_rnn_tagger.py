@@ -7,7 +7,7 @@ from pathlib import Path
 import torch
 
 sys.path.append(".")
-from src import plotly_plots, tagger_model, util
+from src import plotly_plots, tagger_model, util, vocab
 from src import torch_util as tu
 
 RETRAIN_FINAL = False
@@ -52,10 +52,10 @@ def main() -> None:
     )
 
     # ===========     DATA     ===========
-    split_idx, split_date = util.load_split_idx()
+    split_idx = util.load_split_idx()
 
-    print(f"Loaded split {split_date}")
-    splits = util.load_dataset_splits(split_idx, path=DATASET_FILE)
+    print(f"Loaded {split_idx}")
+    splits = util.load_dataset_splits(split_idx.id_to_group, path=DATASET_FILE)
 
     if RETRAIN_FINAL:
         print("[NOTE] Retraining model on train+val")
@@ -66,16 +66,17 @@ def main() -> None:
 
     data = {sk: util.dataset_to_df(v) for sk, v in splits.items()}
     # get the vocabs
-    vocab, token2idx, tag_vocab, tag2idx = util.make_vocab(data["train"])
+    vocs = vocab.both_vocabs(
+        data["train"],  # Build vocabs from training data
+        n_unknown_token=1,  # How many unknown tokens to track
+    )
 
     device = tu.get_dev()
 
-    print(f"\n{len(vocab)=} | {len(tag_vocab)=} | {device=}\n")
+    print(f"\n{len(vocs.token)=} | {len(vocs.tag)=} | {device=}\n")
 
-    dsets = {
-        k: tu.SequenceDataset.from_dataframe(data[k], token2idx, tag2idx, device="cpu")
-        for k in ["train", val_set]
-    }
+    dsets = {k: tu.SequenceDataset.from_dataframe(df, vocs, device="cpu") for k, df in data.items()}
+
     for k, d in dsets.items():
         print(f"{k}: {d}")
 
@@ -86,7 +87,7 @@ def main() -> None:
     device = tu.get_dev()
 
     # model instance
-    model = tagger_model.RNNTagger(model_conf, len(vocab), len(tag_vocab), n_extra=None)
+    model = tagger_model.RNNTagger(model_conf, len(vocs.token), len(vocs.tag), n_extra=None)
     model.to(device=device)
 
     # Where to store results
@@ -99,8 +100,8 @@ def main() -> None:
         json.dumps(
             {
                 "config": dict(model_conf),
-                "vocab": vocab,
-                "tag_vocab": tag_vocab,
+                "vocab": vocs.token.vocab_list,
+                "tag_vocab": vocs.tag.vocab_list,
             },
             indent=4,
         )

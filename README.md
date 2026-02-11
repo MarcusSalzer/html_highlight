@@ -81,4 +81,5 @@ We are trying to define some classes, that should work across most languages
 
 ## ideas
 
-out of vocabulary words are all the same? embeddings such that at least can recognize words?
+- out of vocabulary words are all the same? embeddings such that at least can recognize words?
+- key-string class (for json/dicts etc)

@@ -156,3 +156,9 @@ btncl_html
 dshwk_bash
 lsxmpls_bash
 csmntnmd_bash
+mnclr_css
+mrgnstrxls_css
+bscarithm_bash
+fndprt_bash
+btndsbl_css
+fcstlnlw_css

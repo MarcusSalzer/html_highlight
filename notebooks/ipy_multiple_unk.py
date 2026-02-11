@@ -9,10 +9,9 @@ import torch
 
 sys.path.append("..")
 from src import plotly_plots as pp
-from src import tagger_model, util, vocab
-from src import torch_metrics as tm
+from src import tagger_model, text_process, util, vocab
 from src import torch_util as tu
-from src.datamodels import split_index
+from src.datamodels import dataset_record, split_index
 
 # %% Load a subset of
 
@@ -27,6 +26,7 @@ data = {
     for sk, v in util.load_dataset_splits(
         split_idx.id_to_group,
         path=Path("../data/dataset.ndjson"),
+        limit=100,
         filter_lang={"python"},
     ).items()
 }
@@ -36,7 +36,7 @@ for k, v in data.items():
 # get a vocab
 vocs = vocab.both_vocabs(
     data["train"],  # Build vocabs from training data
-    n_unknown_token=12,  # How many unknown tokens to track
+    n_unknown_token=4,  # How many unknown tokens to track
 )
 
 device = tu.get_dev()
@@ -81,3 +81,45 @@ train_settings = tagger_model.TrainSettings(
 metrics = model.complete_train_loop(train_settings, dsets["train"], dsets["val"], verbose=False)
 print(f"{metrics.keys()=}")
 pp.train_metrics_single_run(metrics, acc_range=(0.3, 1.0))
+
+
+# %% Synthetic example
+reload(dataset_record)
+
+examples = [
+    dataset_record.DatasetRecord(
+        "module",
+        "python",
+        ["import", " ", "x", "\n", "print", "(", "x", ".", "y", ")"],
+        ["kwim", "ws", "mo", "nl", "fnfr", "brop", "mo", "sy", "at", "brcl"],
+    ),
+    dataset_record.DatasetRecord(
+        "var",
+        "python",
+        ["x", "=", "Thing", "(", ")", "\n", "print", "(", "x", ".", "y", ")"],
+        ["v", "opas", "clco", "brop", "brcl", "nl", "fnfr", "brop", "va", "sy", "at", "brcl"],
+    ),
+]
+
+
+processed = [text_process.process(e.to_string()) for e in examples]
+
+
+model_out = [
+    model(
+        torch.tensor(vocs.token.encode(tokens), device=device).unsqueeze(0),
+        torch.tensor(vocs.tag.encode(tags_det), device=device).unsqueeze(0),
+    )
+    .squeeze()
+    .argmax(-1)
+    for tokens, tags_det in processed
+]
+preds = [vocs.tag.decode(seq) for seq in model_out]
+
+# concise print
+for ex, pr in zip(examples, preds, strict=True):
+    acc = sum(t == p for t, p in zip(ex.tags, pr)) / len(pr)
+    print("---")
+    print(f"{acc=:.1%}")
+    print(ex.to_string())
+    print(" ".join(t for t in pr if t not in {"ws", "nl"}))

@@ -7,6 +7,8 @@ import polars as pl
 from joblib import Parallel, delayed
 from sklearn.model_selection import KFold
 
+from src.datamodels.overlap_stat import OverlapStat
+
 
 def make_example_groups(df: pl.DataFrame, min_group_count: int = 3):
     """Add a group column to examples dataframe.
@@ -129,11 +131,13 @@ def get_overlap(a: set[Any], b: set[Any], norm: Literal["iou", "max"] = "iou"):
         raise ValueError(f"unknown normalization: {norm}")
 
 
-def overlap_pairwise_simple(docs: Sequence[list[str]], n: int = 3, thr=0.5):
+def overlap_pairwise_simple(
+    docs: Sequence[list[str]], n: int = 3, thr=0.5
+) -> tuple[np.ndarray, list[OverlapStat]]:
     """Compare n-gram overlap for all document pairs"""
 
     results = np.eye(len(docs))
-    high = []
+    high: list[OverlapStat] = []
 
     # store all ngram sets ahead of time to avoid recomputing
     # shouldnt need too much memory
@@ -147,10 +151,10 @@ def overlap_pairwise_simple(docs: Sequence[list[str]], n: int = 3, thr=0.5):
 
         # keep track of highest
         if overlap > thr:
-            high.append((i, j, overlap))
+            high.append(OverlapStat({i, j}, overlap))
 
     # sort by descending overlap
-    high.sort(key=lambda t: -t[-1])
+    high.sort(key=lambda t: -t.overlap)
     return results, high
 
 

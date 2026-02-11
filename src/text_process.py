@@ -41,7 +41,7 @@ basic_pats = [
     # catch some syntax features before numbers
     ("sy", r"\.{3}|\.{2}[=?]?"),
     # numbers: scientific
-    ("nu", r"(?<!\w)\d+(?:\.\d+)?+e-\d+"),
+    ("nu", r"(?<!\w)\d+(?:\.\d+)?+[eE]-\d+"),
     # numbers: hex, bin,
     ("nu", r"(?<!\w)0x[0-9a-fA-F]+|0b[01]+"),
     # numbers: integer, decimal, percent

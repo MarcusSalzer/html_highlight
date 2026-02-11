@@ -36,29 +36,29 @@ class CodeVocab:
     - word tokens
     """
 
-    def __init__(
-        self,
-        tokens: Iterable[str],
-        n_unknown: int = 1,
-    ) -> None:
-        assert n_unknown >= 0, "expects 0+ unknown tokens"
+    def __init__(self, vocab_list: list[str]) -> None:
 
-        unk_tokens = [f"<u{k}>" for k in range(n_unknown)]
-        word_tokens = sorted(set(tokens))
+        self.vocab_list = vocab_list
 
-        self.n_unknown = n_unknown
+        self.n_unknown = sum(t.startswith("<unk") for t in self.vocab_list)
+        assert self.n_unknown >= 0, "expects 0+ unknown tokens"
 
-        self.vocab = ["<pad>"] + unk_tokens + word_tokens
-        self.token2idx = {t: i for i, t in enumerate(self.vocab)}
+        self.token2idx = {t: i for i, t in enumerate(self.vocab_list)}
+
+    @classmethod
+    def from_words(cls, word_tokens: set[str], n_unknown: int = 1):
+        # build unknown-tokens
+        unk_tokens = [f"<unk{k}>" for k in range(n_unknown)]
+        return cls(["<pad>"] + unk_tokens + sorted(word_tokens))
 
     def __str__(self) -> str:
-        return f"Vocab(n={len(self.vocab)}, n_unk={self.n_unknown})"
+        return f"Vocab(n={len(self.vocab_list)}, n_unk={self.n_unknown})"
 
     def __len__(self) -> int:
-        return len(self.vocab)
+        return len(self.vocab_list)
 
     def __iter__(self):
-        return iter(self.vocab)
+        return iter(self.vocab_list)
 
     def encode(self, tokens: Iterable[str]) -> list[int]:
         """Encode words as integers."""
@@ -80,7 +80,7 @@ class CodeVocab:
 
     def decode(self, idxs: Iterable[int]) -> list[str]:
         """Reconstruct tokens."""
-        return [self.vocab[i] for i in idxs]
+        return [self.vocab_list[i] for i in idxs]
 
 
 class VocabDuo(NamedTuple):
@@ -97,9 +97,11 @@ def both_vocabs(
     """Get vocabs for tags and tokens"""
 
     # pick out tokens
-    tokens = vocab_candidates(examples, vocab_allowed_tags)
+    tokens = set(vocab_candidates(examples, vocab_allowed_tags))
 
     # consider all unique tags
-    tags = examples["tags"].explode().unique().to_list()
+    tags = set(examples["tags"].explode().unique())
 
-    return VocabDuo(CodeVocab(tokens, n_unknown_token), CodeVocab(tags, n_unknown_tag))
+    return VocabDuo(
+        CodeVocab.from_words(tokens, n_unknown_token), CodeVocab.from_words(tags, n_unknown_tag)
+    )

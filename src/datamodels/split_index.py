@@ -14,3 +14,7 @@ class SplitIndex(pydantic.BaseModel):
 
     # map each example to its group
     id_to_group: dict[str, str]
+
+    def __str__(self) -> str:
+
+        return f"SplitIndex({self.date}, {self.group_counts})"

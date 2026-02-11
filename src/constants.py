@@ -49,7 +49,6 @@ LANG_SPEC_TOKENS = {
         "if": "kwfl",
         "else": "kwfl",
         "<": "opbi",
-        ">": "opbi",
     },
     "js": {
         "=": "opas",
@@ -82,7 +81,7 @@ POSSIBLE_PER_TOKEN = {
     "  ": ["ws", "id"],
     "=": ["opas", "opbi", "sy"],
     "&": ["opmo", "opun", "opbi"],
-    "*": ["opmo", "opun", "opbi"],
+    "*": ["opmo", "opun", "opbi", "mo"],
     "float": ["ty", "tyco", "pa"],
     "int": ["ty", "tyco"],
     "str": ["ty", "tyco"],

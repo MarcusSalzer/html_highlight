@@ -8,8 +8,8 @@ from typing import Literal
 import numpy as np
 import polars as pl
 
+from src.datamodels.dataset_record import DatasetRecord
 from src.datamodels.split_index import SplitIndex
-from src.DatasetRecord import DatasetRecord
 
 
 def load_split_idx(filename: str = "split_index.json") -> SplitIndex:
@@ -42,6 +42,20 @@ def load_dataset_parallel(
         ]
 
     return dataset
+
+
+def load_dataset_df(path=Path("data/dataset.ndjson")):
+    """Load the data directly to a dataframe."""
+    schema = {
+        "lang": pl.Utf8,
+        "name": pl.Utf8,
+        "tokens": pl.List(pl.Utf8),
+        "tags": pl.List(pl.Utf8),
+        "difficulty": pl.Utf8,
+    }
+
+    df = pl.read_ndjson(path, schema=schema).with_columns(id=pl.col("lang") + "_" + pl.col("name"))
+    return df
 
 
 def load_dataset_zip(

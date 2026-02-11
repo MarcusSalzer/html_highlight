@@ -30,6 +30,8 @@ class RNNTaggerConfig(pydantic.BaseModel):
     dropout_rnn: float = 0.0
     dropout_between: float = 0.0
     dropout_mlp: float = 0.0
+    # vocab
+    n_unk_token: int = 1
 
     def model_post_init(self, context: Any) -> None:
         assert self.rnn_variant in {"rnn", "gru", "lstm"}, "unexpected RNN variant"

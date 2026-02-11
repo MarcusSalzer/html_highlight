@@ -303,23 +303,25 @@ def data2torch(
 def make_extra_feats(tokens: list[str], padto: int = 0, t_len_max: int = 24):
     """Prepare extra features for tagger
 
-
     Returns: features (len, Nextra)
     """
     assert isinstance(tokens[0], str), "should be strings"
 
     n_cases = len(text_process.WordCase)
+    N = max(len(tokens), padto)
     # padding
-    wordcase_oh = torch.zeros((max(len(tokens), padto), n_cases), dtype=torch.float32)
+    wordcase_oh = torch.zeros((N, n_cases), dtype=torch.float32)
     for i, t in enumerate(tokens):
         wc = text_process.get_word_case(t)
         wordcase_oh[i, wc.value] = 1
+
     # normalized token length
-    t_lens = torch.clamp(
+    t_lens = torch.zeros((N, 1), dtype=torch.float32)
+    t_lens[: len(tokens), 0] = torch.clamp(
         torch.tensor([len(t) for t in tokens], dtype=torch.float32) / t_len_max, min=0, max=1
     )
 
-    return torch.concatenate((wordcase_oh, t_lens), dim=-1)
+    return torch.cat((wordcase_oh, t_lens), dim=1)
 
 
 def val_acc(model, dset: SequenceDataset):

@@ -40,6 +40,10 @@ class Inference:
         )
         self.model.load_state_dict(state_dict)
 
+    def __str__(self) -> str:
+        mn = self.model._get_name()
+        return f"Inference({mn})"
+
     def run(self, tokens: list[str], tags_det: list[str]) -> list[str]:
         """Run inference using model"""
         # optionally map tags
