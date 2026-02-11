@@ -10,7 +10,11 @@ from plotly import subplots
 pio.templates.default = "plotly_dark"
 
 
-def train_metrics_single_run(metrics: dict[str, Any], logloss: bool = True):
+def train_metrics_single_run(
+    metrics: dict[str, Any],
+    logloss: bool = True,
+    acc_range: tuple[float, float] = (0.0, 1.0),
+):
     fig = subplots.make_subplots(
         rows=1,
         cols=2,
@@ -50,6 +54,8 @@ def train_metrics_single_run(metrics: dict[str, Any], logloss: bool = True):
 
     if logloss:
         fig.update_yaxes(go.layout.YAxis(type="log"), row=1, col=1)
+
+    fig.update_yaxes(range=acc_range, row=1, col=2)
 
     return fig
 

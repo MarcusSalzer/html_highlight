@@ -1,7 +1,9 @@
 import math
+from enum import Enum
 
 import regex as re
 
+# Another try, cleaner patterns?
 basic_pats_simple = [
     ("co", r"#.*$"),  # shell/py style comment
     ("co", r"\/\*{1,2}[\s\S]+?\*\/"),  # multiline/doc comments
@@ -14,7 +16,7 @@ basic_pats_simple = [
 # in order
 basic_pats = [
     # comment after indentation or full line (NOTE variable length lookbehind)
-    ("co", r"(?<=(?:^|[;,])\s*)(?:/{2,3}|#|%).+$"),
+    ("co", r"(?<=(?:^|[;,])\s*)(?:[/\-]{2,3}|#|%).+$"),
     ("co", r"<!--.+-->\s*$"),  # html-comment
     # multiline comments
     ("co", r"\/\*{1,2}[\s\S]+?\*\/"),
@@ -39,7 +41,7 @@ basic_pats = [
     # catch some syntax features before numbers
     ("sy", r"\.{3}|\.{2}[=?]?"),
     # numbers: scientific
-    ("nu", r"(?<!\w)\d+(?:\.\d+)?+e-\d+"),
+    ("nu", r"(?<!\w)\d+(?:\.\d+)?+[eE]-\d+"),
     # numbers: hex, bin,
     ("nu", r"(?<!\w)0x[0-9a-fA-F]+|0b[01]+"),
     # numbers: integer, decimal, percent
@@ -53,7 +55,7 @@ basic_pats = [
     # bash flags
     # ("uk", r"(?<!\S)--\p{L}+(?=\s|=|$)"),
     # bash flag or op or css attr
-    ("uk", r"\p{L}*-?\p{L}+(?=\s|=|$|:)"),
+    ("uk", r"\p{L}*-{0,2}\p{L}+(?=\s|=|$|:)"),
     # rust macros
     ("uk", r"\S+!(?=\()"),
     # operators
@@ -76,6 +78,36 @@ basic_pats = [
 # NOTE: needed priorites:
 # comment < string < everything
 # bigger compound operators <= smaller operators
+
+
+class WordCase(Enum):
+    """What case is a word in."""
+
+    NONE = 0
+    LOWER = 1
+    UPPER = 2
+    LOWER_CAMEL = 3
+    UPPER_CAMEL = 4
+    KEBAB = 5
+
+
+def get_word_case(word: str) -> WordCase:
+    """Determine the case of a word."""
+    if word.islower():
+        if "-" in word:
+            return WordCase.KEBAB
+        else:
+            return WordCase.LOWER
+
+    if "-" in word:
+        return WordCase.KEBAB
+
+    if word[0].islower():
+        return WordCase.LOWER_CAMEL
+    elif word.isalpha():
+        return WordCase.UPPER_CAMEL
+
+    return WordCase.NONE
 
 
 def process_regex(text: str, patterns: list[tuple[str, str]] = basic_pats):
@@ -105,8 +137,8 @@ def process_regex(text: str, patterns: list[tuple[str, str]] = basic_pats):
 def merge_adjacent(
     tokens: list[str],
     tags: list[str],
-    merge_only: list[str] | None = None,
-    dont_merge: list[str] = [],
+    merge_only: set[str] | None = None,
+    dont_merge: set[str] | None = None,
     interactive: bool = False,
 ):
     """Merge adjacent tokens if they have the same tag.
@@ -129,13 +161,21 @@ def merge_adjacent(
     # keep track of where merges where made
     merge_idx = []
 
+    # Determine if some tag should merge
+    def should_merge(tag: str) -> bool:
+        if merge_only is not None:
+            return tag in merge_only
+        if dont_merge is not None:
+            return tag not in dont_merge
+        return True
+
     current_seq = []
-    for i, (token, tag) in enumerate(zip(tokens, tags)):
+    for i, (token, tag) in enumerate(zip(tokens, tags, strict=True)):
         # next tag, None if at end
         tag_next = tags[i + 1] if i < len(tags) - 1 else None
 
         if tag == tag_next:
-            if (merge_only is None or tag in merge_only) and tag not in dont_merge:
+            if should_merge(tag):
                 if interactive and (
                     input(f"merge: `{token}` + `{tokens[i + 1]}` ({tag}) ? ").lower() != "y"
                 ):
@@ -161,7 +201,7 @@ def merge_adjacent(
     return tokens_merged, tags_merged, merge_idx
 
 
-def infer_indent(text: str, max_symbols=4) -> str | None:
+def infer_indent(text: str, max_symbols=4):
     """DEPRECATED?
 
     Consider the beginning of each line to infer the indentation token"""

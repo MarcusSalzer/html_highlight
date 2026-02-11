@@ -1,5 +1,5 @@
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from timeit import default_timer
@@ -7,71 +7,11 @@ from typing import cast
 
 import polars as pl
 import torch
-from colorama import Fore, Style
-from torch import nn, optim
+from torch import optim
 from torch.utils.data import DataLoader, Dataset
 
 from src import text_process, types
-
-
-class LSTMTagger(nn.Module):
-    """DEPRECATED?"""
-
-    def __init__(
-        self,
-        token_vocab_size: int,
-        label_vocab_size: int,
-        embedding_dim: int = 12,
-        hidden_dim: int = 128,
-        n_lstm_layers: int = 2,
-        dropout_lstm: float = 0.3,
-        bidi: bool = True,
-        n_extra: int = 0,
-    ):
-        super().__init__()
-        self.embedding_tokens = nn.Embedding(token_vocab_size, embedding_dim, padding_idx=0)
-        self.embedding_labels = nn.Embedding(label_vocab_size, embedding_dim, padding_idx=0)
-
-        # LSTM will receive embedded tokens, tags and possibly extra_feats
-        lstm_in_dim = (3 if n_extra > 0 else 2) * embedding_dim
-
-        self.lstm = nn.LSTM(
-            lstm_in_dim,
-            hidden_dim,
-            n_lstm_layers,
-            batch_first=True,
-            dropout=dropout_lstm,
-            bidirectional=bidi,
-        )
-        actual_hidden = hidden_dim * (2 if bidi else 1)
-        self.n_extra = n_extra
-        if n_extra > 0:
-            # project extra features to same dim as tokens and labels
-            self.feature_proj = nn.Linear(n_extra, embedding_dim)
-
-        # double size if bidirectional
-        self.hidden2tag = nn.Linear(actual_hidden, label_vocab_size)
-
-    def forward(
-        self,
-        tokens: torch.Tensor,
-        labels_det: torch.Tensor,
-        extra: torch.Tensor | None = None,
-    ):
-        embeds_tokens = self.embedding_tokens(tokens)
-        embeds_labels = self.embedding_labels(labels_det)
-
-        embeds = torch.cat([embeds_tokens, embeds_labels], dim=-1)
-        if hasattr(self, "feature_proj"):
-            assert extra is not None, "needs extra features"
-            feats_emb = self.feature_proj(extra)
-            embeds = torch.cat([embeds, feats_emb], dim=-1)
-        #  (bs, seq_len, (2 or 3) * emb_dim)
-        lstm_out, _ = self.lstm(embeds)
-        #  (bs, seq_len, actual_hidden)
-        logits = self.hidden2tag(lstm_out)
-        # (bs, seq_len, tagset_size)
-        return logits
+from src.vocab import VocabDuo
 
 
 class SequenceDataset(Dataset):
@@ -79,25 +19,27 @@ class SequenceDataset(Dataset):
 
     def __init__(
         self,
-        tokens: types.ArrayLike[list[str]],
-        labels_det: types.ArrayLike[list[str]],
-        labels_true: types.ArrayLike[list[str]],
-        token2idx: dict[str, int],
-        label2idx: dict[str, int],
+        tokens: Sequence[list[str]],
+        labels_det: Sequence[list[str]],
+        labels_true: Sequence[list[str]],
+        vocs: VocabDuo,
         device: str | torch.device | None = None,
         extra_feats: int = 0,
     ):
         if not len(tokens) == len(labels_det) == len(labels_true):
             raise ValueError("inconsistent lengths")
 
-        token_idx = [[token2idx.get(t, 1) for t in seq] for seq in tokens]
+        # Encode each sequence
+        token_idx = [vocs.token.encode(seq) for seq in tokens]
         self.tokens = seqs2padded_tensor(token_idx, device=device, verbose=False)
 
-        label_det_idx = [[label2idx.get(t, 1) for t in seq] for seq in labels_det]
+        label_det_idx = [vocs.tag.encode(seq) for seq in labels_det]
         self.labels_det = seqs2padded_tensor(label_det_idx, device=device, verbose=False)
 
-        label_true_idx = [[label2idx.get(t, 1) for t in seq] for seq in labels_true]
+        label_true_idx = [vocs.tag.encode(seq) for seq in labels_true]
         self.labels_true = seqs2padded_tensor(label_true_idx, device=device, verbose=False)
+
+        # Optionally add extra features
         if extra_feats > 0:
             self.extra = torch.stack(
                 [make_extra_feats(ts, padto=self.tokens.shape[1]) for ts in tokens],
@@ -111,7 +53,7 @@ class SequenceDataset(Dataset):
     def __len__(self):
         return len(self.tokens)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
         inputs = {
             "tokens": self.tokens[idx],
             "labels_det": self.labels_det[idx],
@@ -141,10 +83,10 @@ class SequenceDataset(Dataset):
     def from_dataframe(
         cls,
         df: pl.DataFrame,
-        token2idx: dict[str, int],
-        tag2idx: dict[str, int],
+        vocs: VocabDuo,
         device: str | torch.device | None = None,
     ):
+        assert {"tokens", "tags"}.issubset(df.columns)
         df = df.with_columns(
             tags_det=pl.col("tokens").map_elements(
                 lambda tks: text_process.process("".join(tks))[1],
@@ -152,17 +94,16 @@ class SequenceDataset(Dataset):
             )
         )
         return cls(
-            cast(types.ArrayLike[list[str]], df["tokens"].to_list()),
-            cast(types.ArrayLike[list[str]], df["tags_det"].to_list()),
-            cast(types.ArrayLike[list[str]], df["tags"].to_list()),
-            token2idx,
-            tag2idx,
+            df["tokens"].to_list(),
+            df["tags_det"].to_list(),
+            df["tags"].to_list(),
+            vocs,
             device,
         )
 
 
 def seqs2padded_tensor(
-    sequences: list[list[int]],
+    sequences: Iterable[list[int]],
     pad_value=0,
     verbose=True,
     device: torch.device | str | None = None,
@@ -285,13 +226,13 @@ class Trainer:
                 if self.save_dir is not None and epoch > self.save_wait:
                     fp = self.save_dir / f"{self.name}_state.pth"
                     torch.save(self.model.state_dict(), fp)
-                    m_extra += f"{Fore.CYAN} Saved in {self.save_dir} (best VL) {Style.RESET_ALL}"
+                    m_extra += f"Saved in {self.save_dir} (best VL)"
             if val_acc_now > best_acc:
                 best_acc = val_acc_now
                 if self.save_dir is not None and epoch > self.save_wait:
                     fp = os.path.join(self.save_dir, f"{self.name}_acc_state.pth")
                     torch.save(self.model.state_dict(), fp)
-                    m_extra += f"{Fore.CYAN} Saved in {self.save_dir} (best Acc) {Style.RESET_ALL}"
+                    m_extra += f"Saved in {self.save_dir} (best Acc)"
 
             self.epoch_print(epoch, train_loss, val_loss, val_accs[-1], m_extra)
 
@@ -319,9 +260,9 @@ class Trainer:
             msg = f"{epoch + 1:4d} | {train_loss=:.6f} | {val_loss=:.6f}, {val_acc=:.2%}"
 
             if self.lr_s is not None:
-                msg += f"{Style.DIM} LR: {self.lr_s.get_last_lr()[0]:.6f} {Style.RESET_ALL}"
+                msg += f" LR: {self.lr_s.get_last_lr()[0]:.6f}"
             if self.lrs_plat is not None:
-                msg += f"{Style.DIM} LR: {self.lrs_plat.get_last_lr()[0]:.6f} {Style.RESET_ALL}"
+                msg += f" LR: {self.lrs_plat.get_last_lr()[0]:.6f}"
             print(msg + m_extra)
             if epoch % (10 * self.printerval) == 0 and epoch > 0:
                 print()
@@ -330,8 +271,7 @@ class Trainer:
 def data2torch(
     df: pl.DataFrame,
     bs: int,
-    token2idx: dict[str, int],
-    tag2idx: dict[str, int],
+    vocs: VocabDuo,
     device: str | torch.device = "cpu",
     extra_feats: int = 0,
 ):
@@ -344,11 +284,10 @@ def data2torch(
         )
     )
     dset = SequenceDataset(
-        cast(types.ArrayLike[list[str]], df["tokens"].to_list()),
-        cast(types.ArrayLike[list[str]], df["tags_det"].to_list()),
-        cast(types.ArrayLike[list[str]], df["tags"].to_list()),
-        token2idx,
-        tag2idx,
+        df["tokens"].to_list(),
+        df["tags_det"].to_list(),
+        df["tags"].to_list(),
+        vocs,
         device=device,
         extra_feats=extra_feats,
     )
@@ -361,25 +300,28 @@ def data2torch(
     return dl
 
 
-def make_extra_feats(tokens: list[str], padto: int = 0):
+def make_extra_feats(tokens: list[str], padto: int = 0, t_len_max: int = 24):
     """Prepare extra features for tagger
 
     Returns: features (len, Nextra)
     """
     assert isinstance(tokens[0], str), "should be strings"
 
-    # paddding
-    features = torch.zeros((max(len(tokens), padto), 3), dtype=torch.float32)
-    laststart = tokens[0]
-    for i, token in enumerate(tokens):
-        is_capitalized = 1.0 if token[0].isupper() else -1.0
-        word_length = min(len(token), 10) / 16  # normalized token length
-        if i > 0 and tokens[i - 1] == "\n":
-            laststart = token
-        line_starts_with = (hash(laststart) % 10) / 10  # Bucket encoding
+    n_cases = len(text_process.WordCase)
+    N = max(len(tokens), padto)
+    # padding
+    wordcase_oh = torch.zeros((N, n_cases), dtype=torch.float32)
+    for i, t in enumerate(tokens):
+        wc = text_process.get_word_case(t)
+        wordcase_oh[i, wc.value] = 1
 
-        features[i, :] = torch.tensor([is_capitalized, word_length, line_starts_with])
-    return features
+    # normalized token length
+    t_lens = torch.zeros((N, 1), dtype=torch.float32)
+    t_lens[: len(tokens), 0] = torch.clamp(
+        torch.tensor([len(t) for t in tokens], dtype=torch.float32) / t_len_max, min=0, max=1
+    )
+
+    return torch.cat((wordcase_oh, t_lens), dim=1)
 
 
 def val_acc(model, dset: SequenceDataset):

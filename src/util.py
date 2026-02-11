@@ -8,12 +8,11 @@ from typing import Literal
 import numpy as np
 import polars as pl
 
-from src import data_functions as datafun
-from src._constants import VOCAB_TAGS
-from src.DatasetRecord import DatasetRecord
+from src.datamodels.dataset_record import DatasetRecord
+from src.datamodels.split_index import SplitIndex
 
 
-def load_split_idx(filename: str = "split_index.json"):
+def load_split_idx(filename: str = "split_index.json") -> SplitIndex:
     """Find and load the file."""
 
     fps = glob(f"../**/data/**/{filename}", recursive=True)
@@ -22,10 +21,9 @@ def load_split_idx(filename: str = "split_index.json"):
     if not fps:
         raise ValueError(f"Couldn't find {filename}")
     with open(fps[0]) as f:
-        split_index = json.load(f)
+        raw = json.load(f)
 
-    assert isinstance(split_index, dict)
-    return split_index["examples"], split_index["date"]
+    return SplitIndex(**raw)
 
 
 def load_dataset_parallel(
@@ -46,6 +44,20 @@ def load_dataset_parallel(
     return dataset
 
 
+def load_dataset_df(path=Path("data/dataset.ndjson")):
+    """Load the data directly to a dataframe."""
+    schema = {
+        "lang": pl.Utf8,
+        "name": pl.Utf8,
+        "tokens": pl.List(pl.Utf8),
+        "tags": pl.List(pl.Utf8),
+        "difficulty": pl.Utf8,
+    }
+
+    df = pl.read_ndjson(path, schema=schema).with_columns(id=pl.col("lang") + "_" + pl.col("name"))
+    return df
+
+
 def load_dataset_zip(
     path=Path("data/dataset.ndjson"),
     filter_lang: list[str] | None = None,
@@ -58,7 +70,7 @@ def load_dataset_zip(
         for line in f:
             record = json.loads(line)
             if filter_lang is None or record["lang"] in filter_lang:
-                tokens, tags = zip(*record["sequence"])
+                tokens, tags = zip(*record["sequence"], strict=True)
                 d = DatasetRecord(
                     record["name"],
                     record["lang"],
@@ -74,6 +86,7 @@ def load_dataset_splits(
     split_idx: dict[str, str],
     path=Path("data/dataset.ndjson"),
     limit: int | None = None,
+    filter_lang: set[str] | None = None,
 ) -> dict[str, list[DatasetRecord]]:
     """Load the annoted data (Newline delimited JSON), and get a list for each split"""
     splits: dict[str, list[DatasetRecord]] = {}
@@ -81,6 +94,11 @@ def load_dataset_splits(
     with path.open("r", encoding="utf-8") as f:
         for i, line in enumerate(f):
             d = DatasetRecord(**json.loads(line))
+
+            # optionally filter by lang
+            if filter_lang and d.lang not in filter_lang:
+                continue
+
             # where should this example go?
             sk = split_idx.get(d.id)
             if sk is None:
@@ -95,14 +113,14 @@ def load_dataset_splits(
         print(f"[NOTE] skipped {n_skip} examples")
 
     # measure overlaps
-    n_ngram = 3
-    print(f"Measuring token overlap ({n_ngram}-grams)...")
+    # n_ngram = 3
+    # print(f"Measuring token overlap ({n_ngram}-grams)...")
 
-    results = datafun.overlap_splits(
-        {k: [d.tokens for d in data] for k, data in splits.items()}, n_ngram
-    )
-    for k1, k2, ovr in results:
-        print(f"  overlap({k1}, {k2}) = {ovr:.2%}")
+    # results = datafun.overlap_splits(
+    #     {k: [d.tokens for d in data] for k, data in splits.items()}, n_ngram
+    # )
+    # for k1, k2, ovr in results:
+    #     print(f"  overlap({k1}, {k2}) = {ovr:.2%}")
 
     return splits
 
@@ -133,40 +151,6 @@ def split_to_chars(tokens: list[str], tags: list[str], only_starts=False):
             char_tags.extend(["start-" + tag] + [tag] * (len(token) - 1))
 
     return chars, char_tags
-
-
-def make_vocab(
-    examples: pl.DataFrame,
-    insert: tuple[str, ...] = ("<pad>", "<unk>"),
-    vocab_allowed_tags: tuple[str, ...] | None = VOCAB_TAGS,
-):
-    """Make vocab, and inverse map"""
-    vocab_cands = examples.select(pl.col("tokens", "tags").explode())
-    if vocab_allowed_tags is not None:
-        vocab_cands = vocab_cands.filter(pl.col("tags").is_in(vocab_allowed_tags))
-
-    token_cands = (
-        vocab_cands.group_by("tokens")
-        .agg(pl.len().alias("count"))
-        .sort("count", "tokens", descending=True)
-    )
-    tag_cands = (
-        examples.select("tags")
-        .explode("tags")
-        .group_by("tags")
-        .agg(pl.len().alias("count"))
-        .sort("count", "tags", descending=True)
-    )
-
-    # token vocab
-    vocab = list(insert) + token_cands["tokens"].to_list()
-    token2idx = {t: i for i, t in enumerate(vocab)}
-
-    # tag vocab
-    tag_vocab = list(insert) + tag_cands["tags"].to_list()
-    tag2idx = {t: i for i, t in enumerate(tag_vocab)}
-
-    return vocab, token2idx, tag_vocab, tag2idx
 
 
 def MAPE(y_true, y_pred, symmetric=False):

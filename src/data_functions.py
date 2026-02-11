@@ -7,6 +7,8 @@ import polars as pl
 from joblib import Parallel, delayed
 from sklearn.model_selection import KFold
 
+from src.datamodels.overlap_stat import OverlapStat
+
 
 def make_example_groups(df: pl.DataFrame, min_group_count: int = 3):
     """Add a group column to examples dataframe.
@@ -73,7 +75,7 @@ def data_split(
             group_df = group_df.sample(fraction=1.0, shuffle=True, seed=seed)
 
         # split one group
-        for split_id, (s, e) in enumerate(zip(*get_splits(n_group, ratios))):
+        for split_id, (s, e) in enumerate(zip(*get_splits(n_group, ratios), strict=True)):
             split_dfs[split_id].append(group_df[s:e])
 
     if shuffle:
@@ -129,11 +131,13 @@ def get_overlap(a: set[Any], b: set[Any], norm: Literal["iou", "max"] = "iou"):
         raise ValueError(f"unknown normalization: {norm}")
 
 
-def overlap_pairwise_simple(docs: Sequence[list[str]], n: int = 3, thr=0.5):
+def overlap_pairwise_simple(
+    docs: Sequence[list[str]], n: int = 3, thr=0.5
+) -> tuple[np.ndarray, list[OverlapStat]]:
     """Compare n-gram overlap for all document pairs"""
 
     results = np.eye(len(docs))
-    high = []
+    high: list[OverlapStat] = []
 
     # store all ngram sets ahead of time to avoid recomputing
     # shouldnt need too much memory
@@ -147,10 +151,10 @@ def overlap_pairwise_simple(docs: Sequence[list[str]], n: int = 3, thr=0.5):
 
         # keep track of highest
         if overlap > thr:
-            high.append((i, j, overlap))
+            high.append(OverlapStat({i, j}, overlap))
 
     # sort by descending overlap
-    high.sort(key=lambda t: -t[-1])
+    high.sort(key=lambda t: -t.overlap)
     return results, high
 
 
@@ -177,11 +181,12 @@ def overlap_splits(splits: dict[str, list[list[str]]], n: int = 3):
         for seq in spl:
             all_ngrams[k].update(get_ngrams(seq, n))
 
-    results: list[tuple[str, str, float]] = []
+    results: dict[tuple[str, str], float] = {}  # overlap for each pair
     for k1, k2 in itertools.combinations(all_ngrams.keys(), 2):
         overlap = get_overlap(all_ngrams[k1], all_ngrams[k2])
-        results.append((k1, k2, overlap))
-    return results
+        results[(k1, k2)] = overlap
+
+    return list(results.items())
 
 
 def simple_folds(df: pl.DataFrame, k: int, shuffle: bool, seed: int | None = None):

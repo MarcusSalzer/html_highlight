@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 from glob import glob
+from pathlib import Path
 
 sys.path.append(".")
 
@@ -17,15 +18,13 @@ def render_data(data, title, correct=None, names=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Renders examples to a HTML file")
     parser.add_argument("data", choices=["train", "val", "test"])
-    parser.add_argument("-l", "--lang")
-    parser.add_argument("-s", "--splits")
+    parser.add_argument("-l", "--lang", type=str)
     parser.add_argument("-n", "--names", action="store_true")
     parser.add_argument("-c", "--clear", action="store_true")
 
     args = parser.parse_args()
     dataset = args.data
-    lang_filter = args.lang
-    splits = args.splits
+    lang_filter = str(args.lang)
     include_names = args.names
     clear = args.clear
     if clear:
@@ -33,18 +32,14 @@ if __name__ == "__main__":
             os.remove(f)
         print("cleared old HTML!")
 
-    if isinstance(lang_filter, str):
+    if not isinstance(lang_filter, list):
         lang_filter = [lang_filter]
 
     # RENDER DATASET
-    data_true = util.load_examples_DEPRECATED(
-        filter_lang=lang_filter, split_idx_id=splits, verbose=False
+    split_idx = util.load_split_idx()
+    data_true = util.load_dataset_splits(
+        split_idx=split_idx.id_to_group, filter_lang=set(lang_filter)
     )
-    if splits is None:
-        print("Error: requires `splits` if data is not 'all'.")
-        files = glob("split_index_*.json", root_dir="data/")
-        print("try: -s ", [n[12:].split(".")[0] for n in files])
-        exit(1)
 
     data_true = data_true[dataset]
     print(f"Loaded {len(data_true)} examples")
@@ -61,9 +56,10 @@ if __name__ == "__main__":
     fps = sorted(glob("./output/*.json"))
     all_data = {}
     for fp in fps:
-        data = util.load_examples_DEPRECATED(
-            path=fp, split_idx_id=splits, filter_lang=lang_filter, verbose=False
+        data = util.load_dataset_splits(
+            path=Path(fp), split_idx=split_idx.id_to_group, filter_lang=set(lang_filter)
         )
+
         if dataset is not None and dataset != "all":
             data = data[dataset]
         all_data[fp.split("/")[-1].split(".")[0]] = data

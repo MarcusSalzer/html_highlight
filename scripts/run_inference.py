@@ -3,8 +3,8 @@
 import json
 import sys
 from glob import glob
+from pathlib import Path
 
-from colorama import Fore, Style
 from tqdm import tqdm
 
 sys.path.append(".")
@@ -21,7 +21,7 @@ def find_models():
 if __name__ == "__main__":
     model_ids = find_models()
     if not model_ids:
-        print(Fore.RED + "No models found" + Style.RESET_ALL)
+        print("No models found")
         exit(1)
 
     data = util.load_dataset_zip()
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         model_ids = tqdm(model_ids)
 
     for mn in model_ids:
-        infer = Inference(mn, model_dir="models_trained")
+        infer = Inference(mn, model_dir=Path("models_trained"))
         outputs = {}
         for ex in data:
             tags_pred = infer.run(ex.tokens, ex.tags)

@@ -13,7 +13,7 @@ from rich.console import Console
 
 sys.path.append(".")
 from src import cli_util, text_process, util
-from src._constants import LANGS
+from src.constants import LANGS
 
 console = Console()
 
@@ -22,6 +22,10 @@ DATASET_FILE = Path("data/dataset.ndjson")
 
 
 IGNORE_PRINT = ["ws", "id", "nl", "brop", "brcl"]
+
+
+def check_loaded(tokens: list[str], tokens_all: list[list[str]]):
+    """Do a quick check to avoid annotating similar example."""
 
 
 def main():
@@ -87,9 +91,7 @@ def main():
 
 def read_difficulty():
     while True:
-        diff_response = input(
-            "difficulty: (e)asy, (n)ormal, (a)mbiguous, (u)nknown ?\n"
-        ).lower()
+        diff_response = input("difficulty: (e)asy, (n)ormal, (a)mbiguous, (u)nknown ?\n").lower()
 
         diff = None
         if diff_response == "ignore":
@@ -259,11 +261,11 @@ def annotate_loop(tokens: list[str], tags: list[str], aliases: dict[str, list[st
 def canonicalize_tag(tag: str, aliases: dict[str, list[str]], verbose=False):
     """Replace aliases to convention"""
     tag_new = None
-    if tag in aliases.keys():
+    if tag in aliases:
         # use normal form if match
         tag_new = tag
     else:
-        for k in aliases.keys():
+        for k in aliases:
             if tag in aliases[k]:
                 tag_new = k
 
@@ -291,9 +293,7 @@ def load_aliases(path: str) -> dict[str, list[str]]:
             counts[a] = 1
 
     if len(alias_list) != len(set(alias_list)):
-        raise ValueError(
-            f"Duplicate aliases: {', '.join(k for k in counts if counts[k] > 1)}"
-        )
+        raise ValueError(f"Duplicate aliases: {', '.join(k for k in counts if counts[k] > 1)}")
 
     return class_aliases
 

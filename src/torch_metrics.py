@@ -1,10 +1,13 @@
 """Some evaluation metrics, implemented for torch tensors."""
 
+from typing import Literal
+
 import torch
 from torch import Tensor
 
 # Direction to optimize
 METRIC_DIR = {"loss": -1, "acc": 1, "balanced_acc": 1}
+type metric_key = Literal["acc", "balanced_acc"]
 
 
 def balanced_acc(pred: Tensor, labels: Tensor):

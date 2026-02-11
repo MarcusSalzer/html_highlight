@@ -66,6 +66,7 @@ We are trying to define some classes, that should work across most languages
 - ✅ NDJSON dataset _25-08-30_
 - ✅ Cleanup labels, linting _25-09-03_
 - ✅ Optuna, settle for a good LSTM model _25-09-20_
+- ❓ Multiple unknown-tokens. Allow recognizing out of vocab
 - ❓ Balance dataset split criterion?
 - ❓ Lightweight inference program.
 - ❓ Reset indentation: avoid unnecessary indentation of all lines
@@ -77,3 +78,8 @@ We are trying to define some classes, that should work across most languages
 - ❓ try to catch code fragments in text?
 - ❓ language classifier?
 - ❓ highlighting inside strings?
+
+## ideas
+
+- out of vocabulary words are all the same? embeddings such that at least can recognize words?
+- key-string class (for json/dicts etc)
