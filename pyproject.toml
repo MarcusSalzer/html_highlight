@@ -17,6 +17,12 @@ dependencies = [
     "panel",
     "plotly",
     "fastapi[standard]>=0.128.0",
+    "ipykernel>=7.2.0",
+    "nbformat>=5.10.4",
+    "mlflow>=3.9.0",
+    "psutil>=7.2.2",
+    "nvidia-ml-py>=13.590.48",
+    "pyperclip>=1.11.0",
 ]
 
 

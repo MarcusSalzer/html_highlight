@@ -4,10 +4,12 @@ from pathlib import Path
 from optuna.pruners._base import BasePruner
 
 import optuna
+import src.models.rnn_tagger
+from src.models import tagger_model
 
 sys.path.append(".")
 
-from src import tagger_model, util
+from src import util
 from src.optuna.optuna_experiment import OptunaExperiment
 
 
@@ -15,7 +17,7 @@ class MultipleUnkExperiment(OptunaExperiment):
     """Investigate the impact of multiple unknown token embeddings."""
 
     def get_model_conf(self, trial):
-        return tagger_model.RNNTaggerConfig(
+        return src.models.rnn_tagger.RNNTaggerConfig(
             d_emb_token=32,
             d_emb_tag=32,
             d_hidden_rnn=64,
@@ -37,6 +39,9 @@ class MultipleUnkExperiment(OptunaExperiment):
 
     def get_pruner(self) -> BasePruner:
         return optuna.pruners.NopPruner()
+
+    def get_sampler(self):
+        return optuna.samplers.RandomSampler()
 
 
 def main():

@@ -1,6 +1,3 @@
-import pointblank as pb
-import polars as pl
-
 from src import text_process
 from src.constants import (
     DET_TAGS,
@@ -12,25 +9,24 @@ from src.constants import (
 )
 from src.datamodels.dataset_record import DatasetRecord
 
-
-def lint_data_df(df: pl.DataFrame):
-    return (
-        pb.Validate(df)
-        .col_schema_match(
-            pb.Schema(
-                {
-                    "name": "String",
-                    "lang": "String",
-                    "tokens": "List(String)",
-                    "tags": "List(String)",
-                    "difficulty": "String",
-                    "id": "String",
-                }
-            ),
-        )
-        .rows_distinct(["name", "lang"])
-        .interrogate()
-    )
+# def lint_data_df(df: pl.DataFrame):
+#     return (
+#         pb.Validate(df)
+#         .col_schema_match(
+#             pb.Schema(
+#                 {
+#                     "name": "String",
+#                     "lang": "String",
+#                     "tokens": "List(String)",
+#                     "tags": "List(String)",
+#                     "difficulty": "String",
+#                     "id": "String",
+#                 }
+#             ),
+#         )
+#         .rows_distinct(["name", "lang"])
+#         .interrogate()
+#     )
 
 
 def lint_single_record(rec: DatasetRecord, allowed_tags: list[str]):

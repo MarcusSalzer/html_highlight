@@ -5,8 +5,7 @@ import sys
 from pathlib import Path
 
 sys.path.append(".")
-import src.util as util
-from src import cli_util, data_lint
+from src import cli_util, data_lint, util
 from src import data_functions as datafun
 from src.data_lint import LintError
 from src.datamodels.overlap_stat import OverlapStat
@@ -44,18 +43,22 @@ def main():
             print("-" * 30 + "\n")
     print(f"{err_count} errors ({err_count / len(data) * 100:0.1f}%)\n")
 
-    N = 3  # overlap ngram length
+    N_TOKEN = 3  # overlap ngram length
+    N_TAG = 8  # overlap ngram length
     THR_TOKEN = 0.5
     THR_TAG = 0.8
 
-    print(f"Overlap check ({N=})")
-    _, high_token = datafun.overlap_pairwise_simple([d.tokens for d in data], N, thr=THR_TOKEN)
-    _, high_tag = datafun.overlap_pairwise_simple([d.tags for d in data], N, thr=THR_TOKEN)
+    print("Overlap check")
+    _, high_token = datafun.overlap_pairwise_simple(
+        [d.tokens for d in data], n=N_TOKEN, thr=THR_TOKEN
+    )
+    _, high_tag = datafun.overlap_pairwise_simple([d.tags for d in data], n=N_TAG, thr=THR_TOKEN)
 
-    print(f"\nToken overlaps (>{THR_TOKEN:.0%}): {len(high_token)}")
+    print(f"\nToken overlaps (>{THR_TOKEN:.0%}, n={N_TOKEN}): {len(high_token)}")
     print_overlaps(high_token, name_ids=[d.id for d in data])
 
-    print(f"\nTag overlaps (>{THR_TAG:.0%}): {len(high_tag)}")
+    print(f"\nTag overlaps (>{THR_TAG:.0%}, n={N_TAG}): {len(high_tag)}")
+    print_overlaps(high_tag, name_ids=[d.id for d in data])
 
 
 if __name__ == "__main__":

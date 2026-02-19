@@ -30,7 +30,7 @@ def main_df():
     data = data.sort("id")
 
     print(f"sorted: {data['id'][0]} ... {data['id'][-1]}")
-    data.drop("id").write_ndjson(OUT_FILE)
+    data.select(["lang", "name", "difficulty", "tokens", "tags"]).write_ndjson(OUT_FILE)
     print(f"saved {OUT_FILE}")
 
 

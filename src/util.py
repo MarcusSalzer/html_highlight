@@ -1,7 +1,6 @@
 # For mapping to a smaller label space
 import json
 from collections.abc import Iterable
-from glob import glob
 from pathlib import Path
 from typing import Literal
 
@@ -12,15 +11,10 @@ from src.datamodels.dataset_record import DatasetRecord
 from src.datamodels.split_index import SplitIndex
 
 
-def load_split_idx(filename: str = "split_index.json") -> SplitIndex:
+def load_split_idx(path: Path = Path("./data/split_index.json")) -> SplitIndex:
     """Find and load the file."""
 
-    fps = glob(f"../**/data/**/{filename}", recursive=True)
-    if len(fps) > 1:
-        raise ValueError(f"Found {len(fps)} matches")
-    if not fps:
-        raise ValueError(f"Couldn't find {filename}")
-    with open(fps[0]) as f:
+    with path.open() as f:
         raw = json.load(f)
 
     return SplitIndex(**raw)
@@ -44,7 +38,7 @@ def load_dataset_parallel(
     return dataset
 
 
-def load_dataset_df(path=Path("data/dataset.ndjson")):
+def load_dataset_df(path=Path("data/dataset.ndjson"), include_derived: bool = False):
     """Load the data directly to a dataframe."""
     schema = {
         "lang": pl.Utf8,
@@ -54,7 +48,15 @@ def load_dataset_df(path=Path("data/dataset.ndjson")):
         "difficulty": pl.Utf8,
     }
 
-    df = pl.read_ndjson(path, schema=schema).with_columns(id=pl.col("lang") + "_" + pl.col("name"))
+    df = pl.read_ndjson(path, schema=schema).with_columns()
+
+    if include_derived:
+        df = df.with_columns(
+            id=pl.col("lang") + "_" + pl.col("name"),
+            seq_len=pl.col("tokens").list.len(),
+            unique_tags=pl.col("tags").list.unique(),
+        )
+
     return df
 
 

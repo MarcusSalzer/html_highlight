@@ -10,6 +10,9 @@ search/
 tmp/
 media/
 
+# where did this come from?
+mlruns/
+
 # sqlite
 *.db
 

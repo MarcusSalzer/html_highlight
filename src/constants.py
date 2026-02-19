@@ -23,7 +23,6 @@ LANGS = [
     "rust",
     "scala",
     "sql",
-    "ts",
 ]
 
 

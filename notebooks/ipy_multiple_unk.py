@@ -4,14 +4,16 @@ import sys
 from importlib import reload
 from pathlib import Path
 
-import numpy as np
 import torch
 
+import src.models.rnn_tagger
+from src.models import tagger_model
+
 sys.path.append("..")
-from src import plotly_plots as pp
-from src import tagger_model, text_process, util, vocab
+from src import text_process, util, vocab
 from src import torch_util as tu
 from src.datamodels import dataset_record, split_index
+from src.plots import plotly_plots as pp
 
 # %% Load a subset of
 
@@ -52,7 +54,7 @@ for k, d in dsets.items():
 reload(tagger_model)
 
 torch.manual_seed(999)
-conf = tagger_model.RNNTaggerConfig(
+conf = src.models.rnn_tagger.RNNTaggerConfig(
     d_emb_token=16,
     d_emb_tag=16,
     d_hidden_rnn=16,
@@ -63,7 +65,7 @@ conf = tagger_model.RNNTaggerConfig(
     dropout_rnn=0.0,
 )
 
-model = tagger_model.RNNTagger(
+model = src.models.rnn_tagger.RNNTagger(
     conf,
     vocab_sz_token=len(vocs.token),
     vocab_sz_tag=len(vocs.tag),
@@ -88,16 +90,16 @@ reload(dataset_record)
 
 examples = [
     dataset_record.DatasetRecord(
-        "module",
-        "python",
-        ["import", " ", "x", "\n", "print", "(", "x", ".", "y", ")"],
-        ["kwim", "ws", "mo", "nl", "fnfr", "brop", "mo", "sy", "at", "brcl"],
+        name="module",
+        lang="python",
+        tokens=["import", " ", "x", "\n", "print", "(", "x", ".", "y", ")"],
+        tags=["kwim", "ws", "mo", "nl", "fnfr", "brop", "mo", "sy", "at", "brcl"],
     ),
     dataset_record.DatasetRecord(
-        "var",
-        "python",
-        ["x", "=", "Thing", "(", ")", "\n", "print", "(", "x", ".", "y", ")"],
-        ["v", "opas", "clco", "brop", "brcl", "nl", "fnfr", "brop", "va", "sy", "at", "brcl"],
+        name="var",
+        lang="python",
+        tokens=["x", "=", "Thing", "(", ")", "\n", "print", "(", "x", ".", "y", ")"],
+        tags=["v", "opas", "clco", "brop", "brcl", "nl", "fnfr", "brop", "va", "sy", "at", "brcl"],
     ),
 ]
 

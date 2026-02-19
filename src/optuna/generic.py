@@ -1,9 +1,12 @@
 import sys
 from pathlib import Path
 
+import src.models.rnn_tagger
+from src.models import tagger_model
+
 sys.path.append(".")
 
-from src import tagger_model, util
+from src import util
 from src.optuna.optuna_experiment import OptunaExperiment
 
 
@@ -13,7 +16,7 @@ class GenericExperiment(OptunaExperiment):
     def get_model_conf(self, trial):
         n_rnn_layers = trial.suggest_int("n_rnn_layers", 1, 3, log=True)
 
-        return tagger_model.RNNTaggerConfig(
+        return src.models.rnn_tagger.RNNTaggerConfig(
             d_emb_token=trial.suggest_int("d_emb_token", 8, 64, step=4),
             d_emb_tag=trial.suggest_int("d_emb_tag", 8, 64, step=4),
             d_hidden_rnn=trial.suggest_int("d_hidden_rnn", 16, 192, step=16),

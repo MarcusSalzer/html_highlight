@@ -5,7 +5,8 @@ from pathlib import Path
 
 import torch
 
-from src import tagger_model, torch_util
+import src.models.rnn_tagger
+from src import torch_util
 
 sys.path.append(".")
 
@@ -17,7 +18,7 @@ class Inference:
         # load metadata
         conf_data = json.loads((model_dir / f"{model_name}_config.json").read_text())
 
-        model_conf = tagger_model.RNNTaggerConfig(**conf_data["config"])
+        model_conf = src.models.rnn_tagger.RNNTaggerConfig(**conf_data["config"])
 
         dev = "cuda" if torch.cuda.is_available() else "cpu"
         vocab = conf_data["vocab"]
@@ -35,7 +36,7 @@ class Inference:
         )
         # TODO EXTRA FEATURES
         # Prepare model
-        self.model = tagger_model.RNNTagger(
+        self.model = src.models.rnn_tagger.RNNTagger(
             model_conf, len(vocab), len(self.tag_vocab), n_extra=None
         )
         self.model.load_state_dict(state_dict)

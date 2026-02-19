@@ -5,9 +5,11 @@ from typing import Literal
 import polars as pl
 
 import optuna
-from src import tagger_model, vocab
+import src.models.rnn_tagger
 from src import torch_util as tu
+from src import vocab
 from src.datamodels.split_index import SplitIndex
+from src.models import tagger_model
 
 
 @dataclass
@@ -37,6 +39,7 @@ class OptunaExperiment:
             storage="sqlite:///data/optuna.db",
             study_name=self.name,
             load_if_exists=True,
+            sampler=self.get_sampler(),
             pruner=self.get_pruner(),
             direction="maximize",
         )
@@ -57,7 +60,7 @@ class OptunaExperiment:
         vocs = vocab.both_vocabs(self.data_train, n_unknown_token=model_conf.n_unk_token)
 
         # model
-        model = tagger_model.RNNTagger(
+        model = src.models.rnn_tagger.RNNTagger(
             model_conf,
             vocab_sz_token=len(vocs.token),
             vocab_sz_tag=len(vocs.tag),
@@ -70,10 +73,10 @@ class OptunaExperiment:
             train_conf,
             tu.SequenceDataset.from_dataframe(self.data_train, vocs, device=self.device),
             tu.SequenceDataset.from_dataframe(self.data_valid, vocs, device=self.device),
-            epoch_cb=lambda ep, mets: self.epoch_callback(
+            epoch_cb=lambda snap: self.epoch_callback(
                 trial,
-                mets[f"val_{self.opt_metric}"],
-                ep,
+                snap.metrics[f"val_{self.opt_metric}"],
+                snap.epoch,
             ),
         )
 
@@ -83,11 +86,15 @@ class OptunaExperiment:
         self._create_study().optimize(self._objective, n_trials)
 
     @abstractmethod
+    def get_sampler(self) -> optuna.samplers.BaseSampler:
+        pass
+
+    @abstractmethod
     def get_pruner(self) -> optuna.pruners.BasePruner:
         pass
 
     @abstractmethod
-    def get_model_conf(self, trial: optuna.Trial) -> tagger_model.RNNTaggerConfig:
+    def get_model_conf(self, trial: optuna.Trial) -> src.models.rnn_tagger.RNNTaggerConfig:
         pass
 
     @abstractmethod

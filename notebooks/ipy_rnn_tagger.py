@@ -6,11 +6,14 @@ from pathlib import Path
 import numpy as np
 import torch
 
+import src.models.rnn_tagger
+
 sys.path.append("..")
-from src import plotly_plots as pp
-from src import tagger_model, util, vocab
 from src import torch_metrics as tm
 from src import torch_util as tu
+from src import util, vocab
+from src.models import tagger_model
+from src.plots import plotly_plots as pp
 
 # %% [markdown]
 # ## Data
@@ -69,7 +72,7 @@ print(f"{distr_vec.shape}")
 reload(tagger_model)
 
 torch.manual_seed(999)
-conf = tagger_model.RNNTaggerConfig(
+conf = src.models.rnn_tagger.RNNTaggerConfig(
     d_emb_token=16,
     d_emb_tag=16,
     d_hidden_rnn=16,
@@ -80,7 +83,7 @@ conf = tagger_model.RNNTaggerConfig(
     dropout_rnn=0.0,
 )
 
-model = tagger_model.RNNTagger(
+model = src.models.rnn_tagger.RNNTagger(
     conf,
     vocab_sz_token=len(vocs.token),
     vocab_sz_tag=len(vocs.tag),

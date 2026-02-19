@@ -7,7 +7,7 @@ from typing import cast
 
 import polars as pl
 import torch
-from torch import optim
+from torch import Tensor, optim
 from torch.utils.data import DataLoader, Dataset
 
 from src import text_process, types
@@ -15,7 +15,7 @@ from src.vocab import VocabDuo
 
 
 class SequenceDataset(Dataset):
-    """Dataset of sequences. NOTE: in memory dataset."""
+    """Dataset of sequences. NOTE: in memory dataset. NOTE: Pads it all in the beginning"""
 
     def __init__(
         self,
@@ -29,7 +29,7 @@ class SequenceDataset(Dataset):
         if not len(tokens) == len(labels_det) == len(labels_true):
             raise ValueError("inconsistent lengths")
 
-        # Encode each sequence
+        # Encode each sequence -> (N, Maxlen)
         token_idx = [vocs.token.encode(seq) for seq in tokens]
         self.tokens = seqs2padded_tensor(token_idx, device=device, verbose=False)
 
@@ -53,15 +53,15 @@ class SequenceDataset(Dataset):
     def __len__(self):
         return len(self.tokens)
 
-    def __getitem__(self, idx: int):
+    def __getitem__(self, index: int):
         inputs = {
-            "tokens": self.tokens[idx],
-            "labels_det": self.labels_det[idx],
+            "tokens": self.tokens[index],  # (maxlen,)
+            "labels_det": self.labels_det[index],  # (maxlen,)
         }
         if hasattr(self, "extra"):
-            inputs["extra"] = self.extra[idx]
+            inputs["extra"] = self.extra[index]
 
-        return inputs, self.labels_true[idx]
+        return inputs, self.labels_true[index]
 
     def to_device(self, device: str | torch.device):
         self.tokens = self.tokens.to(device)
@@ -86,13 +86,9 @@ class SequenceDataset(Dataset):
         vocs: VocabDuo,
         device: str | torch.device | None = None,
     ):
-        assert {"tokens", "tags"}.issubset(df.columns)
-        df = df.with_columns(
-            tags_det=pl.col("tokens").map_elements(
-                lambda tks: text_process.process("".join(tks))[1],
-                pl.List(pl.String),
-            )
-        )
+        missing = {"tokens", "tags", "tags_det"}.difference(df.columns)
+        assert not missing, f"got cols {df.columns} (missing {missing})"
+
         return cls(
             df["tokens"].to_list(),
             df["tags_det"].to_list(),
@@ -102,12 +98,47 @@ class SequenceDataset(Dataset):
         )
 
 
+def add_tag_det_col(df):
+    return df.with_columns(
+        tags_det=pl.col("tokens").map_elements(
+            lambda tks: text_process.process("".join(tks))[1],
+            pl.List(pl.String),
+        )
+    )
+
+
+def df_to_tensorlists(
+    df: pl.DataFrame,
+    vocs: VocabDuo,
+    device: torch.device | None = None,
+) -> dict[str, list[Tensor]]:
+    """Extract (tokens, tags, tags_det) from DF and encode as integer tensors."""
+
+    missing = {"tokens", "tags", "tags_det"}.difference(df.columns)
+    assert not missing, f"got cols {df.columns} (missing {missing})"
+
+    def to_tens(x):
+        return torch.tensor(x, dtype=torch.int64, device=device)
+
+    return {
+        "tokens": [to_tens(vocs.token.encode(s)) for s in df["tokens"]],
+        "tags": [to_tens(vocs.tag.encode(s)) for s in df["tags"]],
+        "tags_det": [to_tens(vocs.token.encode(s)) for s in df["tags_det"]],
+    }
+
+
 def seqs2padded_tensor(
     sequences: Iterable[list[int]],
     pad_value=0,
     verbose=True,
     device: torch.device | str | None = None,
 ):
+    """DEPRECATED? Convert lists to tensors and pad.
+    Returns
+    -------
+    padded: Tensor
+        of shape (BS, Maxlen)
+    """
     t = torch.nn.utils.rnn.pad_sequence(
         [torch.tensor(s) for s in sequences],
         batch_first=True,

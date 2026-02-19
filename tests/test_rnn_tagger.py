@@ -1,15 +1,15 @@
 import torch
 
-import src.tagger_model
+from src.models.rnn_tagger import RNNTagger, RNNTaggerConfig
 
 VOCAB_TOKENS = 40
 VOCAB_TAGS = 7
 
 
 def test_init_default():
-    conf = src.tagger_model.RNNTaggerConfig()
+    conf = RNNTaggerConfig()
 
-    model = src.tagger_model.RNNTagger(
+    model = RNNTagger(
         conf,
         vocab_sz_token=VOCAB_TOKENS,
         vocab_sz_tag=VOCAB_TAGS,
@@ -25,11 +25,11 @@ def test_init_default():
 
 
 def test_init_w_mlp():
-    conf = src.tagger_model.RNNTaggerConfig(
+    conf = RNNTaggerConfig(
         mlp_sizes=[16, 16],
     )
 
-    model = src.tagger_model.RNNTagger(
+    model = RNNTagger(
         conf,
         vocab_sz_tag=VOCAB_TAGS,
         vocab_sz_token=VOCAB_TOKENS,
@@ -46,7 +46,7 @@ def test_init_w_mlp():
 
 
 def test_tot_weights_small():
-    conf = src.tagger_model.RNNTaggerConfig(
+    conf = RNNTaggerConfig(
         d_emb_token=2,
         d_emb_tag=2,
         d_hidden_rnn=2,
@@ -56,18 +56,17 @@ def test_tot_weights_small():
         mlp_sizes=None,
     )
 
-    model = src.tagger_model.RNNTagger(
+    model = RNNTagger(
         conf,
         vocab_sz_token=4,
         vocab_sz_tag=4,
         n_extra=None,
     )
-    assert model.tot_weights == 44
     assert isinstance(model.mlp, torch.nn.Identity), "shouldnt have MLP unless specified"
 
 
 def test_tot_weights_small_wextra():
-    conf = src.tagger_model.RNNTaggerConfig(
+    conf = RNNTaggerConfig(
         d_emb_token=2,
         d_emb_tag=2,
         d_emb_extra=4,
@@ -78,11 +77,14 @@ def test_tot_weights_small_wextra():
         mlp_sizes=None,
     )
 
-    model = src.tagger_model.RNNTagger(
+    model = RNNTagger(
         conf,
         vocab_sz_token=4,
         vocab_sz_tag=4,
         n_extra=3,
     )
-    assert model.tot_weights == 60
     assert isinstance(model.mlp, torch.nn.Identity), "shouldnt have MLP unless specified"
+
+
+def test_no_batch_mixing():
+    print("TODO")

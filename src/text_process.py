@@ -276,12 +276,29 @@ def process_with_inferindent(text: str, verbose: bool = False):
     return tokens, tags
 
 
-def bracket_levels(tags: list[str]) -> tuple[list[str], list[int]]:
+def bracket_levels(tags: list[str], wrap: int | None = 4) -> tuple[list[str], list[int]]:
     """Rename bracket tags from br_op/cl to br{n}.
 
-    ## Returns
-    - tags_new (list[str]): modified tags
-    - brac_level (list[int]): bracket depth for all tokens."""
+    parameters
+    ----------
+    tags: list[str]
+        input sequence
+    wrap: int|None
+        optionally wrap levels when formatting, only affects output class names
+
+    Returns
+    -------
+    tags_new: list[str]
+        modified tags
+    brac_level: list[int]:
+        bracket depth for all tokens.
+    """
+
+    def _fmt(lev: int):
+        if wrap is None:
+            return f"br{lev}"
+        return f"br{lev % wrap}"
+
     brac_level = []
     current_level = 0
     tags_new = tags.copy()

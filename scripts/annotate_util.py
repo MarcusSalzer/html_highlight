@@ -170,13 +170,10 @@ def get_example():
         file_data.append([name.strip(), lang.strip(), size])
 
     done_ignore_data = []
-    for f in done_examples:
-        splts = f.split("_")
-        lang = splts[-1].split(".")[0].strip()
-        if lang not in LANGS:
-            raise ValueError(f"incorrect language: {repr(lang)} (in done)")
-        name = "_".join(splts[:-1])
-        done_ignore_data.append([name.strip(), lang.strip()])
+    for d in dataset:
+        if d.lang not in LANGS:
+            raise ValueError(f"incorrect language: {repr(d.lang)} (in done)")
+        done_ignore_data.append([d.name, d.lang])
     for f in ignore_files:
         splts = f.split("_")
         lang = splts[-1].strip()
