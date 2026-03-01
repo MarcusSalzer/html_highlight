@@ -55,10 +55,10 @@ def main() -> None:
     model_conf = RNNTaggerConfig(
         d_emb_token=64,
         d_emb_tag=64,
-        d_hidden_rnn=96,
+        d_hidden_rnn=32,
         rnn_variant="lstm",
-        n_rnn_layers=1,
-        mlp_sizes=[512],
+        n_rnn_layers=2,
+        mlp_sizes=[256],
         bidi=True,
         dropout_rnn=0.0,
         dropout_between=0.2,

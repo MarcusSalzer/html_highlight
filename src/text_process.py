@@ -16,7 +16,7 @@ basic_pats_simple = [
 # in order
 basic_pats = [
     # comment after indentation or full line (NOTE variable length lookbehind)
-    ("co", r"(?<=(?:^|[;,])\s*)(?:[/\-]{2,3}|#|%).+$"),
+    ("co", r"(?<=(?:^|[;,])\s*)(?:[/]{2,3}|#|%|-- ).+$"),
     ("co", r"<!--.+-->\s*$"),  # html-comment
     # multiline comments
     ("co", r"\/\*{1,2}[\s\S]+?\*\/"),
@@ -55,7 +55,7 @@ basic_pats = [
     # bash flags
     # ("uk", r"(?<!\S)--\p{L}+(?=\s|=|$)"),
     # bash flag or op or css attr
-    ("uk", r"\p{L}*-{0,2}\p{L}+(?=\s|=|$|:)"),
+    ("uk", r"\p{L}*-{0,2}\p{L}[\p{L}-]*(?=\s|=|$|:)"),
     # rust macros
     ("uk", r"\S+!(?=\()"),
     # operators

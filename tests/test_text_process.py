@@ -455,6 +455,12 @@ class TestInitialRegex(unittest.TestCase):
         self.assertListEqual(["-- a comment"], tk)
         self.assertEqual("co", ta[0])
 
+    def test_css_var(self):
+        """CSS variable IS NOT a Lua-comment"""
+
+        tk, ta = process_regex("--my-var: 2px")
+        self.assertListEqual(["--my-var", ":", " ", "2px"], tk)
+
 
 class TestMergeAdjacent(unittest.TestCase):
     def test_nomerge(self):
