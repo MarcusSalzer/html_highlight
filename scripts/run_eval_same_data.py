@@ -1,12 +1,11 @@
 import sys
 from pathlib import Path
 
-from src.models.rnn_tagger import RNNTaggerConfig
-
 sys.path.append(".")
 from src import util
 from src.exper import sampler
 from src.exper.mlflow_experiment import MLflowExperiment
+from src.models.rnn_tagger import RNNTaggerConfig
 from src.models.tagger_model import TrainSettings
 
 # Keep datasplit for comparing models fairly

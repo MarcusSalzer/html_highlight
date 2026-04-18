@@ -98,7 +98,7 @@ class SequenceDataset(Dataset):
         )
 
 
-def add_tag_det_col(df):
+def add_tag_det_col(df: pl.DataFrame):
     return df.with_columns(
         tags_det=pl.col("tokens").map_elements(
             lambda tks: text_process.process("".join(tks))[1],
@@ -129,8 +129,8 @@ def df_to_tensorlists(
 
 def seqs2padded_tensor(
     sequences: Iterable[list[int]],
-    pad_value=0,
-    verbose=True,
+    pad_value: int = 0,
+    verbose: bool = True,
     device: torch.device | str | None = None,
 ):
     """DEPRECATED? Convert lists to tensors and pad.

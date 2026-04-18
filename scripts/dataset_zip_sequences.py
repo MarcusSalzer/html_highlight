@@ -13,7 +13,7 @@ OUT_FILE = Path("data/dataset_zip.ndjson")
 
 data = util.load_dataset_parallel(IN_FILE)
 
-lines = []
+lines: list[str] = []
 for d in data:
     record = {
         "name": d.name,
