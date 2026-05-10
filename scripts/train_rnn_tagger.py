@@ -16,7 +16,7 @@ from src.models.rnn_tagger import RNNTagger, RNNTaggerConfig
 from src.models.tagger_model import TrainSettings
 from src.tensor_sequence_dataset import TensorSequenceDataset, get_dl
 
-RETRAIN_FINAL = False
+RETRAIN_FINAL = True
 
 # === File paths ===
 
@@ -55,14 +55,14 @@ def main() -> None:
     model_conf = RNNTaggerConfig(
         d_emb_token=64,
         d_emb_tag=64,
-        d_hidden_rnn=32,
+        d_hidden_rnn=64,
         rnn_variant="lstm",
         n_rnn_layers=2,
-        mlp_sizes=[256],
+        mlp_sizes=[256, 128],
         bidi=True,
-        dropout_rnn=0.0,
+        dropout_rnn=0.1,
         dropout_between=0.2,
-        dropout_mlp=0.7,
+        dropout_mlp=0.3,
         n_unk_token=1,
     )
 
@@ -114,7 +114,7 @@ def main() -> None:
     model_dir.mkdir(exist_ok=True)
 
     # Save model configuration etc
-    (model_dir / "train.json").write_text(json.dumps(dict(train_settings), indent=4))
+    (model_dir / "train.json").write_text(train_settings.model_dump_json(indent=2))
     (model_dir / "config.json").write_text(
         json.dumps(
             {
@@ -122,14 +122,14 @@ def main() -> None:
                 "vocab": vocs.token.vocab_list,
                 "tag_vocab": vocs.tag.vocab_list,
             },
-            indent=4,
+            indent=2,
         )
     )
 
     print(f"\nTraining {model} on {DEVICE}...\n")
     print(f"Saves results at {model_dir}")
 
-    mlflow_wrapper.init(f"TrainRnnTagger_T{len(dsets['train'])}V{len(dsets['val'])}")
+    mlflow_wrapper.init(f"TrainRnnTagger_T{len(dsets['train'])}V{len(dsets[val_set])}")
 
     with mlflow.start_run():
         # Log configs (flattened)

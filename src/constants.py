@@ -90,7 +90,6 @@ POSSIBLE_PER_TOKEN = {
 # allow these in vocab
 VOCAB_TAGS = (
     "kwfl",
-    "kwty",
     "kwop",
     "kwmo",
     "kwde",
@@ -102,11 +101,16 @@ VOCAB_TAGS = (
     "brcl",
     "sy",
     "pu",
+    "nu",
     "bo",
     "li",
     "opbi",
     "opun",
     "opas",
+    "opmo",
+    "ty",
+    "tyco",
+    "mo",
     "an",
     "uk",
 )
