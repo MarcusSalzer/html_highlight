@@ -11,9 +11,8 @@ import polars as pl
 import regex as re
 from rich.console import Console
 
-sys.path.append(".")
-from src import cli_util, text_process, util
-from src.constants import LANGS
+from html_highlight import cli_util, text_process, util
+from html_highlight.constants import LANGS
 
 console = Console()
 

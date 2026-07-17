@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 def init(
     exp_name: str,
-    tracking_uri: str = "sqlite:///./data/mlflow.db",
+    tracking_uri: str = "sqlite:///./tmp/mlflow.db",
     log_level: int = logging.WARNING,
     sys_metrics_interval: int | None = 5,
 ):

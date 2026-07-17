@@ -1,5 +1,4 @@
-from src import text_process
-from src.constants import (
+from html_highlight.constants import (
     DET_TAGS,
     ILLEGAL_BIGRAMS,
     LANG_SPEC_TOKENS,
@@ -7,7 +6,8 @@ from src.constants import (
     POSSIBLE_PER_TOKEN,
     REQUIRES_PRE,
 )
-from src.datamodels.dataset_record import DatasetRecord
+from html_highlight.datamodels.dataset_record import DatasetRecord
+from src import text_process
 
 # def lint_data_df(df: pl.DataFrame):
 #     return (

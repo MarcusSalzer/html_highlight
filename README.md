@@ -67,14 +67,15 @@ We are trying to define some classes, that should work across most languages
 - ✅ Cleanup labels, linting _25-09-03_
 - ✅ Optuna, settle for a good LSTM model _25-09-20_
 - ✅ ML Flow experiment tracking _26-02-12_
+- ❓ Transfer learning? (A llm might have good code understanding, and a "complete" vocabulary, just need to tune to classify our tags.)
 - ❓ Multiple unknown-tokens. Allow recognizing out of vocab
 - ❓ Balance dataset split criterion?
 - ❓ Lightweight inference program.
 - ❓ Reset indentation: avoid unnecessary indentation of all lines
-- ❓ RNN variant comparison
 - ❓ Feature based classifier
 - ❓ data augmentation
 - ❓ token LM
+- ❓ Reporesentation learning for class colors (conditioned on certain colors? can we learn contrast?).
 - ❓ character level LM -> "end to end" model
 - ❓ try to catch code fragments in text?
 - ❓ language classifier?

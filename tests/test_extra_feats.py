@@ -1,8 +1,8 @@
 import sys
 
 sys.path.append(".")
+from html_highlight.torch_util import make_extra_feats
 from src import text_process
-from src.torch_util import make_extra_feats
 
 
 def test_shape():

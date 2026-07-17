@@ -3,7 +3,7 @@ from typing import NamedTuple
 
 import polars as pl
 
-from src.constants import VOCAB_TAGS
+from html_highlight.constants import VOCAB_TAGS
 
 
 def vocab_candidates(

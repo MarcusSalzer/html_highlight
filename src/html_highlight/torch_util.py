@@ -1,17 +1,12 @@
-import os
-from collections.abc import Callable, Iterable, Sequence
-from dataclasses import dataclass
-from pathlib import Path
-from timeit import default_timer
-from typing import cast
+from collections.abc import Iterable, Sequence
 
 import polars as pl
 import torch
 from torch import Tensor, optim
 from torch.utils.data import DataLoader, Dataset
 
-from src import text_process, types
-from src.vocab import VocabDuo
+from . import text_process
+from .vocab import VocabDuo
 
 
 class SequenceDataset(Dataset):
@@ -185,118 +180,6 @@ def run_epoch(
             optimizer.zero_grad()
 
     return loss_agg / n_elements
-
-
-@dataclass
-class Trainer:
-    model: torch.nn.Module
-    train_dl: DataLoader
-    val_dl: DataLoader
-    optimizer: optim.Optimizer
-    loss_function: Callable
-    lr_s: optim.lr_scheduler.LRScheduler | None = None
-    name: str = ""
-    save_dir: Path | None = None
-    save_wait: int = 5
-    printerval: int | None = 1
-    time_limit: int | None = None
-    reduce_lr_on_plat: types.LrsPlatConfig | None = None
-    stop_patience: int | None = None
-    epoch_callback: Callable | None = None
-
-    def train_loop(self, max_epochs: int = 500):
-        """Train a tagger model
-
-        ## returns
-        - metrics: dict with keys "train_loss", "val_loss", "val_acc"
-        """
-        if self.save_dir is not None and not self.save_dir.exists():
-            self.save_dir.mkdir(parents=True)
-
-        if self.reduce_lr_on_plat:
-            self.lrs_plat = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                self.optimizer, **self.reduce_lr_on_plat.model_dump()
-            )
-        else:
-            self.lrs_plat = None
-
-        losses_train = []
-        losses_val = []
-        val_accs = []
-
-        best_loss = float("inf")
-        best_epoch = 0
-        best_acc = 0
-        tstart = default_timer()
-
-        for epoch in range(max_epochs):
-            if self.stop_patience is not None and epoch > best_epoch + self.stop_patience:
-                print(f"[EARLY STOPPING at {epoch = }]")
-                break
-
-            # TRAINING
-            train_loss = run_epoch(self.model, self.train_dl, self.loss_function, self.optimizer)
-            losses_train.append(train_loss)
-
-            # VALIDATION
-            with torch.no_grad():
-                val_loss = run_epoch(self.model, self.val_dl, self.loss_function)
-                losses_val.append(val_loss)
-                val_acc_now = val_acc(self.model, cast(SequenceDataset, self.val_dl.dataset))
-                val_accs.append(val_acc_now)
-
-            if self.lr_s is not None:
-                self.lr_s.step()
-            if self.lrs_plat is not None:
-                self.lrs_plat.step(val_loss)
-
-            m_extra = " "
-            if val_loss < best_loss:
-                best_loss = val_loss
-                best_epoch = epoch
-                if self.save_dir is not None and epoch > self.save_wait:
-                    fp = self.save_dir / f"{self.name}_state.pth"
-                    torch.save(self.model.state_dict(), fp)
-                    m_extra += f"Saved in {self.save_dir} (best VL)"
-            if val_acc_now > best_acc:
-                best_acc = val_acc_now
-                if self.save_dir is not None and epoch > self.save_wait:
-                    fp = os.path.join(self.save_dir, f"{self.name}_acc_state.pth")
-                    torch.save(self.model.state_dict(), fp)
-                    m_extra += f"Saved in {self.save_dir} (best Acc)"
-
-            self.epoch_print(epoch, train_loss, val_loss, val_accs[-1], m_extra)
-
-            if self.time_limit is not None and default_timer() - tstart > self.time_limit:
-                break
-
-            if self.epoch_callback is not None:
-                self.epoch_callback({"val_acc": val_accs[-1], "epoch": epoch})
-
-        return {
-            "train_loss": losses_train,
-            "val_loss": losses_val,
-            "val_acc": val_accs,
-        }
-
-    def epoch_print(
-        self,
-        epoch: int,
-        train_loss: float,
-        val_loss: float,
-        val_acc: float,
-        m_extra: str,
-    ):
-        if self.printerval is not None and (epoch) % self.printerval == 0:
-            msg = f"{epoch + 1:4d} | {train_loss=:.6f} | {val_loss=:.6f}, {val_acc=:.2%}"
-
-            if self.lr_s is not None:
-                msg += f" LR: {self.lr_s.get_last_lr()[0]:.6f}"
-            if self.lrs_plat is not None:
-                msg += f" LR: {self.lrs_plat.get_last_lr()[0]:.6f}"
-            print(msg + m_extra)
-            if epoch % (10 * self.printerval) == 0 and epoch > 0:
-                print()
 
 
 def data2torch(

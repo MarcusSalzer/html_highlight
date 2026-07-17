@@ -5,13 +5,13 @@ from timeit import default_timer
 
 import mlflow
 
-import src.models.rnn_tagger
+import html_highlight.models.rnn_tagger
+from html_highlight.datamodels.split_index import SplitIndex
+from html_highlight.datamodels.training import EpochSnapshot
+from html_highlight.exper.sampler import Sampler
+from html_highlight.models import tagger_model
 from src import torch_util as tu
 from src import util, vocab
-from src.datamodels.split_index import SplitIndex
-from src.datamodels.training import EpochSnapshot
-from src.exper.sampler import Sampler
-from src.models import tagger_model
 
 
 @dataclass
@@ -19,11 +19,11 @@ class MLflowExperiment:
     name: str
     split_idx: SplitIndex
     filter_lang: set[str]
-    model_conf_builder: Callable[[dict], src.models.rnn_tagger.RNNTaggerConfig]
+    model_conf_builder: Callable[[dict], html_highlight.models.rnn_tagger.RNNTaggerConfig]
     train_conf_builder: Callable[[dict], tagger_model.TrainSettings]
     sampler: Sampler
     opt_metric: str = "balanced_acc"
-    tracking_uri: str = "sqlite:///data/mlflow.db"
+    tracking_uri: str = "sqlite:///tmp/mlflow.db"
     checkpoint_period: int | None = 5
 
     def __post_init__(self):
@@ -73,7 +73,7 @@ class MLflowExperiment:
                 n_unknown_token=model_conf.n_unk_token,
             )
 
-            model = src.models.rnn_tagger.RNNTagger(
+            model = html_highlight.models.rnn_tagger.RNNTagger(
                 model_conf,
                 vocab_sz_token=len(vocs.token),
                 vocab_sz_tag=len(vocs.tag),

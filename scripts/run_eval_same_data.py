@@ -2,11 +2,11 @@ import sys
 from pathlib import Path
 
 sys.path.append(".")
+from html_highlight.exper import sampler
+from html_highlight.exper.mlflow_experiment import MLflowExperiment
+from html_highlight.models.rnn_tagger import RNNTaggerConfig
+from html_highlight.models.tagger_model import TrainSettings
 from src import util
-from src.exper import sampler
-from src.exper.mlflow_experiment import MLflowExperiment
-from src.models.rnn_tagger import RNNTaggerConfig
-from src.models.tagger_model import TrainSettings
 
 # Keep datasplit for comparing models fairly
 SPLIT_PATH = Path("./data/split_index_26-02-14.json")

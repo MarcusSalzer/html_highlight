@@ -5,8 +5,8 @@ from importlib import reload
 from pathlib import Path
 
 sys.path.append("..")
+from html_highlight.plots import data_plots, templates
 from src import util
-from src.plots import data_plots, templates
 
 reload(templates)
 templates.set_plotly_template()

@@ -23,8 +23,13 @@ dependencies = [
     "psutil>=7.2.2",
     "nvidia-ml-py>=13.590.48",
     "pyperclip>=1.11.0",
+    "clearml>=2.1.7",
+    "lightning>=2.6.1",
+    "import-linter[ui]>=2.11",
 ]
 
+[tool.uv]
+package = true
 
 [tool.ruff]
 line-length = 100

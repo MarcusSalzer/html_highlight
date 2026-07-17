@@ -5,10 +5,10 @@ import sys
 from pathlib import Path
 
 sys.path.append(".")
+from html_highlight.data_lint import LintError
+from html_highlight.datamodels.overlap_stat import OverlapStat
 from src import cli_util, data_lint, util
-from src import data_functions as datafun
-from src.data_lint import LintError
-from src.datamodels.overlap_stat import OverlapStat
+from src import data_functions as data_functions
 
 allowed_tags = list(json.loads(Path("data/class_aliases_str.json").read_text()).keys())
 
@@ -49,10 +49,12 @@ def main():
     THR_TAG = 0.8
 
     print("Overlap check")
-    _, high_token = datafun.overlap_pairwise_simple(
+    _, high_token = data_functions.overlap_pairwise_simple(
         [d.tokens for d in data], n=N_TOKEN, thr=THR_TOKEN
     )
-    _, high_tag = datafun.overlap_pairwise_simple([d.tags for d in data], n=N_TAG, thr=THR_TOKEN)
+    _, high_tag = data_functions.overlap_pairwise_simple(
+        [d.tags for d in data], n=N_TAG, thr=THR_TOKEN
+    )
 
     print(f"\nToken overlaps (>{THR_TOKEN:.0%}, n={N_TOKEN}): {len(high_token)}")
     print_overlaps(high_token, name_ids=[d.id for d in data])

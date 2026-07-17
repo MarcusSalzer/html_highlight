@@ -5,10 +5,10 @@ from datetime import datetime
 
 import pyperclip as pc
 
-from src import inference
-from src.constants import MAP_TAGS_SIMPLE
-from src.html_process import format_html
-from src.text_process import process
+from html_highlight import inference
+from html_highlight.constants import MAP_TAGS_SIMPLE
+from html_highlight.html_process import format_html
+from html_highlight.text_process import process
 
 infer = inference.Inference("model_inference")
 

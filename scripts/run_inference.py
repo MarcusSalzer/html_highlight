@@ -8,8 +8,8 @@ from pathlib import Path
 from tqdm import tqdm
 
 sys.path.append(".")
+from html_highlight.inference import Inference
 from src import util
-from src.inference import Inference
 
 
 def find_models():

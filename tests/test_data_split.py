@@ -1,6 +1,6 @@
 import polars as pl
 
-from src.data_functions import data_split
+from html_highlight.data_functions import data_split
 
 
 class TestSplit:

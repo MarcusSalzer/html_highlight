@@ -1,7 +1,7 @@
 import unittest
 
+from html_highlight.text_process import process_regex
 from src import text_process
-from src.text_process import process_regex
 
 
 class TestCleanUp(unittest.TestCase):

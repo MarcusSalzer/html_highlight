@@ -8,8 +8,8 @@ from torch import nn
 from torch.types import Tensor
 from torch.utils.data import DataLoader
 
-from src import torch_metrics as tm
-from src.datamodels.training import EpochSnapshot
+from html_highlight import torch_metrics as tm
+from html_highlight.datamodels.training import EpochSnapshot
 
 
 class TrainSettings(pydantic.BaseModel):

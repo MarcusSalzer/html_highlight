@@ -58,7 +58,7 @@ class TensorSequenceDataset(Dataset):
         }
 
 
-def collate_fn(batch):
+def collate_fn_pad(batch):
     # Separate the different keys
     tokens = [item["tokens"] for item in batch]
     tags = [item["tags"] for item in batch]
@@ -78,7 +78,7 @@ def get_dl(dset: TensorSequenceDataset, bs: int = 16, shuffle: bool = True, n_wo
         dataset=dset,
         batch_size=bs,
         shuffle=shuffle,
-        collate_fn=collate_fn,
+        collate_fn=collate_fn_pad,
         num_workers=n_workers,
         persistent_workers=n_workers > 0,
     )

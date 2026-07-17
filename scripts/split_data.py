@@ -8,9 +8,9 @@ from pathlib import Path
 
 sys.path.append(".")
 
-from src import data_functions as datafun
-from src import util
-from src.datamodels.split_index import SplitIndex
+from html_highlight import data_functions, util
+from html_highlight.cml.cleaml_util import create_dataset
+from html_highlight.datamodels.split_index import SplitIndex
 
 
 def make_split(
@@ -19,14 +19,19 @@ def make_split(
     min_group_count=4,
     seed: int | None = None,
     max_data: int | None = None,
+    data_file: str | Path = "data/dataset.ndjson",
 ):
-    examples = util.load_dataset_parallel()
+    data_file = Path(data_file)
+
+    examples = util.load_dataset_parallel(data_file)
     random.shuffle(examples)
 
     if max_data:
         examples = examples[:max_data]
 
-    filepath = Path("data") / (f"split_index_{max_data}.json" if max_data else "split_index.json")
+    split_index_file = Path("data") / (
+        f"split_index_{max_data}.json" if max_data else "split_index.json"
+    )
 
     # if filepath.exists():
     #     print("Already exists. delete/move old before making new")
@@ -34,8 +39,8 @@ def make_split(
 
     data = util.dataset_to_df(examples)
     # add group column
-    data, group_counts = datafun.make_example_groups(data, min_group_count=min_group_count)
-    splits = datafun.data_split(data, ratios, stratify_col="group", seed=seed)
+    data, group_counts = data_functions.make_example_groups(data, min_group_count=min_group_count)
+    splits = data_functions.data_split(data, ratios, stratify_col="group", seed=seed)
     # fraction of data in ech split
     result_split_ratios = [len(df) / len(data) for df in splits]
 
@@ -64,15 +69,18 @@ def make_split(
         date=now.date(),
         group_counts=group_counts,
         split_ratios=dict(zip(splitnames, result_split_ratios, strict=True)),
-        overlap=datafun.overlap_splits(
+        overlap=data_functions.overlap_splits(
             {k: df["tokens"].to_list() for k, df in zip(splitnames, splits, strict=True)}, n_ngram
         ),
         overlap_ngram=n_ngram,
         id_to_group=to_group,
     )
-    filepath.write_text(json.dumps(model.model_dump(mode="json"), indent=2))
+    split_index_file.write_text(json.dumps(model.model_dump(mode="json"), indent=2))
 
     print(f"date: {alldata['date']}")
+
+    print("registering to clearML")
+    create_dataset([data_file, split_index_file], "examples_split")
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ import torch
 
 sys.path.append("src")
 
-from src.tensor_sequence_dataset import TensorSequenceDataset
+from html_highlight.tensor_sequence_dataset import TensorSequenceDataset
 
 
 def test_init():

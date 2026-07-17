@@ -1,6 +1,6 @@
 import torch
 
-from src.models.rnn_tagger import RNNTagger, RNNTaggerConfig
+from html_highlight.models.rnn_tagger import RNNTagger, RNNTaggerConfig
 
 VOCAB_TOKENS = 40
 VOCAB_TAGS = 7

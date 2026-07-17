@@ -4,12 +4,12 @@ from typing import Literal
 
 import polars as pl
 
+import html_highlight.models.rnn_tagger
 import optuna
-import src.models.rnn_tagger
+from html_highlight.datamodels.split_index import SplitIndex
+from html_highlight.models import tagger_model
 from src import torch_util as tu
 from src import vocab
-from src.datamodels.split_index import SplitIndex
-from src.models import tagger_model
 
 
 @dataclass
@@ -60,7 +60,7 @@ class OptunaExperiment:
         vocs = vocab.both_vocabs(self.data_train, n_unknown_token=model_conf.n_unk_token)
 
         # model
-        model = src.models.rnn_tagger.RNNTagger(
+        model = html_highlight.models.rnn_tagger.RNNTagger(
             model_conf,
             vocab_sz_token=len(vocs.token),
             vocab_sz_tag=len(vocs.tag),
@@ -94,7 +94,9 @@ class OptunaExperiment:
         pass
 
     @abstractmethod
-    def get_model_conf(self, trial: optuna.Trial) -> src.models.rnn_tagger.RNNTaggerConfig:
+    def get_model_conf(
+        self, trial: optuna.Trial
+    ) -> html_highlight.models.rnn_tagger.RNNTaggerConfig:
         pass
 
     @abstractmethod

@@ -5,7 +5,7 @@ import torch
 from torch import nn
 from torch.types import Tensor
 
-from src.models.tagger_model import TaggerModel
+from html_highlight.models.tagger_model import TaggerModel
 
 
 class RNNTaggerConfig(pydantic.BaseModel):

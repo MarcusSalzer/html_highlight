@@ -1,6 +1,6 @@
 from pytest import mark
 
-from src.text_process import WordCase, get_word_case
+from html_highlight.text_process import WordCase, get_word_case
 
 
 @mark.parametrize("w", ["MyClass", "Cool"])

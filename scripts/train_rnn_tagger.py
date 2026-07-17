@@ -1,20 +1,17 @@
 """Script for training the sequence tagger model."""
 
 import json
-import sys
 from pathlib import Path
 
 import mlflow
 import torch
 
-sys.path.append(".")
-
-from src import mlflow_wrapper, util, vocab
-from src import torch_util as tu
-from src.datamodels.training import EpochSnapshot
-from src.models.rnn_tagger import RNNTagger, RNNTaggerConfig
-from src.models.tagger_model import TrainSettings
-from src.tensor_sequence_dataset import TensorSequenceDataset, get_dl
+from html_highlight import mlflow_wrapper, util, vocab
+from html_highlight import torch_util as tu
+from html_highlight.datamodels.training import EpochSnapshot
+from html_highlight.models.rnn_tagger import RNNTagger, RNNTaggerConfig
+from html_highlight.models.tagger_model import TrainSettings
+from html_highlight.tensor_sequence_dataset import TensorSequenceDataset, get_dl
 
 RETRAIN_FINAL = True
 
@@ -89,6 +86,7 @@ def main() -> None:
     else:
         val_set = "val"
 
+    # precompute deterministic tags
     data = {sk: tu.add_tag_det_col(util.dataset_to_df(v)) for sk, v in splits.items()}
     # get the vocabs
     vocs = vocab.both_vocabs(

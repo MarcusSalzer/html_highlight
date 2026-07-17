@@ -1,4 +1,4 @@
-from src.vocab import CodeVocab
+from html_highlight.vocab import CodeVocab
 
 
 def test_code_vocab_fromwords():

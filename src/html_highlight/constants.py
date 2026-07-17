@@ -81,11 +81,6 @@ POSSIBLE_PER_TOKEN = {
     "=": ["opas", "opbi", "sy"],
     "&": ["opmo", "opun", "opbi"],
     "*": ["opmo", "opun", "opbi", "mo"],
-    "float": ["ty", "tyco", "pa"],
-    "int": ["ty", "tyco"],
-    "str": ["ty", "tyco"],
-    "dict": ["ty", "tyco"],
-    "set": ["ty", "tyco"],
 }
 # allow these in vocab
 VOCAB_TAGS = (

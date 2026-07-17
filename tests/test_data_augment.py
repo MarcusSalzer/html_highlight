@@ -1,4 +1,4 @@
-from src.data_augmentation import modify_name, randomize_names
+from html_highlight.data_augmentation import modify_name, randomize_names
 
 
 class TestModName:

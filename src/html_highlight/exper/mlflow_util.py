@@ -4,17 +4,17 @@ import mlflow
 import pandas as pd
 import torch
 
-import src.models.rnn_tagger
+import html_highlight.models.rnn_tagger
+from html_highlight.models import rnn_tagger
+from html_highlight.models.rnn_tagger import RNNTagger
 from src import vocab
-from src.models import rnn_tagger
-from src.models.rnn_tagger import RNNTagger
 
 
 class RNNTaggerPyFunc(mlflow.pyfunc.PyFuncModel):
     """Wrap the RNNTagger"""
 
     def load_context(self, context):
-        from src.models.rnn_tagger import RNNTaggerInferenceConfig
+        from html_highlight.models.rnn_tagger import RNNTaggerInferenceConfig
 
         config = RNNTaggerInferenceConfig.model_validate_json(
             Path(context.artifacts["config"]).read_text()
@@ -49,7 +49,9 @@ def predict(self, context, model_input: pd.DataFrame):
     # convert back to list[str]
 
 
-def complete_config(vocs: vocab.VocabDuo, model_conf: src.models.rnn_tagger.RNNTaggerConfig):
+def complete_config(
+    vocs: vocab.VocabDuo, model_conf: html_highlight.models.rnn_tagger.RNNTaggerConfig
+):
     """What data (other than weights) is needed to recreate a model."""
     return rnn_tagger.RNNTaggerInferenceConfig(
         model_conf=model_conf,

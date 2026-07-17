@@ -7,7 +7,7 @@ import polars as pl
 from joblib import Parallel, delayed
 from sklearn.model_selection import KFold
 
-from src.datamodels.overlap_stat import OverlapStat
+from html_highlight.datamodels.overlap_stat import OverlapStat
 
 
 def make_example_groups(df: pl.DataFrame, min_group_count: int = 3):

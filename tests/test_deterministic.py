@@ -1,6 +1,6 @@
 import unittest
 
-from src.text_process import process
+from html_highlight.text_process import process
 
 
 class TestEasy(unittest.TestCase):

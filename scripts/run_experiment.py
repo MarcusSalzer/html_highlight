@@ -1,13 +1,12 @@
 import sys
 from typing import Any
 
-
 sys.path.append(".")
-from src.models.rnn_tagger import RNNTaggerConfig
+from html_highlight.exper import sampler
+from html_highlight.exper.mlflow_experiment import MLflowExperiment
+from html_highlight.models.rnn_tagger import RNNTaggerConfig
+from html_highlight.models.tagger_model import TrainSettings
 from src import util
-from src.exper import sampler
-from src.exper.mlflow_experiment import MLflowExperiment
-from src.models.tagger_model import TrainSettings
 
 
 def build_model_conf(params: dict[str, Any]):

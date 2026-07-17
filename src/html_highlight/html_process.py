@@ -6,8 +6,8 @@ from glob import glob
 import polars as pl
 import regex as re
 
-from src import text_process
-from src.text_process import bracket_levels
+from html_highlight import text_process
+from html_highlight.text_process import bracket_levels
 
 
 def make_head_html(css_path: str, title: str | None = None):

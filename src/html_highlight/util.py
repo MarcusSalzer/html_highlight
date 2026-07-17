@@ -7,8 +7,8 @@ from typing import Literal
 import numpy as np
 import polars as pl
 
-from src.datamodels.dataset_record import DatasetRecord
-from src.datamodels.split_index import SplitIndex
+from .datamodels.dataset_record import DatasetRecord
+from .datamodels.split_index import SplitIndex
 
 
 def load_split_idx(path: Path = Path("./data/split_index.json")) -> SplitIndex:

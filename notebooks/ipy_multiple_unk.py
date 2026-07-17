@@ -6,14 +6,14 @@ from pathlib import Path
 
 import torch
 
-import src.models.rnn_tagger
-from src.models import tagger_model
+import html_highlight.models.rnn_tagger
+from html_highlight.models import tagger_model
 
 sys.path.append("..")
+from html_highlight.datamodels import dataset_record, split_index
+from html_highlight.plots import plotly_plots as pp
 from src import text_process, util, vocab
 from src import torch_util as tu
-from src.datamodels import dataset_record, split_index
-from src.plots import plotly_plots as pp
 
 # %% Load a subset of
 
@@ -54,7 +54,7 @@ for k, d in dsets.items():
 reload(tagger_model)
 
 torch.manual_seed(999)
-conf = src.models.rnn_tagger.RNNTaggerConfig(
+conf = html_highlight.models.rnn_tagger.RNNTaggerConfig(
     d_emb_token=16,
     d_emb_tag=16,
     d_hidden_rnn=16,
@@ -65,7 +65,7 @@ conf = src.models.rnn_tagger.RNNTaggerConfig(
     dropout_rnn=0.0,
 )
 
-model = src.models.rnn_tagger.RNNTagger(
+model = html_highlight.models.rnn_tagger.RNNTagger(
     conf,
     vocab_sz_token=len(vocs.token),
     vocab_sz_tag=len(vocs.tag),

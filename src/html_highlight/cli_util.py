@@ -1,9 +1,9 @@
 import os
 
+from rich import get_console
 from rich.markup import escape
 
-from scripts.annotate_util import console
-from src import constants
+from html_highlight import constants
 
 
 def clearCLI():
@@ -40,7 +40,7 @@ def pretty_print_code(tokens: list[str], tags: list[str]):
             text += f"[{st}]{escape(token)}[/{st}]"
         else:
             text += escape(token)
-    console.print(text, highlight=False)
+    get_console().print(text, highlight=False)
 
 
 def pick_option[T](options: list[T], prompt: str) -> T | None:
